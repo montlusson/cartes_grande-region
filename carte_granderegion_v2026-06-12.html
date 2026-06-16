@@ -3258,7 +3258,7 @@ function _updateMapMeta() {
   if (!el) return;
   var m = _getMapMeta();
   if (!m.title && !m.chapo && !m.author && !m.source) {
-    el.style.display = 'none'; el.innerHTML = ''; return;
+    el.style.display = 'none'; el.innerHTML = ''; el.style.top = ''; return;
   }
   var html = '';
   if (m.title) html += '<div class="mm-title">' + _escHtml(m.title) + '</div>';
@@ -3269,6 +3269,34 @@ function _updateMapMeta() {
   if (credits.length) html += '<div class="mm-credit">' + credits.join(' · ') + '</div>';
   el.innerHTML = html;
   el.style.display = 'block';
+  _syncMapChrome();
+}
+
+// Évite la collision visuelle entre le cartouche titre/chapeau (#map-meta,
+// centré en haut) et la barre de recherche (#map-search, ancrée en haut à
+// gauche) : les deux étant indépendamment positionnés en CSS, ils peuvent se
+// superposer sur les viewports étroits (mobile, prévisualisation device).
+// On mesure la géométrie réelle après mise en page et, en cas de
+// chevauchement effectif, on repousse le cartouche sous la barre de
+// recherche — plutôt que d'utiliser un décalage fixe qui serait soit
+// insuffisant (titre long) soit superflu (grand écran, pas de chevauchement).
+function _syncMapChrome() {
+  var meta = document.getElementById('map-meta');
+  var search = document.getElementById('map-search');
+  if (!meta || !search) return;
+  if (meta.style.display === 'none' || !meta.innerHTML) { meta.style.top = ''; return; }
+  meta.style.top = ''; // repart de la position CSS par défaut avant de mesurer
+  var searchBottom = search.offsetTop + search.offsetHeight;
+  var metaTop = meta.offsetTop;
+  var metaLeft = meta.offsetLeft;
+  var metaRight = metaLeft + meta.offsetWidth;
+  var searchLeft = search.offsetLeft;
+  var searchRight = searchLeft + search.offsetWidth;
+  var overlapV = metaTop < searchBottom;
+  var overlapH = metaLeft < searchRight && metaRight > searchLeft;
+  if (overlapV && overlapH) {
+    meta.style.top = Math.round(searchBottom + 8) + 'px';
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -4205,6 +4233,8 @@ function _generateEmbedHTML(payload) {
 'var STATE = _p.state;',
 'var META  = STATE.meta || {};',
 'function esc(s){return String(s===undefined||s===null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}',
+'var _isMobileVp = (window.innerWidth || document.documentElement.clientWidth || 1024) <= 480;',
+
 '(function(){',
 '  var hdr = document.getElementById("hdr");',
 '  if (hdr && (META.title || META.chapo)) {',
@@ -4213,20 +4243,62 @@ function _generateEmbedHTML(payload) {
 '    if (META.chapo) h += "<div class=\\"hdr-c\\">"+esc(META.chapo)+"</div>";',
 '    hdr.innerHTML = h;',
 '    hdr.style.display = "block";',
-'    document.getElementById("map").style.top = hdr.offsetHeight + "px";',
 '  }',
 '  var attrEl = document.getElementById("attr");',
 '  var credits = [];',
 '  if (META.source) credits.push("Source : " + META.source);',
 '  if (META.author) credits.push("Carte : " + META.author);',
-'  if (attrEl && credits.length) attrEl.textContent = credits.join(" · ") + " · " + attrEl.textContent;',
+'  if (attrEl && credits.length) {',
+'    var full = credits.join(" · ") + " · " + attrEl.textContent;',
+'    attrEl.textContent = full;',
+'    attrEl.title = full;',
+'  }',
 '})();',
+
+'  // Synchronisation dynamique des décalages (header / footer mobile),',
+'  // rejouée au resize/orientationchange — corrige les collisions header/recherche',
+'  // et adapte la zone carte quand légende+attribution passent en pied de page mobile.',
+'function _syncChrome(){',
+'  var hdr = document.getElementById("hdr");',
+'  var mapEl = document.getElementById("map");',
+'  var sr = document.getElementById("map-search");',
+'  var hH = (hdr && hdr.style.display !== "none") ? hdr.offsetHeight : 0;',
+'  if (mapEl) mapEl.style.top = hH + "px";',
+'  if (sr) sr.style.top = (hH ? hH + 10 : 10) + "px";',
+'  var mobile = (window.innerWidth || document.documentElement.clientWidth || 1024) <= 480;',
+'  var foot = document.getElementById("mfoot");',
+'  var zc = document.getElementById("zoom-ctrl");',
+'  if (mobile && foot) {',
+'    var fH = foot.offsetHeight;',
+'    if (mapEl) mapEl.style.bottom = fH + "px";',
+'    if (zc) zc.style.bottom = (fH + 10) + "px";',
+'  } else {',
+'    if (mapEl) mapEl.style.bottom = "";',
+'    if (zc) zc.style.bottom = "";',
+'  }',
+'  if (window._embedMap) window._embedMap.resize();',
+'}',
+'var _syncChromeT;',
+'window.addEventListener("resize", function(){',
+'  clearTimeout(_syncChromeT);',
+'  _syncChromeT = setTimeout(_syncChrome, 150);',
+'});',
+'_syncChrome();',
+
+'  // Sur mobile, la carte capturée en desktop ne tient pas dans un écran',
+'  // étroit/portrait : on réduit le zoom initial et on recentre sur le',
+'  // Luxembourg (référence géographique centrale de la Grande Région).',
+'  // Hypothèse assumée : recentrage Luxembourg appliqué uniquement sur mobile ;',
+'  // à confirmer si un autre point de référence ou un recentrage desktop est souhaité.',
+'var LUX_CENTER = [6.13, 49.75];',
+'var _initZoom   = _isMobileVp ? (STATE.zoom * 0.8) : STATE.zoom;',
+'var _initCenter = _isMobileVp ? LUX_CENTER : STATE.center;',
 
 'var map = window._embedMap = new maplibregl.Map({',
 '  container: "map",',
 '  style: { version:8, sources:{}, layers:[{id:"bg",type:"background",paint:{"background-color":"#e8e6e0"}}] },',
-'  center: STATE.center,',
-'  zoom:   STATE.zoom,',
+'  center: _initCenter,',
+'  zoom:   _initZoom,',
 '  attributionControl: false,',
 '  dragRotate: false,',
 '  pitchWithRotate: false,',
@@ -4279,6 +4351,7 @@ function _generateEmbedHTML(payload) {
 '                 + "<span>"+esc(item.label)+"</span>";',
 '    legEl.appendChild(sp);',
 '  });',
+'  _syncChrome();',
 
 '  // Étiquettes — point + nom, placement anti-chevauchement',
 '  var _mks = [];',
@@ -4372,11 +4445,7 @@ function _generateEmbedHTML(payload) {
 '    return String(tpl).replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, function(m,k){ var v=c[k]; if (v===undefined) return ""; return doEsc ? esc(v) : String(v); });',
 '  }',
 '  var layers = ["active-fill","blocs-fill"].filter(function(l){return map.getLayer(l);});',
-'  map.on("mousemove", function(e){',
-'    var feats = map.queryRenderedFeatures(e.point, {layers:layers});',
-'    if (!feats.length) { tt.style.display="none"; hovered=null; return; }',
-'    var f = feats[0], p = f.properties||{};',
-'    hovered = f;',
+'  function renderTT(p, mx, my){',
 '    var c = ttCtx(p);',
 '    var html = "";',
 '    if (TT.htmlMode && TT.htmlTpl) {',
@@ -4393,14 +4462,115 @@ function _generateEmbedHTML(payload) {
 '    tt.innerHTML = html;',
 '    tt.querySelectorAll("img").forEach(function(im){ im.addEventListener("error", function(){ im.style.display = "none"; }); });',
 '    tt.style.display = "block";',
-'    var mx = e.point.x, my = e.point.y;',
 '    var tw = tt.offsetWidth||180, th = tt.offsetHeight||80;',
 '    var W = map.getContainer().offsetWidth, H = map.getContainer().offsetHeight;',
 '    tt.style.left = Math.min(mx+14, W-tw-6)+"px";',
 '    tt.style.top  = (my-th-12 < 4 ? my+14 : my-th-12)+"px";',
+'  }',
+'  map.on("mousemove", function(e){',
+'    var feats = map.queryRenderedFeatures(e.point, {layers:layers});',
+'    if (!feats.length) { tt.style.display="none"; hovered=null; return; }',
+'    var f = feats[0];',
+'    hovered = f;',
+'    renderTT(f.properties||{}, e.point.x, e.point.y);',
 '  });',
 '  map.getContainer().addEventListener("mouseleave", function(){ tt.style.display="none"; hovered=null; });',
 '  map.getCanvas().style.cursor = "crosshair";',
+'',
+'  // Recherche (autonome, données déjà embarquées)',
+'  var srInput = document.getElementById("map-search-input");',
+'  var srClear = document.getElementById("map-search-clear");',
+'  var srList  = document.getElementById("map-search-list");',
+'  function srNorm(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9]/g,""); }',
+'  function srCenter(f){',
+'    var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;',
+'    function walk(c){ if (typeof c[0] === "number") { if (c[0]<minX)minX=c[0]; if (c[0]>maxX)maxX=c[0]; if (c[1]<minY)minY=c[1]; if (c[1]>maxY)maxY=c[1]; } else { c.forEach(walk); } }',
+'    if (f.geometry) walk(f.geometry.coordinates);',
+'    return [(minX+maxX)/2, (minY+maxY)/2];',
+'  }',
+'  var srItems = [], srSeen = {};',
+'  function srAdd(fc){',
+'    ((fc && fc.features) || []).forEach(function(f){',
+'      var p = f.properties || {}, name = p.name || p.NAME; if (!name) return;',
+'      var key = srNorm(name) + "|" + (p.region||"");',
+'      if (srSeen[key]) return; srSeen[key] = 1;',
+'      srItems.push({ name:name, region:p.region||"", code:p.code||"", pays:p.pays||"", feature:f, norm:srNorm(name) });',
+'    });',
+'  }',
+'  if (srInput) {',
+'    STATE.overlays.forEach(function(id){ if (id !== "blocs" && DATA[id]) srAdd(DATA[id]); });',
+'    if (DATA._active) srAdd(DATA._active);',
+'  }',
+'  var srActiveIdx = -1, srResults = [];',
+'  function srFilter(q){',
+'    var nq = srNorm(q); if (!nq) return [];',
+'    var exact=[], starts=[], contains=[];',
+'    srItems.forEach(function(it){',
+'      var i = it.norm.indexOf(nq);',
+'      if (i === -1) return;',
+'      if (it.norm === nq) exact.push(it); else if (i === 0) starts.push(it); else contains.push(it);',
+'    });',
+'    return exact.concat(starts).concat(contains).slice(0,10);',
+'  }',
+'  function srRender(){',
+'    srActiveIdx = -1;',
+'    if (!srResults.length) {',
+'      var q = srInput.value.trim();',
+'      srList.innerHTML = q ? "<div class=\\"msl-hint\\">Aucun résultat</div>" : "";',
+'      srList.classList.toggle("vis", !!q);',
+'      return;',
+'    }',
+'    srList.innerHTML = srResults.map(function(it,i){',
+'      var sub = STATE.blocLabels[it.region] || it.pays || "";',
+'      return "<div class=\\"msl-item\\" data-i=\\"" + i + "\\">" + esc(it.name) + (sub ? "<span class=\\"msl-sub\\">"+esc(sub)+"</span>" : "") + "</div>";',
+'    }).join("");',
+'    srList.classList.add("vis");',
+'  }',
+'  function srSelect(it){',
+'    if (!it) return;',
+'    srInput.value = it.name;',
+'    srList.classList.remove("vis");',
+'    srClear.classList.add("vis");',
+'    var c = srCenter(it.feature);',
+'    var z = Math.max(map.getZoom(), it.code && it.code.length >= 5 ? 11 : 9.5);',
+'    map.flyTo({ center: c, zoom: z, duration: 650 });',
+'    map.once("moveend", function(){',
+'      var pt = map.project(c);',
+'      renderTT(it.feature.properties || {}, pt.x, pt.y);',
+'      setTimeout(function(){ if (!hovered) tt.style.display = "none"; }, 2600);',
+'    });',
+'  }',
+'  if (srInput) {',
+'    srInput.addEventListener("input", function(){',
+'      var q = srInput.value;',
+'      srClear.classList.toggle("vis", !!q);',
+'      srResults = srFilter(q);',
+'      srRender();',
+'    });',
+'    srInput.addEventListener("keydown", function(e){',
+'      if (e.key === "Escape") { srInput.value=""; srClear.classList.remove("vis"); srResults=[]; srRender(); srInput.blur(); return; }',
+'      if (!srResults.length) return;',
+'      var items = srList.querySelectorAll(".msl-item");',
+'      if (e.key === "ArrowDown") { e.preventDefault(); srActiveIdx = Math.min(srActiveIdx+1, srResults.length-1); }',
+'      else if (e.key === "ArrowUp") { e.preventDefault(); srActiveIdx = Math.max(srActiveIdx-1, 0); }',
+'      else if (e.key === "Enter") { e.preventDefault(); srSelect(srResults[srActiveIdx>=0?srActiveIdx:0]); return; }',
+'      else return;',
+'      items.forEach(function(el,i){ el.classList.toggle("msl-active", i===srActiveIdx); });',
+'    });',
+'    srList.addEventListener("click", function(e){',
+'      var el = e.target.closest(".msl-item"); if (!el) return;',
+'      srSelect(srResults[+el.getAttribute("data-i")]);',
+'    });',
+'    srClear.addEventListener("click", function(){',
+'      srInput.value=""; srClear.classList.remove("vis"); srResults=[]; srRender(); srInput.focus();',
+'    });',
+'    document.addEventListener("keydown", function(e){',
+'      var tag = ((document.activeElement||{}).tagName||"").toLowerCase();',
+'      if (e.key === "/" && document.activeElement !== srInput && tag !== "input" && tag !== "textarea") {',
+'        e.preventDefault(); srInput.focus();',
+'      }',
+'    });',
+'  }',
 '});',
 '})();'
   ].join('\n');
@@ -4421,6 +4591,7 @@ function _generateEmbedHTML(payload) {
 '#hdr{position:absolute;top:0;left:0;right:0;background:rgba(255,255,255,.95);border-bottom:1px solid #e4e4e4;padding:9px 14px;z-index:6;display:none;text-align:center}',
 '.hdr-t{font-weight:700;font-size:14px;color:#1a1a1a}',
 '.hdr-c{font-size:11.5px;color:#666;margin-top:2px;line-height:1.4}',
+'#mfoot{display:contents}',
 '#legend{position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(255,255,255,.93);',
 '  border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:4px;',
 '  font-size:11px;max-width:46%;box-shadow:0 1px 6px rgba(0,0,0,.12)}',
@@ -4444,18 +4615,54 @@ function _generateEmbedHTML(payload) {
 '.lbl-marker.p-top .lbl-text{bottom:8px;left:50%;transform:translateX(-50%)}',
 '.lbl-marker.p-bottom .lbl-text{top:8px;left:50%;transform:translateX(-50%)}',
 '.lbl-marker.lbl-hidden .lbl-text{display:none}',
-'#zoom-ctrl{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:2px;z-index:5}',
+'#map-search{position:absolute;top:10px;left:10px;z-index:20;width:200px;pointer-events:auto}',
+'#map-search-icon{position:absolute;left:9px;top:9px;width:14px;height:14px;color:#888;pointer-events:none}',
+'#map-search-input{width:100%;height:32px;padding:0 28px 0 30px;border:1px solid #d8d8d8;border-radius:16px;',
+'  font-size:12.5px;background:rgba(255,255,255,.96);backdrop-filter:blur(2px);box-shadow:0 1px 6px rgba(0,0,0,.12);',
+'  outline:none}',
+'#map-search-input::placeholder{color:#999}',
+'#map-search-input:focus{border-color:#18a0fb;box-shadow:0 0 0 3px rgba(24,160,251,.15)}',
+'#map-search-clear{position:absolute;right:6px;top:5px;width:22px;height:22px;border:none;background:transparent;',
+'  color:#999;font-size:15px;cursor:pointer;display:none;align-items:center;justify-content:center;border-radius:50%}',
+'#map-search-clear.vis{display:flex}',
+'#map-search-clear:hover{background:#eee}',
+'#map-search-list{position:absolute;top:36px;left:0;width:100%;max-height:240px;overflow-y:auto;',
+'  background:#fff;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);display:none}',
+'#map-search-list.vis{display:block}',
+'.msl-item{padding:7px 11px;font-size:12px;cursor:pointer;border-bottom:1px solid #f0f0f0}',
+'.msl-item:last-child{border-bottom:none}',
+'.msl-item:hover,.msl-item.msl-active{background:#f2f8ff}',
+'.msl-item .msl-sub{display:block;font-size:10.5px;color:#888;margin-top:1px}',
+'.msl-hint{padding:9px 11px;font-size:11.5px;color:#999;text-align:center}',
+'#zoom-ctrl{position:absolute;bottom:44px;right:10px;display:flex;flex-direction:column;gap:2px;z-index:5}',
 '.zoom-btn{width:30px;height:30px;background:#fff;border:1px solid #ccc;border-radius:4px;touch-action:manipulation;',
 '  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;',
 '  box-shadow:0 1px 3px rgba(0,0,0,.12)}',
 '.zoom-btn:hover{background:#f4f4f4}',
-'#attr{position:absolute;bottom:6px;right:6px;font-size:9px;color:#aaa;pointer-events:none}',
+'#attr{position:absolute;bottom:6px;right:6px;max-width:62%;font-size:10.5px;color:#555;',
+'  background:rgba(255,255,255,.78);padding:2px 7px;border-radius:4px;pointer-events:none;',
+'  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
 '@media (max-width:480px){',
-'  #legend{max-width:72%;font-size:10px;padding:6px 8px;left:6px;bottom:6px}',
-'  .hdr-t{font-size:13px}',
-'  .hdr-c{font-size:10.5px}',
+'  .hdr-t{font-size:15px}',
+'  .hdr-c{font-size:12px}',
 '  #tt{max-width:72vw}',
 '  .zoom-btn{width:38px;height:38px;font-size:18px}',
+'  /* Légende + source/auteur regroupées en pied de page (lisibilité, plus de chevauchement avec la carte) */',
+'  #mfoot{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;',
+'    background:rgba(255,255,255,.97);box-shadow:0 -1px 6px rgba(0,0,0,.10)}',
+'  #legend{position:static;left:auto;bottom:auto;width:100%;max-width:100%;border-radius:0;',
+'    box-shadow:none;background:transparent;font-size:12px;padding:8px 10px 4px;',
+'    flex-direction:row;flex-wrap:wrap;justify-content:center;gap:6px 14px}',
+'  #attr{position:static;right:auto;bottom:auto;left:auto;max-width:100%;width:100%;',
+'    text-align:center;white-space:normal;overflow:visible;text-overflow:unset;',
+'    font-size:11px;border-top:1px solid #e9e9e9;border-radius:0;background:transparent;padding:5px 10px}',
+'  /* Recherche : pleine largeur + cibles tactiles agrandies (WCAG 2.5.8 ~44px) */',
+'  #map-search{left:8px;right:8px;width:auto}',
+'  #map-search-icon{left:12px;top:13px;width:16px;height:16px}',
+'  #map-search-input{height:42px;padding:0 38px 0 38px;font-size:14px;border-radius:21px}',
+'  #map-search-clear{right:4px;top:4px;width:34px;height:34px;font-size:18px}',
+'  #map-search-list{top:46px;max-height:50vh}',
+'  .msl-item{padding:10px 12px;font-size:13.5px}',
 '}',
 '@media (prefers-reduced-motion: reduce){',
 '  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}',
@@ -4465,13 +4672,23 @@ function _generateEmbedHTML(payload) {
 '<body>',
 '<div id="hdr"></div>',
 '<div id="map"></div>',
-'<div id="legend"></div>',
 '<div id="tt"></div>',
+'<div id="map-search" role="search" aria-label="Rechercher un lieu">',
+'  <svg id="map-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
+'    <circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>',
+'  </svg>',
+'  <input type="text" id="map-search-input" placeholder="Rechercher…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Rechercher un lieu" aria-autocomplete="list" aria-controls="map-search-list">',
+'  <button id="map-search-clear" aria-label="Effacer">&#215;</button>',
+'  <div id="map-search-list" role="listbox"></div>',
+'</div>',
 '<div id="zoom-ctrl">',
 '  <button class="zoom-btn" id="z-in" title="Zoom avant">+</button>',
 '  <button class="zoom-btn" id="z-out" title="Zoom arrière">−</button>',
 '</div>',
+'<div id="mfoot">',
+'<div id="legend"></div>',
 '<div id="attr">© OpenStreetMap contributors · MapLibre GL</div>',
+'</div>',
 '<script>',
 'window.__EMBED_PAYLOAD__ = ' + payload + ';',
 PLAYER_SCRIPT,
@@ -4738,6 +4955,7 @@ function _initPreviewToggle() {
   function _pvScheduleFit(animate) {
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
+        if (typeof _syncMapChrome === 'function') _syncMapChrome();
         if (!_map) return;
         _map.resize();
         _pvFitBounds(animate);
@@ -4779,6 +4997,7 @@ function _initPreviewToggle() {
       if (w === _pvRoW || w === 0) return;
       _pvRoW = w;
       requestAnimationFrame(function() {
+        if (typeof _syncMapChrome === 'function') _syncMapChrome();
         if (!_map || !_mapReady) return;
         _map.resize();
         _pvFitBounds(false);
