@@ -4424,16 +4424,22 @@ function _generateEmbedHTML(payload) {
 '  var hH = (hdr && hdr.style.display !== "none") ? hdr.offsetHeight : 0;',
 '  var mobile = (window.innerWidth || document.documentElement.clientWidth || 1024) <= 480;',
 '  var srMargin = mobile ? 14 : 10;',
-'  if (mapEl) mapEl.style.top = hH + "px";',
+  // Quelques pixels d'air entre la carte et le bord réel de l'écran mobile
+  // (sinon le contenu géographique touche le bord — cf. même correctif
+  // côté outil d'édition). left/right/top/bottom sont tous pilotés ici
+  // pour rester une seule source de vérité, plutôt que de partager avec
+  // le CSS statique #map{inset:0}.
+'  var gap = mobile ? 8 : 0;',
+'  if (mapEl) { mapEl.style.top = (hH + gap) + "px"; mapEl.style.left = gap + "px"; mapEl.style.right = gap + "px"; }',
 '  if (sr) sr.style.top = (hH ? hH + srMargin : srMargin) + "px";',
 '  var foot = document.getElementById("mfoot");',
 '  var zc = document.getElementById("zoom-ctrl");',
 '  if (mobile && foot) {',
 '    var fH = foot.offsetHeight;',
-'    if (mapEl) mapEl.style.bottom = fH + "px";',
+'    if (mapEl) mapEl.style.bottom = (fH + gap) + "px";',
 '    if (zc) zc.style.bottom = (fH + 10) + "px";',
 '  } else {',
-'    if (mapEl) mapEl.style.bottom = "";',
+'    if (mapEl) mapEl.style.bottom = gap ? gap + "px" : "";',
 '    if (zc) zc.style.bottom = "";',
 '  }',
 '  if (window._embedMap) window._embedMap.resize();',
