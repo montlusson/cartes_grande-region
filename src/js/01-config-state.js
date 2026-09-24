@@ -27,36 +27,40 @@ var GR_URLS = {
   cantons_lux:    'https://download.data.public.lu/resources/administrative-entities-2020/20200325-152605/administrative-entities-2020-1948-cantons-lux-2020-9.geojson',
 };
 
+// Ordre alphabétique des pays (Allemagne, Belgique, France, Luxembourg) —
+// suivi par tous les objets ci-dessous ainsi que les listes HTML de
+// territoires (puces "Blocs actifs", niveaux intermédiaires, chefs-lieux).
 var BLOC_COLORS = {
-  'Grand Est':        '#b5e2b5',
   'Rheinland-Pfalz':  '#b3d4f5',
   'Saarland':         '#bfa0dd',
   'Wallonie':         '#f5baba',
+  'Grand Est':        '#b5e2b5',
   'Luxembourg':       '#ffdca8',
 };
 
 var BLOC_LABELS = {
-  'Grand Est': 'Lorraine (France)',
   'Rheinland-Pfalz': 'Rhénanie-Palatinat (DE)',
   'Saarland': 'Sarre (DE)',
-  'Wallonie': 'Wallonie (Belgique)',
-  'Luxembourg': 'Luxembourg',
+  'Wallonie': 'Wallonie (BE)',
+  'Grand Est': 'Lorraine (FR)',
+  'Luxembourg': 'Luxembourg (LU)',
 };
 
 var BLOC_PAYS = {
-  'Grand Est': 'France',
   'Rheinland-Pfalz': 'Allemagne',
   'Saarland': 'Allemagne',
   'Wallonie': 'Belgique',
+  'Grand Est': 'France',
   'Luxembourg': 'Luxembourg',
 };
 
-// Palettes (5 teintes) pour les couches de subdivision, par bloc régional
+// Palettes (5 teintes) pour les couches de subdivision, par bloc régional —
+// chaque gradient reprend la teinte de BLOC_COLORS ci-dessus.
 var BLOC_SUBDIV_PALETTES = {
-  'Grand Est':       ['#a5d6a7','#66bb6a','#388e3c','#1b5e20','#558b2f'],
   'Rheinland-Pfalz': ['#90caf9','#42a5f5','#1565c0','#0d47a1','#283593'],
-  'Saarland':        ['#80deea','#26c6da','#00838f','#006064','#004d40'],
+  'Saarland':        ['#c292f2','#8c33e6','#701cc4','#47147b','#611da5'],
   'Wallonie':        ['#f48fb1','#e91e63','#c2185b','#880e4f','#ad1457'],
+  'Grand Est':       ['#a5d6a7','#66bb6a','#388e3c','#1b5e20','#558b2f'],
   'Luxembourg':      ['#ffcc80','#ffa726','#e65100','#bf360c','#ff6f00'],
 };
 
@@ -143,10 +147,10 @@ var FLAG_PAYS = {
   'Luxembourg': 'https://flagcdn.com/w80/lu.png',
 };
 var FLAG_REGION = {
-  'Grand Est':       'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Lorraine.svg?width=120',
   'Rheinland-Pfalz': 'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Rhineland-Palatinate.svg?width=120',
   'Saarland':        'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Saarland.svg?width=120',
   'Wallonie':        'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Wallonia.svg?width=120',
+  'Grand Est':       'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Lorraine.svg?width=120',
   'Luxembourg':      'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Luxembourg.svg?width=120',
 };
 

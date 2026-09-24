@@ -467,7 +467,7 @@ body.preview-mode #map-search{
       <button class="btn btn-ghost btn-sm" id="btn-embed"  disabled>&lt;/&gt; Embed</button>
       <span class="hdr-sep"></span>
       <button class="btn btn-ghost btn-sm pv-btn" id="btn-preview-desktop" title="Vue Desktop" aria-pressed="true">&#128421; Desktop</button>
-      <button class="btn btn-ghost btn-sm pv-btn" id="btn-preview-mobile"  title="Vue Mobile 375&thinsp;px" aria-pressed="false">&#128241; Mobile</button>
+      <button class="btn btn-ghost btn-sm pv-btn" id="btn-preview-mobile"  title="Vue Mobile 360&thinsp;px" aria-pressed="false">&#128241; Mobile</button>
     </div>
   </header>
 
@@ -605,11 +605,11 @@ body.preview-mode #map-search{
         <div id="bloc-selector-wrap">
           <div class="bloc-selector-lbl">Blocs actifs</div>
           <div class="bloc-selector-row">
-            <button class="bloc-chip active" data-bloc="Grand Est"       style="--c:#7ebf7e" title="Grand Est (Lorraine)">Grand Est</button>
-            <button class="bloc-chip active" data-bloc="Rheinland-Pfalz" style="--c:#6baed6" title="Rhénanie-Palatinat">RLP</button>
-            <button class="bloc-chip active" data-bloc="Saarland"        style="--c:#74aed0" title="Sarre">Sarre</button>
-            <button class="bloc-chip active" data-bloc="Wallonie"        style="--c:#e07b7b" title="Wallonie">Wallonie</button>
-            <button class="bloc-chip active" data-bloc="Luxembourg"      style="--c:#e6a84a" title="Luxembourg">Lux.</button>
+            <button class="bloc-chip active" data-bloc="Rheinland-Pfalz" style="--c:#6baed6" title="Rhénanie-Palatinat (DE)">RLP</button>
+            <button class="bloc-chip active" data-bloc="Saarland"        style="--c:#906bb3" title="Sarre (DE)">Sarre</button>
+            <button class="bloc-chip active" data-bloc="Wallonie"        style="--c:#e07b7b" title="Wallonie (BE)">Wallonie</button>
+            <button class="bloc-chip active" data-bloc="Grand Est"       style="--c:#7ebf7e" title="Lorraine (FR)">Grand Est</button>
+            <button class="bloc-chip active" data-bloc="Luxembourg"      style="--c:#e6a84a" title="Luxembourg (LU)">Lux.</button>
           </div>
         </div>
 
@@ -663,25 +663,6 @@ body.preview-mode #map-search{
             <div class="collapsible-body" id="body-overlays">
               <div style="font-size:10px;color:var(--muted);margin:6px 0 8px">Sélectionnez indépendamment les niveaux à afficher pour chaque territoire.</div>
 
-              <!-- Lorraine -->
-              <div class="terr-group">
-                <div class="terr-header">&#127467;&#127479; Lorraine (France)</div>
-                <div class="terr-layers">
-                  <div class="terr-layer-row" data-layer="depts_lor">
-                    <span>Départements <small style="color:#767676">492 KB</small></span>
-                    <label class="toggle"><input type="checkbox" id="chk-depts_lor"><span class="toggle-slider"></span></label>
-                  </div>
-                  <div class="terr-layer-row" data-layer="arr_lor">
-                    <span>Arrondissements <small style="color:#767676">773 KB</small></span>
-                    <label class="toggle"><input type="checkbox" id="chk-arr_lor"><span class="toggle-slider"></span></label>
-                  </div>
-                  <div class="terr-layer-row" data-layer="cantons_lor">
-                    <span>Cantons <small style="color:#767676">1,4 MB</small></span>
-                    <label class="toggle"><input type="checkbox" id="chk-cantons_lor"><span class="toggle-slider"></span></label>
-                  </div>
-                </div>
-              </div>
-
               <!-- Rhénanie-Palatinat -->
               <div class="terr-group">
                 <div class="terr-header">&#127465;&#127466; Rhénanie-Palatinat (DE)</div>
@@ -710,7 +691,7 @@ body.preview-mode #map-search{
 
               <!-- Wallonie -->
               <div class="terr-group">
-                <div class="terr-header">&#127463;&#127466; Wallonie (Belgique)</div>
+                <div class="terr-header">&#127463;&#127466; Wallonie (BE)</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="provinces_wal">
                     <span>Provinces <small style="color:#767676">449 KB</small></span>
@@ -723,9 +704,28 @@ body.preview-mode #map-search{
                 </div>
               </div>
 
+              <!-- Lorraine -->
+              <div class="terr-group">
+                <div class="terr-header">&#127467;&#127479; Lorraine (FR)</div>
+                <div class="terr-layers">
+                  <div class="terr-layer-row" data-layer="depts_lor">
+                    <span>Départements <small style="color:#767676">492 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-depts_lor"><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="terr-layer-row" data-layer="arr_lor">
+                    <span>Arrondissements <small style="color:#767676">773 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-arr_lor"><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="terr-layer-row" data-layer="cantons_lor">
+                    <span>Cantons <small style="color:#767676">1,4 MB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-cantons_lor"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+
               <!-- Luxembourg -->
               <div class="terr-group">
-                <div class="terr-header">&#127922; Luxembourg</div>
+                <div class="terr-header">&#127922; Luxembourg (LU)</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="cantons_lux">
                     <span>Cantons <small style="color:#767676">461 KB</small></span>
@@ -855,14 +855,6 @@ body.preview-mode #map-search{
               <div style="font-size:10px;color:var(--muted);margin:6px 0 6px">Chaque liste affiche un point et le nom du chef-lieu. Les noms s'écartent ou se masquent automatiquement en cas de chevauchement.</div>
               <div class="terr-layers" style="padding:2px 2px 6px">
                 <div class="terr-layer-row">
-                  <span>Préfectures — départements lorrains <small style="color:#767676">4</small></span>
-                  <label class="toggle"><input type="checkbox" id="grp-depts_lor"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="terr-layer-row">
-                  <span>Chefs-lieux — arrondissements lorrains <small style="color:#767676">15</small></span>
-                  <label class="toggle"><input type="checkbox" id="grp-arr_lor"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="terr-layer-row">
                   <span>Chefs-lieux — Kreise (Rhénanie-Palatinat) <small style="color:#767676">30</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-kreise_rlp"><span class="toggle-slider"></span></label>
                 </div>
@@ -877,6 +869,14 @@ body.preview-mode #map-search{
                 <div class="terr-layer-row">
                   <span>Chefs-lieux — arrondissements wallons <small style="color:#767676">20</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-arr_wal"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Préfectures — départements lorrains <small style="color:#767676">4</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-depts_lor"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Chefs-lieux — arrondissements lorrains <small style="color:#767676">15</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-arr_lor"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
                   <span>Chefs-lieux — cantons luxembourgeois <small style="color:#767676">12</small></span>
@@ -1081,12 +1081,11 @@ body.preview-mode #map-search{
       <!-- Barre DevTools (visible en mode preview uniquement) -->
       <div id="preview-bar">
         <select id="device-select" title="Choisir un appareil">
-          <option value="375x667">&#128241; iPhone SE &middot; 375&times;667</option>
-          <option value="390x844">&#128241; iPhone 14 &middot; 390&times;844</option>
-          <option value="393x852">&#128241; iPhone 14 Pro &middot; 393&times;852</option>
-          <option value="360x800">&#128241; Galaxy S &middot; 360&times;800</option>
-          <option value="412x915">&#128241; Pixel 7 &middot; 412&times;915</option>
-          <option value="768x1024">&#128187; iPad &middot; 768&times;1024</option>
+          <option value="360x780">&#128241; Galaxy S25 &middot; 360&times;780</option>
+          <option value="402x873">&#128241; iPhone 18 Pro &middot; 402&times;873</option>
+          <option value="440x956">&#128241; iPhone 18 Pro Max &middot; 440&times;956</option>
+          <option value="412x924">&#128241; Pixel 10 &middot; 412&times;924</option>
+          <option value="1032x1376">&#128187; iPad Pro 13&Prime; &middot; 1032&times;1376</option>
           <option value="custom">&#9999; Personnalis&eacute;&hellip;</option>
         </select>
         <input type="number" id="pv-custom-w" min="280" max="1400" value="375" title="Largeur en px">
@@ -1099,9 +1098,9 @@ body.preview-mode #map-search{
       <div id="preview-shell">
       <div id="map-frame" role="region" aria-label="Carte interactive de la Grande Région. Une version accessible des données est disponible via le bouton « Tableau » en haut de page.">
         <!-- Barre de recherche flottante -->
-        <div id="map-search" role="search" aria-label="Rechercher une commune">
+        <div id="map-search" role="search" aria-label="Rechercher un lieu">
           <svg id="map-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="map-search-input" placeholder="Commune…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Chercher une commune (raccourci /)" aria-autocomplete="list" aria-controls="map-search-list">
+          <input type="text" id="map-search-input" placeholder="Rechercher…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Rechercher un lieu (raccourci /)" aria-autocomplete="list" aria-controls="map-search-list">
           <button id="map-search-clear" aria-label="Effacer">&#215;</button>
           <div id="map-search-list" role="listbox"></div>
         </div>
@@ -1161,36 +1160,40 @@ var GR_URLS = {
   cantons_lux:    'https://download.data.public.lu/resources/administrative-entities-2020/20200325-152605/administrative-entities-2020-1948-cantons-lux-2020-9.geojson',
 };
 
+// Ordre alphabétique des pays (Allemagne, Belgique, France, Luxembourg) —
+// suivi par tous les objets ci-dessous ainsi que les listes HTML de
+// territoires (puces "Blocs actifs", niveaux intermédiaires, chefs-lieux).
 var BLOC_COLORS = {
-  'Grand Est':        '#b5e2b5',
   'Rheinland-Pfalz':  '#b3d4f5',
   'Saarland':         '#bfa0dd',
   'Wallonie':         '#f5baba',
+  'Grand Est':        '#b5e2b5',
   'Luxembourg':       '#ffdca8',
 };
 
 var BLOC_LABELS = {
-  'Grand Est': 'Lorraine (France)',
   'Rheinland-Pfalz': 'Rhénanie-Palatinat (DE)',
   'Saarland': 'Sarre (DE)',
-  'Wallonie': 'Wallonie (Belgique)',
-  'Luxembourg': 'Luxembourg',
+  'Wallonie': 'Wallonie (BE)',
+  'Grand Est': 'Lorraine (FR)',
+  'Luxembourg': 'Luxembourg (LU)',
 };
 
 var BLOC_PAYS = {
-  'Grand Est': 'France',
   'Rheinland-Pfalz': 'Allemagne',
   'Saarland': 'Allemagne',
   'Wallonie': 'Belgique',
+  'Grand Est': 'France',
   'Luxembourg': 'Luxembourg',
 };
 
-// Palettes (5 teintes) pour les couches de subdivision, par bloc régional
+// Palettes (5 teintes) pour les couches de subdivision, par bloc régional —
+// chaque gradient reprend la teinte de BLOC_COLORS ci-dessus.
 var BLOC_SUBDIV_PALETTES = {
-  'Grand Est':       ['#a5d6a7','#66bb6a','#388e3c','#1b5e20','#558b2f'],
   'Rheinland-Pfalz': ['#90caf9','#42a5f5','#1565c0','#0d47a1','#283593'],
-  'Saarland':        ['#80deea','#26c6da','#00838f','#006064','#004d40'],
+  'Saarland':        ['#c292f2','#8c33e6','#701cc4','#47147b','#611da5'],
   'Wallonie':        ['#f48fb1','#e91e63','#c2185b','#880e4f','#ad1457'],
+  'Grand Est':       ['#a5d6a7','#66bb6a','#388e3c','#1b5e20','#558b2f'],
   'Luxembourg':      ['#ffcc80','#ffa726','#e65100','#bf360c','#ff6f00'],
 };
 
@@ -1277,10 +1280,10 @@ var FLAG_PAYS = {
   'Luxembourg': 'https://flagcdn.com/w80/lu.png',
 };
 var FLAG_REGION = {
-  'Grand Est':       'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Lorraine.svg?width=120',
   'Rheinland-Pfalz': 'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Rhineland-Palatinate.svg?width=120',
   'Saarland':        'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Saarland.svg?width=120',
   'Wallonie':        'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Wallonia.svg?width=120',
+  'Grand Est':       'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Lorraine.svg?width=120',
   'Luxembourg':      'https://commons.wikimedia.org/wiki/Special:FilePath/Flag_of_Luxembourg.svg?width=120',
 };
 
@@ -1635,14 +1638,22 @@ function _mergeFeaturesIntoOne(features, region) {
 //  CARTE — INITIALISATION MAPLIBRE
 // ══════════════════════════════════════════════════════════════════
 
-var GR_BOUNDS = [[4.3, 47.6], [8.7, 51.2]]; // [sw, ne]
+var GR_BOUNDS = [[3.4, 47.7], [8.6, 51.1]]; // [sw, ne]
 
+// Limites réelles mesurées sur la géométrie chargée (et non plus une
+// approximation à la main : les anciennes valeurs sous-estimaient Wallonie,
+// qui débordait donc du cadrage). Pour la Sarre à la Rhénanie-Palatinat, etc.,
+// simple bbox géographique — aucune exception.
+// Wallonie fait exception : l'arrondissement de Tournai-Mouscron (bien à
+// l'ouest, ~2.84°E, isolé du reste du territoire) est volontairement exclu
+// du cadrage pour ne pas dézoomer tout le monde pour un seul territoire
+// excentré — il reste affiché sur la carte, juste pas garanti dans le cadre.
 var BLOC_BOUNDS = {
-  'Grand Est':       [[4.9, 47.3], [7.7, 49.8]],
-  'Rheinland-Pfalz': [[5.9, 48.8], [8.5, 51.0]],
-  'Saarland':        [[6.3, 49.1], [7.5, 49.7]],
-  'Wallonie':        [[4.7, 49.3], [6.5, 50.9]],
-  'Luxembourg':      [[5.7, 49.4], [6.6, 50.2]],
+  'Grand Est':       [[4.89, 47.81], [7.64, 49.62]],
+  'Rheinland-Pfalz': [[6.11, 48.97], [8.51, 50.95]],
+  'Saarland':        [[6.36, 49.11], [7.41, 49.64]],
+  'Wallonie':        [[3.49, 49.50], [6.41, 50.81]], // hors Tournai-Mouscron
+  'Luxembourg':      [[5.74, 49.45], [6.53, 50.19]],
 };
 
 // Blocs actuellement affichés — tous actifs par défaut
@@ -1856,21 +1867,18 @@ function _buildBlocsCollection() {
   return {type: 'FeatureCollection', features: all};
 }
 
-function _fillColorExpression() {
+// Couleur d'un bloc pour la vue "Blocs" — factorisé pour être réutilisé tel
+// quel par _serializeEmbedPayload() (js/13), qui doit graver la couleur dans
+// chaque feature (l'embed n'a pas accès à _dataMap/_activeBlocs à l'affichage).
+function _blocRegionColor(region) {
   // Si choroplèthe active avec jointure par région, on colorie chaque bloc
   var choroActive = Object.keys(_dataMap).length > 0 && !!_valueCol;
   if (choroActive) {
     var el = document.getElementById('join-type');
     var jt = el ? el.value : 'region';
     if (jt === 'region') {
-      var expr = ['match', ['get', 'region']];
-      Object.keys(BLOC_COLORS).forEach(function(region) {
-        var key = _normStr(region);
-        var val = _dataMap[key];
-        expr.push(region, val !== undefined ? _choroColor(val) : '#ccc');
-      });
-      expr.push('#ccc');
-      return expr;
+      var val = _dataMap[_normStr(region)];
+      return val !== undefined ? _choroColor(val) : '#ccc';
     }
   }
 
@@ -1879,10 +1887,13 @@ function _fillColorExpression() {
   var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
   if (activeCount === 1) return '#e4e1db';
 
-  // Couleurs régionales par défaut
+  return BLOC_COLORS[region] || '#e0ddd8';
+}
+
+function _fillColorExpression() {
   var expr = ['match', ['get', 'region']];
   Object.keys(BLOC_COLORS).forEach(function(region) {
-    expr.push(region, BLOC_COLORS[region]);
+    expr.push(region, _blocRegionColor(region));
   });
   expr.push('#e0ddd8');
   return expr;
@@ -2745,8 +2756,11 @@ function _showTooltip(e, feat) {
   var _chipInner = _escHtml(_parts[0]);
   if (_parts[1]) _chipInner += '<span class="tt-chip-sep">›</span><span class="tt-chip-sub">' + _escHtml(_parts[1]) + '</span>';
   html += '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' + bc + ';color:#1a1a1a">' + _chipInner + '</span></div>';
-  if (tf.name !== false) {
-    html += '<div class="tt-name">' + _escHtml(p.name || p.NAME || BLOC_LABELS[h.region] || '—') + '</div>';
+  // Pas de repli sur BLOC_LABELS : le territoire est déjà dans le cadre
+  // coloré ci-dessus (chip) — ne répéter le nom que s'il y a une entité
+  // précise (commune, canton…) distincte de ce territoire.
+  if (tf.name !== false && (p.name || p.NAME)) {
+    html += '<div class="tt-name">' + _escHtml(p.name || p.NAME) + '</div>';
   }
 
   var rows = [];
@@ -3207,7 +3221,7 @@ function _ttContext(feat, h) {
     if (k && _dataMap[k] !== undefined) val = _dataMap[k];
   }
   var ctx = {
-    name: p.name || p.NAME || BLOC_LABELS[h.region] || '',
+    name: p.name || p.NAME || '', // pas de repli BLOC_LABELS : déjà dans chipLabel
     region: BLOC_LABELS[h.region] || h.region || '',
     pays: h.pays || '',
     dept: h.dept || '', arrondissement: h.arrondissement || '', canton: h.canton || '',
@@ -4264,8 +4278,14 @@ function _serializeEmbedPayload() {
   // ── Collections GeoJSON à embarquer ───────────────────────────
   var data = {};
 
-  // Fond "blocs" (toujours présent)
+  // Fond "blocs" (toujours présent) — la couleur (choroplèthe par région ou
+  // défaut) doit être gravée par feature : l'embed n'a accès ni à _dataMap
+  // ni à _activeBlocs, seulement à ce qui est écrit dans ce payload.
   data._blocs = _buildBlocsCollection();
+  data._blocs.features.forEach(function(f) {
+    var region = f.properties && f.properties.region;
+    f.properties._fillColor = _blocRegionColor(region);
+  });
 
   // Couche active au premier plan
   if (_fillLayer !== 'blocs' && _cache[_fillLayer]) {
@@ -4385,9 +4405,10 @@ function _generateEmbedHTML(payload) {
 '  var mapEl = document.getElementById("map");',
 '  var sr = document.getElementById("map-search");',
 '  var hH = (hdr && hdr.style.display !== "none") ? hdr.offsetHeight : 0;',
-'  if (mapEl) mapEl.style.top = hH + "px";',
-'  if (sr) sr.style.top = (hH ? hH + 10 : 10) + "px";',
 '  var mobile = (window.innerWidth || document.documentElement.clientWidth || 1024) <= 480;',
+'  var srMargin = mobile ? 14 : 10;',
+'  if (mapEl) mapEl.style.top = hH + "px";',
+'  if (sr) sr.style.top = (hH ? hH + srMargin : srMargin) + "px";',
 '  var foot = document.getElementById("mfoot");',
 '  var zc = document.getElementById("zoom-ctrl");',
 '  if (mobile && foot) {',
@@ -4407,20 +4428,16 @@ function _generateEmbedHTML(payload) {
 '});',
 '_syncChrome();',
 
-'  // Sur mobile, la carte capturée en desktop ne tient pas dans un écran',
-'  // étroit/portrait : on réduit le zoom initial et on recentre sur le',
-'  // Luxembourg (référence géographique centrale de la Grande Région).',
-'  // Hypothèse assumée : recentrage Luxembourg appliqué uniquement sur mobile ;',
-'  // à confirmer si un autre point de référence ou un recentrage desktop est souhaité.',
-'var LUX_CENTER = [6.13, 49.75];',
-'var _initZoom   = _isMobileVp ? (STATE.zoom * 0.8) : STATE.zoom;',
-'var _initCenter = _isMobileVp ? LUX_CENTER : STATE.center;',
-
+'  // La carte est capturée avec le cadrage (centre/zoom) de la fenêtre',
+'  // d\'édition desktop, qui ne correspond pas au ratio largeur/hauteur du',
+'  // conteneur d\'embed (mobile, étroit et haut, notamment). On recadre donc',
+'  // toujours sur les limites réelles du contenu (STATE.bounds) plutôt que',
+'  // de rejouer le centre/zoom capturé — correct quel que soit le ratio.',
 'var map = window._embedMap = new maplibregl.Map({',
 '  container: "map",',
 '  style: { version:8, sources:{}, layers:[{id:"bg",type:"background",paint:{"background-color":"#e8e6e0"}}] },',
-'  center: _initCenter,',
-'  zoom:   _initZoom,',
+'  bounds: STATE.bounds,',
+'  fitBoundsOptions: { padding: _isMobileVp ? 16 : 30, animate: false },',
 '  attributionControl: false,',
 '  dragRotate: false,',
 '  pitchWithRotate: false,',
@@ -4558,7 +4575,7 @@ function _generateEmbedHTML(payload) {
 '  var TT = STATE.tt || {};',
 '  function ttCtx(p){',
 '    var pays = (STATE.blocPays||{})[p.region] || p.pays || "";',
-'    return { name:p.name||p.NAME||STATE.blocLabels[p.region]||"", region:STATE.blocLabels[p.region]||p.region||"",',
+'    return { name:p.name||p.NAME||"", region:STATE.blocLabels[p.region]||p.region||"",',
 '      pays:pays, code:p.code||"",',
 '      valeur:(p._dataVal===undefined||p._dataVal===null)?"":p._dataVal, colonne:TT.valueCol||"",',
 '      flag_pays:(TT.flagsPays||{})[pays]||"", flag_region:(TT.flagsRegion||{})[p.region]||"" };',
@@ -5374,11 +5391,11 @@ function _initPreviewToggle() {
   if (!btnD || !btnM) return;
 
   var DEVICES = {
-    '375x667': {w:375,h:667}, '390x844': {w:390,h:844},
-    '393x852': {w:393,h:852}, '360x800': {w:360,h:800},
-    '412x915': {w:412,h:915}, '768x1024': {w:768,h:1024}
+    '360x780': {w:360,h:780}, '402x873': {w:402,h:873},
+    '440x956': {w:440,h:956}, '412x924': {w:412,h:924},
+    '1032x1376': {w:1032,h:1376}
   };
-  var _pvW = 375, _pvH = 667, _pvRotated = false;
+  var _pvW = 360, _pvH = 780, _pvRotated = false;
 
   // Datawrapper-style : padding proportionnel à la largeur du container
   function _pvPad() {

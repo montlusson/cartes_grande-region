@@ -167,11 +167,11 @@ function _initPreviewToggle() {
   if (!btnD || !btnM) return;
 
   var DEVICES = {
-    '375x667': {w:375,h:667}, '390x844': {w:390,h:844},
-    '393x852': {w:393,h:852}, '360x800': {w:360,h:800},
-    '412x915': {w:412,h:915}, '768x1024': {w:768,h:1024}
+    '360x780': {w:360,h:780}, '402x873': {w:402,h:873},
+    '440x956': {w:440,h:956}, '412x924': {w:412,h:924},
+    '1032x1376': {w:1032,h:1376}
   };
-  var _pvW = 375, _pvH = 667, _pvRotated = false;
+  var _pvW = 360, _pvH = 780, _pvRotated = false;
 
   // Datawrapper-style : padding proportionnel à la largeur du container
   function _pvPad() {

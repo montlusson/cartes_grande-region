@@ -285,7 +285,7 @@ function _ttContext(feat, h) {
     if (k && _dataMap[k] !== undefined) val = _dataMap[k];
   }
   var ctx = {
-    name: p.name || p.NAME || BLOC_LABELS[h.region] || '',
+    name: p.name || p.NAME || '', // pas de repli BLOC_LABELS : déjà dans chipLabel
     region: BLOC_LABELS[h.region] || h.region || '',
     pays: h.pays || '',
     dept: h.dept || '', arrondissement: h.arrondissement || '', canton: h.canton || '',

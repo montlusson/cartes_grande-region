@@ -49,21 +49,18 @@ function _buildBlocsCollection() {
   return {type: 'FeatureCollection', features: all};
 }
 
-function _fillColorExpression() {
+// Couleur d'un bloc pour la vue "Blocs" — factorisé pour être réutilisé tel
+// quel par _serializeEmbedPayload() (js/13), qui doit graver la couleur dans
+// chaque feature (l'embed n'a pas accès à _dataMap/_activeBlocs à l'affichage).
+function _blocRegionColor(region) {
   // Si choroplèthe active avec jointure par région, on colorie chaque bloc
   var choroActive = Object.keys(_dataMap).length > 0 && !!_valueCol;
   if (choroActive) {
     var el = document.getElementById('join-type');
     var jt = el ? el.value : 'region';
     if (jt === 'region') {
-      var expr = ['match', ['get', 'region']];
-      Object.keys(BLOC_COLORS).forEach(function(region) {
-        var key = _normStr(region);
-        var val = _dataMap[key];
-        expr.push(region, val !== undefined ? _choroColor(val) : '#ccc');
-      });
-      expr.push('#ccc');
-      return expr;
+      var val = _dataMap[_normStr(region)];
+      return val !== undefined ? _choroColor(val) : '#ccc';
     }
   }
 
@@ -72,10 +69,13 @@ function _fillColorExpression() {
   var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
   if (activeCount === 1) return '#e4e1db';
 
-  // Couleurs régionales par défaut
+  return BLOC_COLORS[region] || '#e0ddd8';
+}
+
+function _fillColorExpression() {
   var expr = ['match', ['get', 'region']];
   Object.keys(BLOC_COLORS).forEach(function(region) {
-    expr.push(region, BLOC_COLORS[region]);
+    expr.push(region, _blocRegionColor(region));
   });
   expr.push('#e0ddd8');
   return expr;

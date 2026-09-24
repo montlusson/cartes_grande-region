@@ -7,12 +7,11 @@
       <!-- Barre DevTools (visible en mode preview uniquement) -->
       <div id="preview-bar">
         <select id="device-select" title="Choisir un appareil">
-          <option value="375x667">&#128241; iPhone SE &middot; 375&times;667</option>
-          <option value="390x844">&#128241; iPhone 14 &middot; 390&times;844</option>
-          <option value="393x852">&#128241; iPhone 14 Pro &middot; 393&times;852</option>
-          <option value="360x800">&#128241; Galaxy S &middot; 360&times;800</option>
-          <option value="412x915">&#128241; Pixel 7 &middot; 412&times;915</option>
-          <option value="768x1024">&#128187; iPad &middot; 768&times;1024</option>
+          <option value="360x780">&#128241; Galaxy S25 &middot; 360&times;780</option>
+          <option value="402x873">&#128241; iPhone 18 Pro &middot; 402&times;873</option>
+          <option value="440x956">&#128241; iPhone 18 Pro Max &middot; 440&times;956</option>
+          <option value="412x924">&#128241; Pixel 10 &middot; 412&times;924</option>
+          <option value="1032x1376">&#128187; iPad Pro 13&Prime; &middot; 1032&times;1376</option>
           <option value="custom">&#9999; Personnalis&eacute;&hellip;</option>
         </select>
         <input type="number" id="pv-custom-w" min="280" max="1400" value="375" title="Largeur en px">
@@ -25,9 +24,9 @@
       <div id="preview-shell">
       <div id="map-frame" role="region" aria-label="Carte interactive de la Grande Région. Une version accessible des données est disponible via le bouton « Tableau » en haut de page.">
         <!-- Barre de recherche flottante -->
-        <div id="map-search" role="search" aria-label="Rechercher une commune">
+        <div id="map-search" role="search" aria-label="Rechercher un lieu">
           <svg id="map-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="map-search-input" placeholder="Commune…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Chercher une commune (raccourci /)" aria-autocomplete="list" aria-controls="map-search-list">
+          <input type="text" id="map-search-input" placeholder="Rechercher…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Rechercher un lieu (raccourci /)" aria-autocomplete="list" aria-controls="map-search-list">
           <button id="map-search-clear" aria-label="Effacer">&#215;</button>
           <div id="map-search-list" role="listbox"></div>
         </div>

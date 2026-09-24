@@ -18,8 +18,14 @@ function _serializeEmbedPayload() {
   // ── Collections GeoJSON à embarquer ───────────────────────────
   var data = {};
 
-  // Fond "blocs" (toujours présent)
+  // Fond "blocs" (toujours présent) — la couleur (choroplèthe par région ou
+  // défaut) doit être gravée par feature : l'embed n'a accès ni à _dataMap
+  // ni à _activeBlocs, seulement à ce qui est écrit dans ce payload.
   data._blocs = _buildBlocsCollection();
+  data._blocs.features.forEach(function(f) {
+    var region = f.properties && f.properties.region;
+    f.properties._fillColor = _blocRegionColor(region);
+  });
 
   // Couche active au premier plan
   if (_fillLayer !== 'blocs' && _cache[_fillLayer]) {

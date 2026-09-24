@@ -270,8 +270,11 @@ function _showTooltip(e, feat) {
   var _chipInner = _escHtml(_parts[0]);
   if (_parts[1]) _chipInner += '<span class="tt-chip-sep">›</span><span class="tt-chip-sub">' + _escHtml(_parts[1]) + '</span>';
   html += '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' + bc + ';color:#1a1a1a">' + _chipInner + '</span></div>';
-  if (tf.name !== false) {
-    html += '<div class="tt-name">' + _escHtml(p.name || p.NAME || BLOC_LABELS[h.region] || '—') + '</div>';
+  // Pas de repli sur BLOC_LABELS : le territoire est déjà dans le cadre
+  // coloré ci-dessus (chip) — ne répéter le nom que s'il y a une entité
+  // précise (commune, canton…) distincte de ce territoire.
+  if (tf.name !== false && (p.name || p.NAME)) {
+    html += '<div class="tt-name">' + _escHtml(p.name || p.NAME) + '</div>';
   }
 
   var rows = [];
