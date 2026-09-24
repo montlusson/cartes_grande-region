@@ -358,7 +358,7 @@ body.preview-mode.pv-tablet #map-frame{border-radius:0}
    requis pour les unités cqw plus bas, en fait un contexte de containment —
    #maplibre-map avec inset:0 ignore alors la boîte de padding et colle au
    bord malgré tout). L'inset du canevas est donc piloté en JS directement
-   sur #maplibre-map (voir _pvApply), pas via ce padding.
+   sur #maplibre-map (voir _pvApply), pas via ce padding. */
 
 /* ── Datawrapper-inspired : scaling adaptatif des éléments UI ───── */
 /* Titre/chapeau : clamp proportionnel à --pv-w */
@@ -399,11 +399,16 @@ body.preview-mode:not(.pv-tablet) #zoom-reset button{
 body.preview-mode:not(.pv-tablet) #zoom-level{
   display:none;
 }
-/* Barre de recherche : compacte, ancrée en haut à gauche comme sur desktop */
+/* Barre de recherche : compacte, ancrée en haut à gauche comme sur desktop.
+   Sur téléphone (pas tablette), l'encoche du mockup (::before sur
+   #preview-shell, 20px de haut) déborde de 10px dans #map-frame : sans
+   décalage supplémentaire, elle chevauche le haut de la barre. */
 body.preview-mode #map-search{
   width:min(160px,calc(var(--pv-w) - 60px));
-  top:8px;left:8px;
+  left:8px;
 }
+body.preview-mode.pv-tablet #map-search{top:8px}
+body.preview-mode:not(.pv-tablet) #map-search{top:22px}
 
 /* ── Barre de recherche carte ───────────────────────────────────── */
 #map-search{position:absolute;top:10px;left:10px;z-index:60;width:200px;pointer-events:auto}

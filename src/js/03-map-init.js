@@ -1,21 +1,19 @@
 //  CARTE — INITIALISATION MAPLIBRE
 // ══════════════════════════════════════════════════════════════════
 
-var GR_BOUNDS = [[3.4, 47.7], [8.6, 51.1]]; // [sw, ne]
+var GR_BOUNDS = [[2.8, 47.7], [8.6, 51.1]]; // [sw, ne]
 
 // Limites réelles mesurées sur la géométrie chargée (et non plus une
 // approximation à la main : les anciennes valeurs sous-estimaient Wallonie,
-// qui débordait donc du cadrage). Pour la Sarre à la Rhénanie-Palatinat, etc.,
-// simple bbox géographique — aucune exception.
-// Wallonie fait exception : l'arrondissement de Tournai-Mouscron (bien à
-// l'ouest, ~2.84°E, isolé du reste du territoire) est volontairement exclu
-// du cadrage pour ne pas dézoomer tout le monde pour un seul territoire
-// excentré — il reste affiché sur la carte, juste pas garanti dans le cadre.
+// qui débordait donc du cadrage). Wallonie inclut l'arrondissement de
+// Tournai-Mouscron (~2.84°E, isolé à l'ouest du reste du territoire) : il
+// avait été exclu du cadrage pour éviter de dézoomer tout le monde, mais ça
+// coupait visiblement la carte — le territoire entier prime sur le zoom.
 var BLOC_BOUNDS = {
   'Grand Est':       [[4.89, 47.81], [7.64, 49.62]],
   'Rheinland-Pfalz': [[6.11, 48.97], [8.51, 50.95]],
   'Saarland':        [[6.36, 49.11], [7.41, 49.64]],
-  'Wallonie':        [[3.49, 49.50], [6.41, 50.81]], // hors Tournai-Mouscron
+  'Wallonie':        [[2.84, 49.50], [6.41, 50.81]],
   'Luxembourg':      [[5.74, 49.45], [6.53, 50.19]],
 };
 

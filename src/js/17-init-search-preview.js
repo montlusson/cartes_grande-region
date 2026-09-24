@@ -234,8 +234,11 @@ function _initPreviewToggle() {
     document.body.classList.toggle('pv-tablet', w >= 600);
     // Air entre la carte et le bord du mockup téléphone (cf. note CSS sur
     // #map-frame : un padding CSS ne suffit pas ici, piloté directement).
+    // En haut, l'encoche (::before sur #preview-shell, 20px) déborde de 10px
+    // dans #map-frame (bordure du mockup 10px) : sans marge du haut plus
+    // large que les autres côtés, l'encoche recouvre le haut de la carte.
     var mapDiv = document.getElementById('maplibre-map');
-    if (mapDiv) mapDiv.style.inset = (w < 600) ? '8px' : '0';
+    if (mapDiv) mapDiv.style.inset = (w < 600) ? '14px 8px 8px' : '0';
     if (pvLabel) {
       pvLabel.textContent = w + ' × ' + h + ' px' + (scale < 0.999 ? ' (affiché à ' + Math.round(scale * 100) + '%)' : '');
     }

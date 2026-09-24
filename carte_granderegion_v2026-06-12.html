@@ -371,7 +371,7 @@ body.preview-mode.pv-tablet #map-frame{border-radius:0}
    requis pour les unités cqw plus bas, en fait un contexte de containment —
    #maplibre-map avec inset:0 ignore alors la boîte de padding et colle au
    bord malgré tout). L'inset du canevas est donc piloté en JS directement
-   sur #maplibre-map (voir _pvApply), pas via ce padding.
+   sur #maplibre-map (voir _pvApply), pas via ce padding. */
 
 /* ── Datawrapper-inspired : scaling adaptatif des éléments UI ───── */
 /* Titre/chapeau : clamp proportionnel à --pv-w */
@@ -412,11 +412,16 @@ body.preview-mode:not(.pv-tablet) #zoom-reset button{
 body.preview-mode:not(.pv-tablet) #zoom-level{
   display:none;
 }
-/* Barre de recherche : compacte, ancrée en haut à gauche comme sur desktop */
+/* Barre de recherche : compacte, ancrée en haut à gauche comme sur desktop.
+   Sur téléphone (pas tablette), l'encoche du mockup (::before sur
+   #preview-shell, 20px de haut) déborde de 10px dans #map-frame : sans
+   décalage supplémentaire, elle chevauche le haut de la barre. */
 body.preview-mode #map-search{
   width:min(160px,calc(var(--pv-w) - 60px));
-  top:8px;left:8px;
+  left:8px;
 }
+body.preview-mode.pv-tablet #map-search{top:8px}
+body.preview-mode:not(.pv-tablet) #map-search{top:22px}
 
 /* ── Barre de recherche carte ───────────────────────────────────── */
 #map-search{position:absolute;top:10px;left:10px;z-index:60;width:200px;pointer-events:auto}
@@ -1655,21 +1660,19 @@ function _mergeFeaturesIntoOne(features, region) {
 //  CARTE — INITIALISATION MAPLIBRE
 // ══════════════════════════════════════════════════════════════════
 
-var GR_BOUNDS = [[3.4, 47.7], [8.6, 51.1]]; // [sw, ne]
+var GR_BOUNDS = [[2.8, 47.7], [8.6, 51.1]]; // [sw, ne]
 
 // Limites réelles mesurées sur la géométrie chargée (et non plus une
 // approximation à la main : les anciennes valeurs sous-estimaient Wallonie,
-// qui débordait donc du cadrage). Pour la Sarre à la Rhénanie-Palatinat, etc.,
-// simple bbox géographique — aucune exception.
-// Wallonie fait exception : l'arrondissement de Tournai-Mouscron (bien à
-// l'ouest, ~2.84°E, isolé du reste du territoire) est volontairement exclu
-// du cadrage pour ne pas dézoomer tout le monde pour un seul territoire
-// excentré — il reste affiché sur la carte, juste pas garanti dans le cadre.
+// qui débordait donc du cadrage). Wallonie inclut l'arrondissement de
+// Tournai-Mouscron (~2.84°E, isolé à l'ouest du reste du territoire) : il
+// avait été exclu du cadrage pour éviter de dézoomer tout le monde, mais ça
+// coupait visiblement la carte — le territoire entier prime sur le zoom.
 var BLOC_BOUNDS = {
   'Grand Est':       [[4.89, 47.81], [7.64, 49.62]],
   'Rheinland-Pfalz': [[6.11, 48.97], [8.51, 50.95]],
   'Saarland':        [[6.36, 49.11], [7.41, 49.64]],
-  'Wallonie':        [[3.49, 49.50], [6.41, 50.81]], // hors Tournai-Mouscron
+  'Wallonie':        [[2.84, 49.50], [6.41, 50.81]],
   'Luxembourg':      [[5.74, 49.45], [6.53, 50.19]],
 };
 
@@ -5477,8 +5480,11 @@ function _initPreviewToggle() {
     document.body.classList.toggle('pv-tablet', w >= 600);
     // Air entre la carte et le bord du mockup téléphone (cf. note CSS sur
     // #map-frame : un padding CSS ne suffit pas ici, piloté directement).
+    // En haut, l'encoche (::before sur #preview-shell, 20px) déborde de 10px
+    // dans #map-frame (bordure du mockup 10px) : sans marge du haut plus
+    // large que les autres côtés, l'encoche recouvre le haut de la carte.
     var mapDiv = document.getElementById('maplibre-map');
-    if (mapDiv) mapDiv.style.inset = (w < 600) ? '8px' : '0';
+    if (mapDiv) mapDiv.style.inset = (w < 600) ? '14px 8px 8px' : '0';
     if (pvLabel) {
       pvLabel.textContent = w + ' × ' + h + ' px' + (scale < 0.999 ? ' (affiché à ' + Math.round(scale * 100) + '%)' : '');
     }
