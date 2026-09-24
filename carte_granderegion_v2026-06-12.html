@@ -373,11 +373,11 @@ body.preview-mode #map-meta{max-width:90%;padding:6px 10px}
 body.preview-mode #map-meta .mm-title{font-size:clamp(11px,calc(var(--pv-w)*0.038),15px)}
 body.preview-mode #map-meta .mm-chapo{font-size:clamp(9px,calc(var(--pv-w)*0.028),11.5px)}
 body.preview-mode #map-meta .mm-credit{font-size:clamp(8px,calc(var(--pv-w)*0.024),10px)}
-/* Légende : largeur et taille de police proportionnelles */
+/* Légende : discrète, sans dominer le cadre mobile */
 body.preview-mode #map-legend{
-  left:8px;bottom:8px;padding:5px 8px;gap:3px;
-  max-width:min(55%,calc(var(--pv-w)*0.55));
-  font-size:clamp(9px,calc(var(--pv-w)*0.027),12px);
+  left:8px;bottom:8px;padding:4px 6px;gap:2px;
+  max-width:min(44%,calc(var(--pv-w)*0.44));
+  font-size:clamp(8px,calc(var(--pv-w)*0.022),10px);
 }
 /* Tooltip : max-width liée à la largeur du device */
 body.preview-mode #map-tt{
@@ -385,19 +385,19 @@ body.preview-mode #map-tt{
   max-width:calc(var(--pv-w) - 20px);
   padding:7px 10px;
 }
-/* Boutons zoom : touch-friendly 36px sur téléphone */
+/* Boutons zoom : compacts, alignés sur la taille desktop */
 body.preview-mode:not(.pv-tablet) #zoom-btns button{
-  width:36px;height:36px;font-size:20px;
+  width:28px;height:28px;font-size:15px;
 }
 body.preview-mode:not(.pv-tablet) #zoom-reset button{
-  width:36px;height:36px;
+  width:28px;height:28px;
 }
 body.preview-mode:not(.pv-tablet) #zoom-level{
-  height:24px;line-height:24px;font-size:10px;
+  height:20px;line-height:20px;font-size:9px;
 }
-/* Barre de recherche : s'adapte à la largeur du device */
+/* Barre de recherche : compacte, ancrée en haut à gauche comme sur desktop */
 body.preview-mode #map-search{
-  width:min(196px,calc(var(--pv-w) - 54px));
+  width:min(160px,calc(var(--pv-w) - 60px));
   top:8px;left:8px;
 }
 
@@ -4785,23 +4785,19 @@ function _generateEmbedHTML(payload) {
 '  .hdr-t{font-size:15px}',
 '  .hdr-c{font-size:12px}',
 '  #tt{max-width:72vw}',
-'  .zoom-btn{width:38px;height:38px;font-size:18px}',
-'  /* Légende + source/auteur regroupées en pied de page (lisibilité, plus de chevauchement avec la carte) */',
+'  /* Légende + source/auteur regroupées en pied de page, en restant compactes */',
 '  #mfoot{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;',
 '    background:rgba(255,255,255,.97);box-shadow:0 -1px 6px rgba(0,0,0,.10)}',
 '  #legend{position:static;left:auto;bottom:auto;width:100%;max-width:100%;border-radius:0;',
-'    box-shadow:none;background:transparent;font-size:12px;padding:8px 10px 4px;',
-'    flex-direction:row;flex-wrap:wrap;justify-content:center;gap:6px 14px}',
+'    box-shadow:none;background:transparent;font-size:10px;padding:5px 8px 3px;',
+'    flex-direction:row;flex-wrap:wrap;justify-content:center;gap:3px 9px}',
+'  .leg-sw{width:13px;height:8px}',
 '  #attr{position:static;right:auto;bottom:auto;left:auto;max-width:100%;width:100%;',
 '    text-align:center;white-space:normal;overflow:visible;text-overflow:unset;',
-'    font-size:11px;border-top:1px solid #e9e9e9;border-radius:0;background:transparent;padding:5px 10px}',
-'  /* Recherche : pleine largeur + cibles tactiles agrandies (WCAG 2.5.8 ~44px) */',
-'  #map-search{left:8px;right:8px;width:auto}',
-'  #map-search-icon{left:12px;top:13px;width:16px;height:16px}',
-'  #map-search-input{height:42px;padding:0 38px 0 38px;font-size:14px;border-radius:21px}',
-'  #map-search-clear{right:4px;top:4px;width:34px;height:34px;font-size:18px}',
-'  #map-search-list{top:46px;max-height:50vh}',
-'  .msl-item{padding:10px 12px;font-size:13.5px}',
+'    font-size:10px;border-top:1px solid #e9e9e9;border-radius:0;background:transparent;padding:4px 10px}',
+'  /* Recherche compacte, alignée comme sur desktop plutôt qu\'étirée pleine largeur */',
+'  #map-search{left:10px;width:230px}',
+'  #map-search-list{top:36px}',
 '}',
 '@media (prefers-reduced-motion: reduce){',
 '  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}',

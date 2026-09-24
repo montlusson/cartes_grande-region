@@ -360,11 +360,11 @@ body.preview-mode #map-meta{max-width:90%;padding:6px 10px}
 body.preview-mode #map-meta .mm-title{font-size:clamp(11px,calc(var(--pv-w)*0.038),15px)}
 body.preview-mode #map-meta .mm-chapo{font-size:clamp(9px,calc(var(--pv-w)*0.028),11.5px)}
 body.preview-mode #map-meta .mm-credit{font-size:clamp(8px,calc(var(--pv-w)*0.024),10px)}
-/* Légende : largeur et taille de police proportionnelles */
+/* Légende : discrète, sans dominer le cadre mobile */
 body.preview-mode #map-legend{
-  left:8px;bottom:8px;padding:5px 8px;gap:3px;
-  max-width:min(55%,calc(var(--pv-w)*0.55));
-  font-size:clamp(9px,calc(var(--pv-w)*0.027),12px);
+  left:8px;bottom:8px;padding:4px 6px;gap:2px;
+  max-width:min(44%,calc(var(--pv-w)*0.44));
+  font-size:clamp(8px,calc(var(--pv-w)*0.022),10px);
 }
 /* Tooltip : max-width liée à la largeur du device */
 body.preview-mode #map-tt{
@@ -372,19 +372,19 @@ body.preview-mode #map-tt{
   max-width:calc(var(--pv-w) - 20px);
   padding:7px 10px;
 }
-/* Boutons zoom : touch-friendly 36px sur téléphone */
+/* Boutons zoom : compacts, alignés sur la taille desktop */
 body.preview-mode:not(.pv-tablet) #zoom-btns button{
-  width:36px;height:36px;font-size:20px;
+  width:28px;height:28px;font-size:15px;
 }
 body.preview-mode:not(.pv-tablet) #zoom-reset button{
-  width:36px;height:36px;
+  width:28px;height:28px;
 }
 body.preview-mode:not(.pv-tablet) #zoom-level{
-  height:24px;line-height:24px;font-size:10px;
+  height:20px;line-height:20px;font-size:9px;
 }
-/* Barre de recherche : s'adapte à la largeur du device */
+/* Barre de recherche : compacte, ancrée en haut à gauche comme sur desktop */
 body.preview-mode #map-search{
-  width:min(196px,calc(var(--pv-w) - 54px));
+  width:min(160px,calc(var(--pv-w) - 60px));
   top:8px;left:8px;
 }
 
