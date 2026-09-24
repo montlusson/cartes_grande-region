@@ -353,6 +353,12 @@ body.preview-mode.pv-tablet #preview-shell::before{display:none}
 body.preview-mode #status-bar{display:none}
 body.preview-mode #map-frame{border-radius:32px 32px 0 0;overflow:hidden}
 body.preview-mode.pv-tablet #map-frame{border-radius:0}
+/* Quelques pixels d'air entre la carte et le bord réel du mockup : un
+   padding sur #map-frame ne suffit pas ici (container-type:inline-size,
+   requis pour les unités cqw plus bas, en fait un contexte de containment —
+   #maplibre-map avec inset:0 ignore alors la boîte de padding et colle au
+   bord malgré tout). L'inset du canevas est donc piloté en JS directement
+   sur #maplibre-map (voir _pvApply), pas via ce padding.
 
 /* ── Datawrapper-inspired : scaling adaptatif des éléments UI ───── */
 /* Titre/chapeau : clamp proportionnel à --pv-w */
@@ -360,11 +366,20 @@ body.preview-mode #map-meta{max-width:90%;padding:6px 10px}
 body.preview-mode #map-meta .mm-title{font-size:clamp(11px,calc(var(--pv-w)*0.038),15px)}
 body.preview-mode #map-meta .mm-chapo{font-size:clamp(9px,calc(var(--pv-w)*0.028),11.5px)}
 body.preview-mode #map-meta .mm-credit{font-size:clamp(8px,calc(var(--pv-w)*0.024),10px)}
-/* Légende : discrète, sans dominer le cadre mobile */
-body.preview-mode #map-legend{
+/* Légende : coin compact sur tablette, bandeau pleine largeur sur téléphone
+   (une colonne étroite forçait chaque nom de territoire à passer sur 2
+   lignes — en ligne façon pied de page, tout respire mieux). */
+body.preview-mode.pv-tablet #map-legend{
   left:8px;bottom:8px;padding:4px 6px;gap:2px;
   max-width:min(44%,calc(var(--pv-w)*0.44));
   font-size:clamp(8px,calc(var(--pv-w)*0.022),10px);
+}
+body.preview-mode:not(.pv-tablet) #map-legend{
+  left:0;right:0;bottom:0;max-width:none;width:100%;
+  border-radius:0;box-shadow:0 -1px 6px rgba(0,0,0,.10);
+  flex-direction:row;flex-wrap:wrap;justify-content:center;
+  padding:6px 10px;gap:3px 12px;
+  font-size:clamp(9px,calc(var(--pv-w)*0.026),11px);
 }
 /* Tooltip : max-width liée à la largeur du device */
 body.preview-mode #map-tt{
@@ -372,7 +387,9 @@ body.preview-mode #map-tt{
   max-width:calc(var(--pv-w) - 20px);
   padding:7px 10px;
 }
-/* Boutons zoom : compacts, alignés sur la taille desktop */
+/* Boutons zoom : compacts, alignés sur la taille desktop. Le niveau de zoom
+   (texte "×1.0", pure info sans action) n'a pas sa place sur un mockup
+   téléphone exigu — seuls +/−/réinitialiser (de vraies actions) restent. */
 body.preview-mode:not(.pv-tablet) #zoom-btns button{
   width:28px;height:28px;font-size:15px;
 }
@@ -380,7 +397,7 @@ body.preview-mode:not(.pv-tablet) #zoom-reset button{
   width:28px;height:28px;
 }
 body.preview-mode:not(.pv-tablet) #zoom-level{
-  height:20px;line-height:20px;font-size:9px;
+  display:none;
 }
 /* Barre de recherche : compacte, ancrée en haut à gauche comme sur desktop */
 body.preview-mode #map-search{

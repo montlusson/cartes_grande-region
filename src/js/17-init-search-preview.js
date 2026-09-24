@@ -232,6 +232,10 @@ function _initPreviewToggle() {
     document.documentElement.style.setProperty('--pv-w', renderW + 'px');
     document.documentElement.style.setProperty('--pv-h', renderH + 'px');
     document.body.classList.toggle('pv-tablet', w >= 600);
+    // Air entre la carte et le bord du mockup téléphone (cf. note CSS sur
+    // #map-frame : un padding CSS ne suffit pas ici, piloté directement).
+    var mapDiv = document.getElementById('maplibre-map');
+    if (mapDiv) mapDiv.style.inset = (w < 600) ? '8px' : '0';
     if (pvLabel) {
       pvLabel.textContent = w + ' × ' + h + ' px' + (scale < 0.999 ? ' (affiché à ' + Math.round(scale * 100) + '%)' : '');
     }
@@ -249,6 +253,8 @@ function _initPreviewToggle() {
       document.documentElement.style.removeProperty('--pv-w');
       document.documentElement.style.removeProperty('--pv-h');
       document.body.classList.remove('pv-tablet');
+      var mapDiv = document.getElementById('maplibre-map');
+      if (mapDiv) mapDiv.style.inset = '0';
       _pvScheduleFit(true);
     }
   }
@@ -279,6 +285,24 @@ function _initPreviewToggle() {
     });
     var _pvFrame = document.getElementById('map-frame');
     if (_pvFrame) _pvRO.observe(_pvFrame);
+
+    // Légende pleine largeur en pied de page mobile (preview) : la hauteur
+    // varie avec son contenu (blocs actifs, choroplèthe...) — on pousse les
+    // boutons de zoom au-dessus à chaque changement plutôt que de deviner
+    // une hauteur fixe.
+    var legendEl = document.getElementById('map-legend');
+    var zoomBtns = document.getElementById('zoom-btns');
+    var zoomReset = document.getElementById('zoom-reset');
+    if (legendEl && zoomBtns) {
+      var _liftLegend = function() {
+        var mobilePv = document.body.classList.contains('preview-mode')
+          && !document.body.classList.contains('pv-tablet');
+        var lift = (mobilePv && legendEl.offsetHeight) ? (legendEl.offsetHeight + 10) + 'px' : '';
+        zoomBtns.style.bottom = lift;
+        if (zoomReset) zoomReset.style.bottom = lift;
+      };
+      new ResizeObserver(_liftLegend).observe(legendEl);
+    }
   }
 
   if (devSel) devSel.addEventListener('change', function() {
