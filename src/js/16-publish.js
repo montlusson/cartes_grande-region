@@ -98,7 +98,7 @@ function _waitUntilLive(url, timeoutMs) {
 
 function _publishCurrentMap() {
   if (!_mapReady) return Promise.reject(new Error('Carte non prête.'));
-  if (!_ghToken()) return Promise.reject(new Error('Renseignez votre jeton GitHub dans l’onglet "Publié" d’abord.'));
+  if (!_ghToken()) return Promise.reject(new Error('Collez votre jeton GitHub ci-dessus d’abord.'));
 
   var sel = document.getElementById('embed-publish-target');
   var updateFilename = sel && sel.value ? sel.value : null;
@@ -260,6 +260,20 @@ function _wirePublishUI() {
 
   var pubBtn = document.getElementById('btn-publish-embed');
   if (pubBtn) pubBtn.addEventListener('click', function () {
+    // Jeton saisi à l'instant dans le modal (pas encore enregistré) :
+    // on l'enregistre au vol pour publier en un seul clic, sans repasser
+    // par l'onglet "Publié".
+    if (!_ghToken()) {
+      var inlineInput = document.getElementById('embed-token-input');
+      var inlineTok = (inlineInput && inlineInput.value || '').trim();
+      if (inlineTok) {
+        _setGhToken(inlineTok);
+        _refreshTokenUI();
+        var tokenBox = document.getElementById('embed-token-inline');
+        if (tokenBox) tokenBox.classList.remove('show');
+      }
+    }
+
     pubBtn.disabled = true;
     _setPublishStatus('Publication en cours…', 'pending');
     _publishCurrentMap().then(function (res) {

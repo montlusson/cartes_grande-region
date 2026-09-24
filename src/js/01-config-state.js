@@ -30,7 +30,7 @@ var GR_URLS = {
 var BLOC_COLORS = {
   'Grand Est':        '#b5e2b5',
   'Rheinland-Pfalz':  '#b3d4f5',
-  'Saarland':         '#a9cce8',
+  'Saarland':         '#bfa0dd',
   'Wallonie':         '#f5baba',
   'Luxembourg':       '#ffdca8',
 };

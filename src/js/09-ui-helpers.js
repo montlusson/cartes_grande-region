@@ -186,6 +186,7 @@ function _renderLabelsList() {
     var del = document.createElement('button');
     del.className = 'lbl-del';
     del.title = 'Supprimer';
+    del.setAttribute('aria-label', 'Supprimer l’étiquette ' + l.name);
     del.textContent = '✕';
     del.addEventListener('click', function() {
       _labels = _labels.filter(function(x) { return x.id !== l.id; });

@@ -153,7 +153,8 @@ function wireEvents() {
   });
 
   // Repliables (toggle-X ↔ body-X)
-  ['toggle-overlays', 'toggle-chefslieux'].forEach(function(id) {
+  ['toggle-overlays', 'toggle-chefslieux', 'toggle-st-colors', 'toggle-st-strokes',
+   'toggle-st-choro', 'toggle-st-labels', 'toggle-st-tooltip'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('click', function() {

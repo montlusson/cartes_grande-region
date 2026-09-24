@@ -18,12 +18,12 @@
         <input type="number" id="pv-custom-w" min="280" max="1400" value="375" title="Largeur en px">
         <span id="pv-dim-x">&times;</span>
         <input type="number" id="pv-custom-h" min="400" max="1200" value="667" title="Hauteur en px">
-        <button id="btn-pv-rotate" title="Rotation paysage / portrait">&#8644;</button>
+        <button id="btn-pv-rotate" title="Rotation paysage / portrait" aria-label="Rotation paysage / portrait">&#8644;</button>
         <span id="pv-dims-label">375 &times; 667 px</span>
         <button id="btn-exit-preview">&#10005; Quitter le preview</button>
       </div>
       <div id="preview-shell">
-      <div id="map-frame">
+      <div id="map-frame" role="region" aria-label="Carte interactive de la Grande Région. Une version accessible des données est disponible via le bouton « Tableau » en haut de page.">
         <!-- Barre de recherche flottante -->
         <div id="map-search" role="search" aria-label="Rechercher une commune">
           <svg id="map-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -42,10 +42,10 @@
         <div id="map-tt"></div>
     <div id="map-meta"></div>
         <div id="zoom-level" title="Niveau de zoom">×1.0</div>
-        <div id="zoom-reset"><button title="Réinitialiser zoom">&#8635;</button></div>
+        <div id="zoom-reset"><button title="Réinitialiser zoom" aria-label="Réinitialiser le zoom">&#8635;</button></div>
         <div id="zoom-btns">
-          <button id="zoom-in">+</button>
-          <button id="zoom-out" disabled>&#8722;</button>
+          <button id="zoom-in" aria-label="Zoomer">+</button>
+          <button id="zoom-out" disabled aria-label="Dézoomer">&#8722;</button>
         </div>
         <div id="map-legend"></div>
       </div><!-- /#map-frame -->

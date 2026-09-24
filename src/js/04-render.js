@@ -66,6 +66,12 @@ function _fillColorExpression() {
       return expr;
     }
   }
+
+  // Une seule région active : rien à comparer, la couleur d'identification
+  // régionale n'a de sens qu'à côté des autres — fond neutre à la place.
+  var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
+  if (activeCount === 1) return '#e4e1db';
+
   // Couleurs régionales par défaut
   var expr = ['match', ['get', 'region']];
   Object.keys(BLOC_COLORS).forEach(function(region) {
@@ -93,6 +99,9 @@ function _drawBlocs() {
 
   if (_map.getSource(BLOCS_SOURCE_ID)) {
     _map.getSource(BLOCS_SOURCE_ID).setData(fc);
+    // Réévalue la couleur à chaque bascule de bloc (ex. passage à une seule
+    // région active) — sinon l'expression figée à la création ne suit pas.
+    _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
   } else {
     _map.addSource(BLOCS_SOURCE_ID, {type: 'geojson', data: fc});
     _map.addLayer({

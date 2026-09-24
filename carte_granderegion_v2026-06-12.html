@@ -61,16 +61,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
 /* LAYER TOGGLES */
 .layer-group{margin-bottom:10px}
-.layer-group-title{font-size:10px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.layer-group-title{font-size:10px;font-weight:600;color:#767676;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;display:flex;align-items:center;gap:4px}
 .layer-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:5px;margin-bottom:2px;background:#fafafa;border:1px solid #f0f0f0;cursor:pointer;transition:background .1s}
 .layer-item:hover{background:#f0f0f0}
 .layer-item.loading{opacity:.6}
 .layer-left{display:flex;align-items:center;gap:8px}
 .layer-swatch{width:16px;height:10px;border-radius:2px;flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
 .layer-name{font-size:12px;font-weight:500;color:#333}
-.layer-sub{font-size:10px;color:#aaa;margin-top:1px}
+.layer-sub{font-size:10px;color:#767676;margin-top:1px}
 .layer-right{display:flex;align-items:center;gap:6px}
-.layer-size{font-size:9.5px;color:#bbb}
+.layer-size{font-size:9.5px;color:#767676}
 .layer-spinner{width:12px;height:12px;border:2px solid #e0e0e0;border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:none}
 .layer-item.loading .layer-spinner{display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -132,7 +132,7 @@ select.full{font-family:var(--font)}
 .lbl-marker.lbl-hidden .lbl-text{display:none}
 .lbl-row{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:3px 6px;border-radius:4px;font-size:11.5px;color:#333}
 .lbl-row:hover{background:#f5f5f5}
-.lbl-del{background:none;border:none;cursor:pointer;color:#bbb;font-size:13px;line-height:1;padding:1px 4px}
+.lbl-del{background:none;border:none;cursor:pointer;color:#767676;font-size:13px;line-height:1;padding:1px 4px}
 .lbl-del:hover{color:#e74c3c}
 
 /* Image dans l'infobulle */
@@ -142,7 +142,7 @@ select.full{font-family:var(--font)}
 .tt-chip-row{text-align:center;margin-bottom:5px}
 .tt-name{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:4px;text-align:center}
 .tt-row{display:flex;align-items:baseline;gap:6px;font-size:11.5px;line-height:1.4}
-.tt-row-label{color:#aaa;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.tt-row-label{color:#767676;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
 .tt-row-val{color:#444;font-weight:500}
 .tt-bloc-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#fff;margin-top:0}
 .tt-data-val{font-size:15px;font-weight:700;color:#1d2d35;margin-top:5px}
@@ -155,13 +155,13 @@ select.full{font-family:var(--font)}
 
 /* Zoom */
 #zoom-btns{position:absolute;bottom:14px;right:14px;display:flex;flex-direction:column;gap:1px;z-index:50;box-shadow:0 1px 5px rgba(0,0,0,.2)}
-#zoom-btns button{width:28px;height:28px;background:#fff;border:1px solid #d6d3cd;color:#555;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+#zoom-btns button{width:32px;height:32px;background:#fff;border:1px solid #d6d3cd;color:#555;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
 #zoom-btns button:first-child{border-radius:5px 5px 0 0}
 #zoom-btns button:last-child{border-radius:0 0 5px 5px}
 #zoom-btns button:hover{background:#eee}
 #zoom-btns button:disabled{opacity:.4;cursor:default}
-#zoom-reset{position:absolute;bottom:14px;right:48px;z-index:50}
-#zoom-reset button{width:28px;height:28px;background:#fff;border:1px solid #d6d3cd;color:#555;cursor:pointer;font-size:13px;border-radius:5px;box-shadow:0 1px 5px rgba(0,0,0,.2)}
+#zoom-reset{position:absolute;bottom:14px;right:52px;z-index:50}
+#zoom-reset button{width:32px;height:32px;background:#fff;border:1px solid #d6d3cd;color:#555;cursor:pointer;font-size:13px;border-radius:5px;box-shadow:0 1px 5px rgba(0,0,0,.2)}
 #zoom-reset button:hover{background:#eee}
 
 /* Status bar */
@@ -232,6 +232,12 @@ select.full{font-family:var(--font)}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:4px}
 .modal-size-note{font-size:10.5px;color:#f59e0b;display:none}
 .modal-size-note.show{display:block}
+#embed-token-inline{display:none;margin-bottom:10px}
+#embed-token-inline.show{display:block}
+#embed-result-field{display:none}
+#embed-result-field.show{display:block}
+#embed-result-actions{display:none}
+#embed-result-actions.show{display:flex}
 
 
 /* ── Sélecteur de blocs ─────────────────────────────────────── */
@@ -410,7 +416,7 @@ body.preview-mode #map-search{
 #map-search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(24,160,251,.15),0 1px 6px rgba(0,0,0,.14)}
 #map-search-clear{
   position:absolute;right:7px;top:5px;width:22px;height:22px;
-  border:none;background:none;cursor:pointer;color:#bbb;font-size:18px;
+  border:none;background:none;cursor:pointer;color:#767676;font-size:18px;
   line-height:1;padding:0;display:none;align-items:center;justify-content:center
 }
 #map-search-clear.vis{display:flex}
@@ -429,8 +435,8 @@ body.preview-mode #map-search{
 }
 .msl-item:last-child{border-bottom:none}
 .msl-item:hover,.msl-item.msl-active{background:rgba(24,160,251,.1);color:var(--accent)}
-.msl-item .msl-sub{font-size:10px;color:#aaa;margin-left:5px}
-.msl-hint{padding:7px 12px;font-size:11px;color:#aaa;cursor:default;font-style:italic}
+.msl-item .msl-sub{font-size:10px;color:#767676;margin-left:5px}
+.msl-hint{padding:7px 12px;font-size:11px;color:#767676;cursor:default;font-style:italic}
 
 /* Ajustement search en vue mobile simulée */
 @container (max-width:420px){
@@ -473,48 +479,66 @@ body.preview-mode #map-search{
         <button class="modal-close" id="embed-modal-close" aria-label="Fermer">&#215;</button>
       </div>
       <div class="modal-body">
-        <div class="modal-field">
-          <label>Publier comme</label>
-          <select class="full" id="embed-publish-target">
-            <option value="">Nouvelle carte</option>
-          </select>
-        </div>
-        <div class="modal-dims">
+        <!-- Visible seulement si aucun jeton enregistré — évite l'aller-retour
+             vers l'onglet "Publié" pour une première publication. -->
+        <div id="embed-token-inline" class="token-inline">
+          <p class="modal-hint">
+            Jeton GitHub requis, une seule fois — <strong>jeton à grain fin</strong>,
+            limité à ce dépôt, permission <code>Contents: Read and write</code> uniquement.
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:var(--accent)">Créer ce jeton &#8599;</a>
+          </p>
           <div class="modal-field">
-            <label>Largeur (px)</label>
-            <input type="number" id="embed-w" value="800" min="300" max="2000" step="10" />
-          </div>
-          <div class="modal-field">
-            <label>Hauteur (px)</label>
-            <input type="number" id="embed-h" value="520" min="200" max="1200" step="10" />
+            <input type="password" class="full" id="embed-token-input" placeholder="github_pat_…" autocomplete="off">
           </div>
         </div>
-        <div class="modal-size-note" id="embed-size-note">
-          ⚠ La vue actuelle contient beaucoup de données — le fichier publié peut être volumineux (&gt; 3 Mo).
-        </div>
+
         <div class="modal-actions">
           <button class="btn btn-primary" id="btn-publish-embed">&#128640; Publier</button>
         </div>
         <div id="publish-status" class="publish-status"></div>
 
-        <div class="modal-field">
-          <label>URL GitHub Pages</label>
-          <input type="text" id="embed-url" placeholder="https://montlusson.github.io/cartes_grande-region/grande-region-abc123.html" />
+        <div class="modal-field" id="embed-result-field">
+          <label>Code d'intégration</label>
+          <textarea id="embed-code" readonly placeholder="Publiez la carte pour générer le code iframe."></textarea>
         </div>
-        <div class="modal-field">
-          <label>Code d'intégration <span id="embed-code-hint" style="font-weight:400;color:#bbb">(publiez d'abord, ou saisissez une URL existante)</span></label>
-          <textarea id="embed-code" readonly placeholder="Publiez la carte, ou saisissez une URL existante ci-dessus, pour générer le code iframe."></textarea>
-        </div>
-        <div class="modal-actions">
+        <div class="modal-actions" id="embed-result-actions">
           <button class="btn btn-secondary btn-sm" id="btn-copy-embed">Copier le code</button>
         </div>
+
+        <div class="modal-size-note" id="embed-size-note">
+          ⚠ La vue actuelle contient beaucoup de données — le fichier publié peut être volumineux (&gt; 3 Mo).
+        </div>
+
+        <details class="modal-fallback">
+          <summary>Options avancées</summary>
+          <div class="modal-field">
+            <label>Publier comme</label>
+            <select class="full" id="embed-publish-target">
+              <option value="">Nouvelle carte</option>
+            </select>
+          </div>
+          <div class="modal-dims">
+            <div class="modal-field">
+              <label>Largeur (px)</label>
+              <input type="number" id="embed-w" value="800" min="300" max="2000" step="10" />
+            </div>
+            <div class="modal-field">
+              <label>Hauteur (px)</label>
+              <input type="number" id="embed-h" value="520" min="200" max="1200" step="10" />
+            </div>
+          </div>
+          <div class="modal-field">
+            <label>URL GitHub Pages</label>
+            <input type="text" id="embed-url" placeholder="https://montlusson.github.io/cartes_grande-region/grande-region-abc123.html" />
+          </div>
+        </details>
 
         <details class="modal-fallback">
           <summary>Publication manuelle (sans jeton GitHub)</summary>
           <p class="modal-hint">
             ① <strong>Téléchargez</strong> le fichier HTML.<br>
             ② <strong>Ajoutez-le</strong> au dépôt <a href="https://github.com/montlusson/cartes_grande-region" target="_blank" rel="noopener" style="color:var(--accent)">cartes_grande-region</a> — GitHub Pages le publie automatiquement.<br>
-            ③ Collez l'URL ci-dessus une fois en ligne pour générer le code.
+            ③ Collez l'URL dans "Options avancées" une fois en ligne pour générer le code.
           </p>
           <div class="modal-actions">
             <button class="btn btn-secondary btn-sm" id="btn-dl-embed">&#8659; Télécharger le fichier HTML</button>
@@ -644,15 +668,15 @@ body.preview-mode #map-search{
                 <div class="terr-header">&#127467;&#127479; Lorraine (France)</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="depts_lor">
-                    <span>Départements <small style="color:#aaa">492 KB</small></span>
+                    <span>Départements <small style="color:#767676">492 KB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-depts_lor"><span class="toggle-slider"></span></label>
                   </div>
                   <div class="terr-layer-row" data-layer="arr_lor">
-                    <span>Arrondissements <small style="color:#aaa">773 KB</small></span>
+                    <span>Arrondissements <small style="color:#767676">773 KB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-arr_lor"><span class="toggle-slider"></span></label>
                   </div>
                   <div class="terr-layer-row" data-layer="cantons_lor">
-                    <span>Cantons <small style="color:#aaa">1,4 MB</small></span>
+                    <span>Cantons <small style="color:#767676">1,4 MB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-cantons_lor"><span class="toggle-slider"></span></label>
                   </div>
                 </div>
@@ -663,11 +687,11 @@ body.preview-mode #map-search{
                 <div class="terr-header">&#127465;&#127466; Rhénanie-Palatinat (DE)</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="kreise_rlp">
-                    <span>Kreise <small style="color:#aaa">1,4 MB</small></span>
+                    <span>Kreise <small style="color:#767676">1,4 MB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-kreise_rlp"><span class="toggle-slider"></span></label>
                   </div>
                   <div class="terr-layer-row" data-layer="vg_rlp">
-                    <span>Verbandsgemeinden <small style="color:#aaa">2,7 MB</small></span>
+                    <span>Verbandsgemeinden <small style="color:#767676">2,7 MB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-vg_rlp"><span class="toggle-slider"></span></label>
                   </div>
                 </div>
@@ -678,7 +702,7 @@ body.preview-mode #map-search{
                 <div class="terr-header">&#127465;&#127466; Sarre (DE)</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="landkreise_sar">
-                    <span>Landkreise <small style="color:#aaa">217 KB</small></span>
+                    <span>Landkreise <small style="color:#767676">217 KB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-landkreise_sar"><span class="toggle-slider"></span></label>
                   </div>
                 </div>
@@ -689,11 +713,11 @@ body.preview-mode #map-search{
                 <div class="terr-header">&#127463;&#127466; Wallonie (Belgique)</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="provinces_wal">
-                    <span>Provinces <small style="color:#aaa">449 KB</small></span>
+                    <span>Provinces <small style="color:#767676">449 KB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-provinces_wal"><span class="toggle-slider"></span></label>
                   </div>
                   <div class="terr-layer-row" data-layer="arr_wal">
-                    <span>Arrondissements <small style="color:#aaa">726 KB</small></span>
+                    <span>Arrondissements <small style="color:#767676">726 KB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-arr_wal"><span class="toggle-slider"></span></label>
                   </div>
                 </div>
@@ -704,7 +728,7 @@ body.preview-mode #map-search{
                 <div class="terr-header">&#127922; Luxembourg</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="cantons_lux">
-                    <span>Cantons <small style="color:#aaa">461 KB</small></span>
+                    <span>Cantons <small style="color:#767676">461 KB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-cantons_lux"><span class="toggle-slider"></span></label>
                   </div>
                 </div>
@@ -715,7 +739,7 @@ body.preview-mode #map-search{
                 <div class="terr-header">&#127743; Communes</div>
                 <div class="terr-layers">
                   <div class="terr-layer-row" data-layer="communes">
-                    <span>Communes GR 2026 <small style="color:#aaa">~18 MB</small></span>
+                    <span>Communes GR 2026 <small style="color:#767676">~18 MB</small></span>
                     <label class="toggle"><input type="checkbox" id="chk-communes"><span class="toggle-slider"></span></label>
                   </div>
                 </div>
@@ -751,13 +775,16 @@ body.preview-mode #map-search{
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Couleurs des blocs</div>
-            <div id="bloc-colors" style="margin-top:8px"></div>
+            <div class="section-title collapsible collapsed" id="toggle-st-colors">Couleurs des blocs</div>
+            <div class="collapsible-body collapsed" id="body-st-colors">
+              <div id="bloc-colors" style="margin-top:8px"></div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Superposition — épaisseur des frontières</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-strokes">Superposition — épaisseur des frontières</div>
+            <div class="collapsible-body collapsed" id="body-st-strokes">
             <div style="margin-top:8px">
               <div class="style-row">
                 <label>Blocs</label>
@@ -786,11 +813,13 @@ body.preview-mode #map-search{
                 <button class="btn btn-secondary btn-sm" id="stroke-color-auto" title="Revenir à la couleur automatique">Auto</button>
               </div>
             </div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section" id="section-choro-num">
-            <div class="section-title">Choroplèthe (si données CSV)</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-choro">Choroplèthe (si données CSV)</div>
+            <div class="collapsible-body collapsed" id="body-st-choro">
             <div style="margin-top:8px">
               <div class="pal-grid" id="choro-pals"></div>
               <div class="style-row" style="margin-top:10px">
@@ -802,11 +831,13 @@ body.preview-mode #map-search{
                 </div>
               </div>
             </div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Étiquettes — noms sur la carte</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-labels">Étiquettes — noms sur la carte</div>
+            <div class="collapsible-body collapsed" id="body-st-labels">
             <div class="layer-item" style="margin-top:8px">
               <div class="layer-left">
                 <div>
@@ -819,36 +850,36 @@ body.preview-mode #map-search{
               </div>
             </div>
 
-            <div class="section-title collapsible" id="toggle-chefslieux" style="margin-top:10px">Chefs-lieux par circonscription</div>
-            <div class="collapsible-body" id="body-chefslieux">
+            <div class="section-title collapsible collapsed" id="toggle-chefslieux" style="margin-top:10px">Chefs-lieux par circonscription</div>
+            <div class="collapsible-body collapsed" id="body-chefslieux">
               <div style="font-size:10px;color:var(--muted);margin:6px 0 6px">Chaque liste affiche un point et le nom du chef-lieu. Les noms s'écartent ou se masquent automatiquement en cas de chevauchement.</div>
               <div class="terr-layers" style="padding:2px 2px 6px">
                 <div class="terr-layer-row">
-                  <span>Préfectures — départements lorrains <small style="color:#aaa">4</small></span>
+                  <span>Préfectures — départements lorrains <small style="color:#767676">4</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-depts_lor"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — arrondissements lorrains <small style="color:#aaa">15</small></span>
+                  <span>Chefs-lieux — arrondissements lorrains <small style="color:#767676">15</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-arr_lor"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — Kreise (Rhénanie-Palatinat) <small style="color:#aaa">30</small></span>
+                  <span>Chefs-lieux — Kreise (Rhénanie-Palatinat) <small style="color:#767676">30</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-kreise_rlp"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — Landkreise (Sarre) <small style="color:#aaa">6</small></span>
+                  <span>Chefs-lieux — Landkreise (Sarre) <small style="color:#767676">6</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-landkreise_sar"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — provinces wallonnes <small style="color:#aaa">5</small></span>
+                  <span>Chefs-lieux — provinces wallonnes <small style="color:#767676">5</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-provinces_wal"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — arrondissements wallons <small style="color:#aaa">20</small></span>
+                  <span>Chefs-lieux — arrondissements wallons <small style="color:#767676">20</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-arr_wal"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — cantons luxembourgeois <small style="color:#aaa">12</small></span>
+                  <span>Chefs-lieux — cantons luxembourgeois <small style="color:#767676">12</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-cantons_lux"><span class="toggle-slider"></span></label>
                 </div>
               </div>
@@ -867,11 +898,13 @@ body.preview-mode #map-search{
               <input type="range" id="label-size" min="9" max="18" step="0.5" value="11.5">
               <span class="val" id="label-size-v">11.5</span>
             </div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Infobulle</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-tooltip">Infobulle</div>
+            <div class="collapsible-body collapsed" id="body-st-tooltip">
               <div class="field" style="margin-top:6px">
                 <label>Image dans l'infobulle</label>
                 <select class="full" id="tt-img-mode" style="font-family:var(--font)">
@@ -903,6 +936,7 @@ body.preview-mode #map-search{
                 <div id="tt-vars-dynamic" style="margin-top:2px;margin-bottom:4px"></div>
                 <div style="font-size:10px;color:#b45309;margin-top:3px;line-height:1.5">⚠ Le HTML du modèle est inséré tel quel : n'y collez que du code dont vous êtes l'auteur. Les valeurs {{…}} issues des données sont, elles, toujours échappées.</div>
               </div>
+            </div>
           </div>
         </div><!-- /tab-style -->
 
@@ -988,7 +1022,7 @@ body.preview-mode #map-search{
               </div>
               <div class="lib-add-btns">
                 <button id="lib-add-confirm" class="btn btn-primary" style="flex:1;padding:5px 0">✓ Ajouter</button>
-                <button id="lib-add-cancel" class="btn" style="padding:5px 12px">✕</button>
+                <button id="lib-add-cancel" class="btn" style="padding:5px 12px" aria-label="Annuler">✕</button>
               </div>
             </div>
 
@@ -1029,7 +1063,7 @@ body.preview-mode #map-search{
           <div class="section">
             <div class="section-header">
               <span class="section-title">Cartes publiées</span>
-              <button class="btn btn-ghost btn-sm" id="pub-refresh" title="Actualiser">&#8635;</button>
+              <button class="btn btn-ghost btn-sm" id="pub-refresh" title="Actualiser" aria-label="Actualiser la liste des cartes publiées">&#8635;</button>
             </div>
             <div id="pub-list"></div>
             <div id="pub-empty-hint" style="text-align:center;padding:10px 8px;font-size:10.5px;color:var(--muted);font-style:italic">
@@ -1058,12 +1092,12 @@ body.preview-mode #map-search{
         <input type="number" id="pv-custom-w" min="280" max="1400" value="375" title="Largeur en px">
         <span id="pv-dim-x">&times;</span>
         <input type="number" id="pv-custom-h" min="400" max="1200" value="667" title="Hauteur en px">
-        <button id="btn-pv-rotate" title="Rotation paysage / portrait">&#8644;</button>
+        <button id="btn-pv-rotate" title="Rotation paysage / portrait" aria-label="Rotation paysage / portrait">&#8644;</button>
         <span id="pv-dims-label">375 &times; 667 px</span>
         <button id="btn-exit-preview">&#10005; Quitter le preview</button>
       </div>
       <div id="preview-shell">
-      <div id="map-frame">
+      <div id="map-frame" role="region" aria-label="Carte interactive de la Grande Région. Une version accessible des données est disponible via le bouton « Tableau » en haut de page.">
         <!-- Barre de recherche flottante -->
         <div id="map-search" role="search" aria-label="Rechercher une commune">
           <svg id="map-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -1082,10 +1116,10 @@ body.preview-mode #map-search{
         <div id="map-tt"></div>
     <div id="map-meta"></div>
         <div id="zoom-level" title="Niveau de zoom">×1.0</div>
-        <div id="zoom-reset"><button title="Réinitialiser zoom">&#8635;</button></div>
+        <div id="zoom-reset"><button title="Réinitialiser zoom" aria-label="Réinitialiser le zoom">&#8635;</button></div>
         <div id="zoom-btns">
-          <button id="zoom-in">+</button>
-          <button id="zoom-out" disabled>&#8722;</button>
+          <button id="zoom-in" aria-label="Zoomer">+</button>
+          <button id="zoom-out" disabled aria-label="Dézoomer">&#8722;</button>
         </div>
         <div id="map-legend"></div>
       </div><!-- /#map-frame -->
@@ -1130,7 +1164,7 @@ var GR_URLS = {
 var BLOC_COLORS = {
   'Grand Est':        '#b5e2b5',
   'Rheinland-Pfalz':  '#b3d4f5',
-  'Saarland':         '#a9cce8',
+  'Saarland':         '#bfa0dd',
   'Wallonie':         '#f5baba',
   'Luxembourg':       '#ffdca8',
 };
@@ -1839,6 +1873,12 @@ function _fillColorExpression() {
       return expr;
     }
   }
+
+  // Une seule région active : rien à comparer, la couleur d'identification
+  // régionale n'a de sens qu'à côté des autres — fond neutre à la place.
+  var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
+  if (activeCount === 1) return '#e4e1db';
+
   // Couleurs régionales par défaut
   var expr = ['match', ['get', 'region']];
   Object.keys(BLOC_COLORS).forEach(function(region) {
@@ -1866,6 +1906,9 @@ function _drawBlocs() {
 
   if (_map.getSource(BLOCS_SOURCE_ID)) {
     _map.getSource(BLOCS_SOURCE_ID).setData(fc);
+    // Réévalue la couleur à chaque bascule de bloc (ex. passage à une seule
+    // région active) — sinon l'expression figée à la création ne suit pas.
+    _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
   } else {
     _map.addSource(BLOCS_SOURCE_ID, {type: 'geojson', data: fc});
     _map.addLayer({
@@ -2162,7 +2205,8 @@ function _redrawFill() {
       _drawBlocs();
       _removeActiveFillLayer();
       _setBlocsAsBackground(false);
-      setStatus('✓ Vue "Blocs" — 5 régions affichées.');
+      var n = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
+      setStatus('✓ Vue "Blocs" — ' + n + ' région' + (n > 1 ? 's' : '') + ' affichée' + (n > 1 ? 's' : '') + '.');
     };
     if (!toLoad.length) { go(); return; }
     showLoading('Chargement des blocs…', toLoad.join(', '));
@@ -2809,6 +2853,11 @@ function _updateLegend() {
     return;
   }
 
+  // Légende par bloc régional : inutile si une seule région est affichée
+  // (rien à comparer — cf. _fillColorExpression, même condition).
+  var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
+  if (activeCount === 1) return;
+
   Object.keys(BLOC_COLORS).forEach(function(region) {
     if (!_activeBlocs[region]) return;
     var item = document.createElement('span');
@@ -3059,6 +3108,7 @@ function _renderLabelsList() {
     var del = document.createElement('button');
     del.className = 'lbl-del';
     del.title = 'Supprimer';
+    del.setAttribute('aria-label', 'Supprimer l’étiquette ' + l.name);
     del.textContent = '✕';
     del.addEventListener('click', function() {
       _labels = _labels.filter(function(x) { return x.id !== l.id; });
@@ -3843,7 +3893,8 @@ function wireEvents() {
   });
 
   // Repliables (toggle-X ↔ body-X)
-  ['toggle-overlays', 'toggle-chefslieux'].forEach(function(id) {
+  ['toggle-overlays', 'toggle-chefslieux', 'toggle-st-colors', 'toggle-st-strokes',
+   'toggle-st-choro', 'toggle-st-labels', 'toggle-st-tooltip'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('click', function() {
@@ -4806,30 +4857,41 @@ function _openEmbedModal() {
   if (typeof _populatePublishTargetSelect === 'function') _populatePublishTargetSelect();
   if (typeof _setPublishStatus === 'function') _setPublishStatus('');
 
+  // Jeton inline : visible seulement s'il n'y en a pas déjà un enregistré
+  // (évite l'aller-retour vers l'onglet "Publié" pour une 1ʳᵉ publication).
+  var tokenBox = document.getElementById('embed-token-inline');
+  if (tokenBox) tokenBox.classList.toggle('show', typeof _ghToken !== 'function' || !_ghToken());
+
   document.getElementById('embed-modal').classList.remove('hidden');
 }
 
 function _updateEmbedCode() {
-  var url  = (document.getElementById('embed-url').value || '').trim();
-  var w    = document.getElementById('embed-w').value || '800';
-  var h    = document.getElementById('embed-h').value || '520';
-  var ta   = document.getElementById('embed-code');
-  var hint = document.getElementById('embed-code-hint');
+  var url    = (document.getElementById('embed-url').value || '').trim();
+  var w      = document.getElementById('embed-w').value || '800';
+  var h      = document.getElementById('embed-h').value || '520';
+  var ta     = document.getElementById('embed-code');
+  var field  = document.getElementById('embed-result-field');
+  var actions = document.getElementById('embed-result-actions');
   if (!url) {
     ta.value = '';
-    if (hint) hint.style.display = '';
+    if (field) field.classList.remove('show');
+    if (actions) actions.classList.remove('show');
     return;
   }
-  if (hint) hint.style.display = 'none';
+  // max-width:100% évite le débordement horizontal sur mobile si la page
+  // hôte ne contraint pas déjà ses iframes (le ratio w/h est conservé, la
+  // hauteur reste fixe — c'est la largeur qui cède la place si besoin).
   ta.value = '<iframe\n'
            + '  src="' + url + '"\n'
            + '  width="' + w + '" height="' + h + '"\n'
            + '  frameborder="0"\n'
            + '  scrolling="no"\n'
-           + '  style="border:none;width:' + w + 'px;height:' + h + 'px"\n'
+           + '  style="border:none;width:' + w + 'px;height:' + h + 'px;max-width:100%"\n'
            + '  title="Grande Région — carte interactive"\n'
            + '  allowfullscreen\n'
            + '></iframe>';
+  if (field) field.classList.add('show');
+  if (actions) actions.classList.add('show');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -4933,7 +4995,7 @@ function _waitUntilLive(url, timeoutMs) {
 
 function _publishCurrentMap() {
   if (!_mapReady) return Promise.reject(new Error('Carte non prête.'));
-  if (!_ghToken()) return Promise.reject(new Error('Renseignez votre jeton GitHub dans l’onglet "Publié" d’abord.'));
+  if (!_ghToken()) return Promise.reject(new Error('Collez votre jeton GitHub ci-dessus d’abord.'));
 
   var sel = document.getElementById('embed-publish-target');
   var updateFilename = sel && sel.value ? sel.value : null;
@@ -5095,6 +5157,20 @@ function _wirePublishUI() {
 
   var pubBtn = document.getElementById('btn-publish-embed');
   if (pubBtn) pubBtn.addEventListener('click', function () {
+    // Jeton saisi à l'instant dans le modal (pas encore enregistré) :
+    // on l'enregistre au vol pour publier en un seul clic, sans repasser
+    // par l'onglet "Publié".
+    if (!_ghToken()) {
+      var inlineInput = document.getElementById('embed-token-input');
+      var inlineTok = (inlineInput && inlineInput.value || '').trim();
+      if (inlineTok) {
+        _setGhToken(inlineTok);
+        _refreshTokenUI();
+        var tokenBox = document.getElementById('embed-token-inline');
+        if (tokenBox) tokenBox.classList.remove('show');
+      }
+    }
+
     pubBtn.disabled = true;
     _setPublishStatus('Publication en cours…', 'pending');
     _publishCurrentMap().then(function (res) {
@@ -5334,13 +5410,38 @@ function _initPreviewToggle() {
     });
   }
 
+  // Espace réellement disponible pour la coque du mockup, pour qu'un
+  // appareil plus haut que la fenêtre (ex. iPhone 14 Pro sur un petit écran)
+  // tienne entièrement à l'écran plutôt que de forcer un défilement.
+  function _pvAvailable() {
+    var el = document.getElementById('preview');
+    var bar = document.getElementById('preview-bar');
+    if (!el) return {w: 1200, h: 800};
+    var barH = (bar && bar.offsetHeight) || 0;
+    var shellMargin = 48; // margin:24px auto (haut+bas) sur #preview-shell
+    var sidePad = 32;     // marge de respiration latérale
+    return {
+      w: Math.max(200, el.clientWidth - sidePad),
+      h: Math.max(200, el.clientHeight - barH - shellMargin)
+    };
+  }
+
   function _pvApply() {
     var w = _pvRotated ? _pvH : _pvW;
     var h = _pvRotated ? _pvW : _pvH;
-    document.documentElement.style.setProperty('--pv-w', w + 'px');
-    document.documentElement.style.setProperty('--pv-h', h + 'px');
+
+    var bezel = 20; // border:10px de chaque côté sur #preview-shell
+    var avail = _pvAvailable();
+    var scale = Math.min(1, avail.w / (w + bezel), avail.h / (h + bezel));
+    var renderW = Math.round(w * scale);
+    var renderH = Math.round(h * scale);
+
+    document.documentElement.style.setProperty('--pv-w', renderW + 'px');
+    document.documentElement.style.setProperty('--pv-h', renderH + 'px');
     document.body.classList.toggle('pv-tablet', w >= 600);
-    if (pvLabel) pvLabel.textContent = w + ' × ' + h + ' px';
+    if (pvLabel) {
+      pvLabel.textContent = w + ' × ' + h + ' px' + (scale < 0.999 ? ' (affiché à ' + Math.round(scale * 100) + '%)' : '');
+    }
     _pvScheduleFit(true);
   }
 
@@ -5358,6 +5459,15 @@ function _initPreviewToggle() {
       _pvScheduleFit(true);
     }
   }
+
+  // Fenêtre redimensionnée pendant que le mockup mobile est actif : on
+  // recalcule l'échelle (_pvApply) pour qu'il continue de tenir à l'écran.
+  var _pvResizeTimer = null;
+  window.addEventListener('resize', function() {
+    if (!document.body.classList.contains('preview-mode')) return;
+    clearTimeout(_pvResizeTimer);
+    _pvResizeTimer = setTimeout(_pvApply, 120);
+  });
 
   // ResizeObserver : recadrage continu si la coque change de taille
   // (ex : redimensionnement de la fenêtre en mode desktop)

@@ -28,48 +28,66 @@
         <button class="modal-close" id="embed-modal-close" aria-label="Fermer">&#215;</button>
       </div>
       <div class="modal-body">
-        <div class="modal-field">
-          <label>Publier comme</label>
-          <select class="full" id="embed-publish-target">
-            <option value="">Nouvelle carte</option>
-          </select>
-        </div>
-        <div class="modal-dims">
+        <!-- Visible seulement si aucun jeton enregistré — évite l'aller-retour
+             vers l'onglet "Publié" pour une première publication. -->
+        <div id="embed-token-inline" class="token-inline">
+          <p class="modal-hint">
+            Jeton GitHub requis, une seule fois — <strong>jeton à grain fin</strong>,
+            limité à ce dépôt, permission <code>Contents: Read and write</code> uniquement.
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:var(--accent)">Créer ce jeton &#8599;</a>
+          </p>
           <div class="modal-field">
-            <label>Largeur (px)</label>
-            <input type="number" id="embed-w" value="800" min="300" max="2000" step="10" />
-          </div>
-          <div class="modal-field">
-            <label>Hauteur (px)</label>
-            <input type="number" id="embed-h" value="520" min="200" max="1200" step="10" />
+            <input type="password" class="full" id="embed-token-input" placeholder="github_pat_…" autocomplete="off">
           </div>
         </div>
-        <div class="modal-size-note" id="embed-size-note">
-          ⚠ La vue actuelle contient beaucoup de données — le fichier publié peut être volumineux (&gt; 3 Mo).
-        </div>
+
         <div class="modal-actions">
           <button class="btn btn-primary" id="btn-publish-embed">&#128640; Publier</button>
         </div>
         <div id="publish-status" class="publish-status"></div>
 
-        <div class="modal-field">
-          <label>URL GitHub Pages</label>
-          <input type="text" id="embed-url" placeholder="https://montlusson.github.io/cartes_grande-region/grande-region-abc123.html" />
+        <div class="modal-field" id="embed-result-field">
+          <label>Code d'intégration</label>
+          <textarea id="embed-code" readonly placeholder="Publiez la carte pour générer le code iframe."></textarea>
         </div>
-        <div class="modal-field">
-          <label>Code d'intégration <span id="embed-code-hint" style="font-weight:400;color:#bbb">(publiez d'abord, ou saisissez une URL existante)</span></label>
-          <textarea id="embed-code" readonly placeholder="Publiez la carte, ou saisissez une URL existante ci-dessus, pour générer le code iframe."></textarea>
-        </div>
-        <div class="modal-actions">
+        <div class="modal-actions" id="embed-result-actions">
           <button class="btn btn-secondary btn-sm" id="btn-copy-embed">Copier le code</button>
         </div>
+
+        <div class="modal-size-note" id="embed-size-note">
+          ⚠ La vue actuelle contient beaucoup de données — le fichier publié peut être volumineux (&gt; 3 Mo).
+        </div>
+
+        <details class="modal-fallback">
+          <summary>Options avancées</summary>
+          <div class="modal-field">
+            <label>Publier comme</label>
+            <select class="full" id="embed-publish-target">
+              <option value="">Nouvelle carte</option>
+            </select>
+          </div>
+          <div class="modal-dims">
+            <div class="modal-field">
+              <label>Largeur (px)</label>
+              <input type="number" id="embed-w" value="800" min="300" max="2000" step="10" />
+            </div>
+            <div class="modal-field">
+              <label>Hauteur (px)</label>
+              <input type="number" id="embed-h" value="520" min="200" max="1200" step="10" />
+            </div>
+          </div>
+          <div class="modal-field">
+            <label>URL GitHub Pages</label>
+            <input type="text" id="embed-url" placeholder="https://montlusson.github.io/cartes_grande-region/grande-region-abc123.html" />
+          </div>
+        </details>
 
         <details class="modal-fallback">
           <summary>Publication manuelle (sans jeton GitHub)</summary>
           <p class="modal-hint">
             ① <strong>Téléchargez</strong> le fichier HTML.<br>
             ② <strong>Ajoutez-le</strong> au dépôt <a href="https://github.com/montlusson/cartes_grande-region" target="_blank" rel="noopener" style="color:var(--accent)">cartes_grande-region</a> — GitHub Pages le publie automatiquement.<br>
-            ③ Collez l'URL ci-dessus une fois en ligne pour générer le code.
+            ③ Collez l'URL dans "Options avancées" une fois en ligne pour générer le code.
           </p>
           <div class="modal-actions">
             <button class="btn btn-secondary btn-sm" id="btn-dl-embed">&#8659; Télécharger le fichier HTML</button>

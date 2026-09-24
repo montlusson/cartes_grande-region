@@ -203,13 +203,38 @@ function _initPreviewToggle() {
     });
   }
 
+  // Espace réellement disponible pour la coque du mockup, pour qu'un
+  // appareil plus haut que la fenêtre (ex. iPhone 14 Pro sur un petit écran)
+  // tienne entièrement à l'écran plutôt que de forcer un défilement.
+  function _pvAvailable() {
+    var el = document.getElementById('preview');
+    var bar = document.getElementById('preview-bar');
+    if (!el) return {w: 1200, h: 800};
+    var barH = (bar && bar.offsetHeight) || 0;
+    var shellMargin = 48; // margin:24px auto (haut+bas) sur #preview-shell
+    var sidePad = 32;     // marge de respiration latérale
+    return {
+      w: Math.max(200, el.clientWidth - sidePad),
+      h: Math.max(200, el.clientHeight - barH - shellMargin)
+    };
+  }
+
   function _pvApply() {
     var w = _pvRotated ? _pvH : _pvW;
     var h = _pvRotated ? _pvW : _pvH;
-    document.documentElement.style.setProperty('--pv-w', w + 'px');
-    document.documentElement.style.setProperty('--pv-h', h + 'px');
+
+    var bezel = 20; // border:10px de chaque côté sur #preview-shell
+    var avail = _pvAvailable();
+    var scale = Math.min(1, avail.w / (w + bezel), avail.h / (h + bezel));
+    var renderW = Math.round(w * scale);
+    var renderH = Math.round(h * scale);
+
+    document.documentElement.style.setProperty('--pv-w', renderW + 'px');
+    document.documentElement.style.setProperty('--pv-h', renderH + 'px');
     document.body.classList.toggle('pv-tablet', w >= 600);
-    if (pvLabel) pvLabel.textContent = w + ' × ' + h + ' px';
+    if (pvLabel) {
+      pvLabel.textContent = w + ' × ' + h + ' px' + (scale < 0.999 ? ' (affiché à ' + Math.round(scale * 100) + '%)' : '');
+    }
     _pvScheduleFit(true);
   }
 
@@ -227,6 +252,15 @@ function _initPreviewToggle() {
       _pvScheduleFit(true);
     }
   }
+
+  // Fenêtre redimensionnée pendant que le mockup mobile est actif : on
+  // recalcule l'échelle (_pvApply) pour qu'il continue de tenir à l'écran.
+  var _pvResizeTimer = null;
+  window.addEventListener('resize', function() {
+    if (!document.body.classList.contains('preview-mode')) return;
+    clearTimeout(_pvResizeTimer);
+    _pvResizeTimer = setTimeout(_pvApply, 120);
+  });
 
   // ResizeObserver : recadrage continu si la coque change de taille
   // (ex : redimensionnement de la fenêtre en mode desktop)

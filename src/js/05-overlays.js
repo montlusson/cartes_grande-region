@@ -168,7 +168,8 @@ function _redrawFill() {
       _drawBlocs();
       _removeActiveFillLayer();
       _setBlocsAsBackground(false);
-      setStatus('✓ Vue "Blocs" — 5 régions affichées.');
+      var n = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
+      setStatus('✓ Vue "Blocs" — ' + n + ' région' + (n > 1 ? 's' : '') + ' affichée' + (n > 1 ? 's' : '') + '.');
     };
     if (!toLoad.length) { go(); return; }
     showLoading('Chargement des blocs…', toLoad.join(', '));

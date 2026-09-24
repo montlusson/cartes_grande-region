@@ -25,13 +25,16 @@
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Couleurs des blocs</div>
-            <div id="bloc-colors" style="margin-top:8px"></div>
+            <div class="section-title collapsible collapsed" id="toggle-st-colors">Couleurs des blocs</div>
+            <div class="collapsible-body collapsed" id="body-st-colors">
+              <div id="bloc-colors" style="margin-top:8px"></div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Superposition — épaisseur des frontières</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-strokes">Superposition — épaisseur des frontières</div>
+            <div class="collapsible-body collapsed" id="body-st-strokes">
             <div style="margin-top:8px">
               <div class="style-row">
                 <label>Blocs</label>
@@ -60,11 +63,13 @@
                 <button class="btn btn-secondary btn-sm" id="stroke-color-auto" title="Revenir à la couleur automatique">Auto</button>
               </div>
             </div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section" id="section-choro-num">
-            <div class="section-title">Choroplèthe (si données CSV)</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-choro">Choroplèthe (si données CSV)</div>
+            <div class="collapsible-body collapsed" id="body-st-choro">
             <div style="margin-top:8px">
               <div class="pal-grid" id="choro-pals"></div>
               <div class="style-row" style="margin-top:10px">
@@ -76,11 +81,13 @@
                 </div>
               </div>
             </div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Étiquettes — noms sur la carte</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-labels">Étiquettes — noms sur la carte</div>
+            <div class="collapsible-body collapsed" id="body-st-labels">
             <div class="layer-item" style="margin-top:8px">
               <div class="layer-left">
                 <div>
@@ -93,36 +100,36 @@
               </div>
             </div>
 
-            <div class="section-title collapsible" id="toggle-chefslieux" style="margin-top:10px">Chefs-lieux par circonscription</div>
-            <div class="collapsible-body" id="body-chefslieux">
+            <div class="section-title collapsible collapsed" id="toggle-chefslieux" style="margin-top:10px">Chefs-lieux par circonscription</div>
+            <div class="collapsible-body collapsed" id="body-chefslieux">
               <div style="font-size:10px;color:var(--muted);margin:6px 0 6px">Chaque liste affiche un point et le nom du chef-lieu. Les noms s'écartent ou se masquent automatiquement en cas de chevauchement.</div>
               <div class="terr-layers" style="padding:2px 2px 6px">
                 <div class="terr-layer-row">
-                  <span>Préfectures — départements lorrains <small style="color:#aaa">4</small></span>
+                  <span>Préfectures — départements lorrains <small style="color:#767676">4</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-depts_lor"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — arrondissements lorrains <small style="color:#aaa">15</small></span>
+                  <span>Chefs-lieux — arrondissements lorrains <small style="color:#767676">15</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-arr_lor"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — Kreise (Rhénanie-Palatinat) <small style="color:#aaa">30</small></span>
+                  <span>Chefs-lieux — Kreise (Rhénanie-Palatinat) <small style="color:#767676">30</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-kreise_rlp"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — Landkreise (Sarre) <small style="color:#aaa">6</small></span>
+                  <span>Chefs-lieux — Landkreise (Sarre) <small style="color:#767676">6</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-landkreise_sar"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — provinces wallonnes <small style="color:#aaa">5</small></span>
+                  <span>Chefs-lieux — provinces wallonnes <small style="color:#767676">5</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-provinces_wal"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — arrondissements wallons <small style="color:#aaa">20</small></span>
+                  <span>Chefs-lieux — arrondissements wallons <small style="color:#767676">20</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-arr_wal"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="terr-layer-row">
-                  <span>Chefs-lieux — cantons luxembourgeois <small style="color:#aaa">12</small></span>
+                  <span>Chefs-lieux — cantons luxembourgeois <small style="color:#767676">12</small></span>
                   <label class="toggle"><input type="checkbox" id="grp-cantons_lux"><span class="toggle-slider"></span></label>
                 </div>
               </div>
@@ -141,11 +148,13 @@
               <input type="range" id="label-size" min="9" max="18" step="0.5" value="11.5">
               <span class="val" id="label-size-v">11.5</span>
             </div>
+            </div>
           </div>
 
           <hr class="divider">
           <div class="section">
-            <div class="section-title">Infobulle</div>
+            <div class="section-title collapsible collapsed" id="toggle-st-tooltip">Infobulle</div>
+            <div class="collapsible-body collapsed" id="body-st-tooltip">
               <div class="field" style="margin-top:6px">
                 <label>Image dans l'infobulle</label>
                 <select class="full" id="tt-img-mode" style="font-family:var(--font)">
@@ -177,5 +186,6 @@
                 <div id="tt-vars-dynamic" style="margin-top:2px;margin-bottom:4px"></div>
                 <div style="font-size:10px;color:#b45309;margin-top:3px;line-height:1.5">⚠ Le HTML du modèle est inséré tel quel : n'y collez que du code dont vous êtes l'auteur. Les valeurs {{…}} issues des données sont, elles, toujours échappées.</div>
               </div>
+            </div>
           </div>
         </div><!-- /tab-style -->

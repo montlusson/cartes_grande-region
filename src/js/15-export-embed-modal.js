@@ -25,30 +25,41 @@ function _openEmbedModal() {
   if (typeof _populatePublishTargetSelect === 'function') _populatePublishTargetSelect();
   if (typeof _setPublishStatus === 'function') _setPublishStatus('');
 
+  // Jeton inline : visible seulement s'il n'y en a pas déjà un enregistré
+  // (évite l'aller-retour vers l'onglet "Publié" pour une 1ʳᵉ publication).
+  var tokenBox = document.getElementById('embed-token-inline');
+  if (tokenBox) tokenBox.classList.toggle('show', typeof _ghToken !== 'function' || !_ghToken());
+
   document.getElementById('embed-modal').classList.remove('hidden');
 }
 
 function _updateEmbedCode() {
-  var url  = (document.getElementById('embed-url').value || '').trim();
-  var w    = document.getElementById('embed-w').value || '800';
-  var h    = document.getElementById('embed-h').value || '520';
-  var ta   = document.getElementById('embed-code');
-  var hint = document.getElementById('embed-code-hint');
+  var url    = (document.getElementById('embed-url').value || '').trim();
+  var w      = document.getElementById('embed-w').value || '800';
+  var h      = document.getElementById('embed-h').value || '520';
+  var ta     = document.getElementById('embed-code');
+  var field  = document.getElementById('embed-result-field');
+  var actions = document.getElementById('embed-result-actions');
   if (!url) {
     ta.value = '';
-    if (hint) hint.style.display = '';
+    if (field) field.classList.remove('show');
+    if (actions) actions.classList.remove('show');
     return;
   }
-  if (hint) hint.style.display = 'none';
+  // max-width:100% évite le débordement horizontal sur mobile si la page
+  // hôte ne contraint pas déjà ses iframes (le ratio w/h est conservé, la
+  // hauteur reste fixe — c'est la largeur qui cède la place si besoin).
   ta.value = '<iframe\n'
            + '  src="' + url + '"\n'
            + '  width="' + w + '" height="' + h + '"\n'
            + '  frameborder="0"\n'
            + '  scrolling="no"\n'
-           + '  style="border:none;width:' + w + 'px;height:' + h + 'px"\n'
+           + '  style="border:none;width:' + w + 'px;height:' + h + 'px;max-width:100%"\n'
            + '  title="Grande Région — carte interactive"\n'
            + '  allowfullscreen\n'
            + '></iframe>';
+  if (field) field.classList.add('show');
+  if (actions) actions.classList.add('show');
 }
 
 // ══════════════════════════════════════════════════════════════════

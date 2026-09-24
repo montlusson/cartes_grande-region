@@ -54,6 +54,11 @@ function _updateLegend() {
     return;
   }
 
+  // Légende par bloc régional : inutile si une seule région est affichée
+  // (rien à comparer — cf. _fillColorExpression, même condition).
+  var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
+  if (activeCount === 1) return;
+
   Object.keys(BLOC_COLORS).forEach(function(region) {
     if (!_activeBlocs[region]) return;
     var item = document.createElement('span');
