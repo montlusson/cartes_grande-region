@@ -1,0 +1,39 @@
+        <!-- TAB: PUBLICATION -->
+        <div class="tab-pane" id="tab-publish">
+
+          <div class="section">
+            <div class="section-title">Jeton GitHub</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Un <strong>jeton à grain fin</strong> limité au dépôt
+              <code>cartes_grande-region</code>, permission <code>Contents: Read and write</code>
+              uniquement. Rien d'autre — jamais un jeton classique à accès large.<br>
+              <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:var(--accent)">Créer ce jeton &#8599;</a>
+            </div>
+            <div class="field">
+              <input type="password" class="full" id="gh-token-input" placeholder="github_pat_…" autocomplete="off">
+            </div>
+            <div class="lib-add-btns">
+              <button id="gh-token-save" class="btn btn-primary" style="flex:1;padding:5px 0">Enregistrer</button>
+              <button id="gh-token-clear" class="btn btn-secondary" style="padding:5px 12px">Oublier</button>
+            </div>
+            <div id="gh-token-status" style="font-size:10.5px;margin-top:6px;color:var(--muted)"></div>
+            <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">
+              Stocké uniquement dans ce navigateur (localStorage), jamais envoyé ailleurs
+              qu'à <code>api.github.com</code>, jamais inclus dans une carte publiée.
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Cartes publiées</span>
+              <button class="btn btn-ghost btn-sm" id="pub-refresh" title="Actualiser">&#8635;</button>
+            </div>
+            <div id="pub-list"></div>
+            <div id="pub-empty-hint" style="text-align:center;padding:10px 8px;font-size:10.5px;color:var(--muted);font-style:italic">
+              Aucune carte publiée pour l’instant.
+            </div>
+          </div>
+
+        </div><!-- /tab-publish -->

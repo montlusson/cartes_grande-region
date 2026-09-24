@@ -1,0 +1,134 @@
+        <div class="tab-pane active" id="tab-layers">
+
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Couche de fond</span>
+            </div>
+            <div class="field" style="margin-bottom:8px">
+              <select class="full" id="fill-layer-sel">
+                <option value="blocs">Blocs (5 grands territoires)</option>
+                <option value="depts_lor">Départements Lorraine (FR)</option>
+                <option value="kreise_rlp">Kreise Rhénanie-Palatinat (DE)</option>
+                <option value="landkreise_sar">Landkreise Sarre (DE)</option>
+                <option value="provinces_wal">Provinces Wallonie (BE)</option>
+                <option value="arr_wal">Arrondissements Wallonie (BE)</option>
+                <option value="cantons_lux">Cantons Luxembourg</option>
+                <option value="communes">Communes GR 2026 (~18 MB)</option>
+                <option value="none">Aucune (fond vide)</option>
+              </select>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px" id="fill-layer-hint">Chaque bloc régional en couleur distincte</div>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <!-- CONTOURS DES BLOCS -->
+          <div class="section">
+            <div class="section-title" style="margin-bottom:8px">Contours des grands blocs</div>
+            <div class="layer-item" data-layer="blocs">
+              <div class="layer-left">
+                <div class="layer-swatch" style="background:linear-gradient(135deg,#c8e6c9 50%,#bbdefb 50%)"></div>
+                <div>
+                  <div class="layer-name">Frontières extérieures</div>
+                  <div class="layer-sub">Lorraine · Wallonie · Sarre · RLP · Lux</div>
+                </div>
+              </div>
+              <div class="layer-right">
+                <label class="toggle"><input type="checkbox" checked id="chk-blocs"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <!-- NIVEAUX INTERMÉDIAIRES PAR TERRITOIRE -->
+          <div class="section">
+            <div class="section-title collapsible" id="toggle-overlays">Niveaux intermédiaires par territoire</div>
+            <div class="collapsible-body" id="body-overlays">
+              <div style="font-size:10px;color:var(--muted);margin:6px 0 8px">Sélectionnez indépendamment les niveaux à afficher pour chaque territoire.</div>
+
+              <!-- Lorraine -->
+              <div class="terr-group">
+                <div class="terr-header">&#127467;&#127479; Lorraine (France)</div>
+                <div class="terr-layers">
+                  <div class="terr-layer-row" data-layer="depts_lor">
+                    <span>Départements <small style="color:#aaa">492 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-depts_lor"><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="terr-layer-row" data-layer="arr_lor">
+                    <span>Arrondissements <small style="color:#aaa">773 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-arr_lor"><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="terr-layer-row" data-layer="cantons_lor">
+                    <span>Cantons <small style="color:#aaa">1,4 MB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-cantons_lor"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rhénanie-Palatinat -->
+              <div class="terr-group">
+                <div class="terr-header">&#127465;&#127466; Rhénanie-Palatinat (DE)</div>
+                <div class="terr-layers">
+                  <div class="terr-layer-row" data-layer="kreise_rlp">
+                    <span>Kreise <small style="color:#aaa">1,4 MB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-kreise_rlp"><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="terr-layer-row" data-layer="vg_rlp">
+                    <span>Verbandsgemeinden <small style="color:#aaa">2,7 MB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-vg_rlp"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sarre -->
+              <div class="terr-group">
+                <div class="terr-header">&#127465;&#127466; Sarre (DE)</div>
+                <div class="terr-layers">
+                  <div class="terr-layer-row" data-layer="landkreise_sar">
+                    <span>Landkreise <small style="color:#aaa">217 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-landkreise_sar"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Wallonie -->
+              <div class="terr-group">
+                <div class="terr-header">&#127463;&#127466; Wallonie (Belgique)</div>
+                <div class="terr-layers">
+                  <div class="terr-layer-row" data-layer="provinces_wal">
+                    <span>Provinces <small style="color:#aaa">449 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-provinces_wal"><span class="toggle-slider"></span></label>
+                  </div>
+                  <div class="terr-layer-row" data-layer="arr_wal">
+                    <span>Arrondissements <small style="color:#aaa">726 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-arr_wal"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Luxembourg -->
+              <div class="terr-group">
+                <div class="terr-header">&#127922; Luxembourg</div>
+                <div class="terr-layers">
+                  <div class="terr-layer-row" data-layer="cantons_lux">
+                    <span>Cantons <small style="color:#aaa">461 KB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-cantons_lux"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Communes -->
+              <div class="terr-group">
+                <div class="terr-header">&#127743; Communes</div>
+                <div class="terr-layers">
+                  <div class="terr-layer-row" data-layer="communes">
+                    <span>Communes GR 2026 <small style="color:#aaa">~18 MB</small></span>
+                    <label class="toggle"><input type="checkbox" id="chk-communes"><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /collapsible-body -->
+          </div><!-- /section -->
+        </div><!-- /tab-layers -->

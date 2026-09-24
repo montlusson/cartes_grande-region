@@ -1,0 +1,94 @@
+
+        <!-- TAB: DONNÉES -->
+        <div class="tab-pane" id="tab-data">
+          <div class="section" style="padding-top:10px">
+            <div class="field">
+              <label>CSV — coller ou télécharger</label>
+              <textarea id="csv-input" rows="7" placeholder="nom_commune,valeur&#10;Metz,42&#10;Trèves,35&#10;..."></textarea>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px">La 1re ligne = en-têtes. Peut être joint par nom de commune ou code INSEE/AGS.</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:12px">
+              <button class="btn btn-secondary" id="btn-load-csv" style="flex:1">&#9654; Charger</button>
+              <button class="btn btn-secondary" id="btn-sample-gr">Exemple</button>
+            </div>
+            <div id="csv-preview-wrap" style="display:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span id="csv-row-count" class="badge badge-ok"></span>
+                <button class="btn btn-secondary btn-sm" id="btn-clear-csv">&#215; Effacer</button>
+              </div>
+              <div id="csv-table" style="overflow-x:auto;max-height:120px;border:1px solid var(--border);border-radius:4px"></div>
+            </div>
+
+            <hr class="divider">
+            <div class="field">
+              <label>Colonne de jointure (identifiant)</label>
+              <select class="full" id="join-col"><option>—</option></select>
+            </div>
+            <div class="field">
+              <label>Type d'identifiant</label>
+              <select class="full" id="join-type">
+                <option value="name">Nom de commune</option>
+                <option value="insee">Code INSEE (France)</option>
+                <option value="ags">Code AGS (Allemagne)</option>
+                <option value="nis">Code NIS (Belgique)</option>
+                <option value="lux">Code commune (Luxembourg)</option>
+                <option value="region">Région/Bloc</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Valeur à cartographier</label>
+              <select class="full" id="value-col"><option>—</option></select>
+            </div>
+            <button class="btn btn-primary" id="btn-apply-data" style="width:100%" disabled>&#9654; Appliquer les données</button>
+            <div id="cat-colors-wrap" style="display:none;margin-top:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                <label style="margin:0">Couleurs des catégories</label>
+                <button class="btn btn-secondary btn-sm" id="btn-cat-reset" title="Revenir aux couleurs par défaut">&#8634; Défauts</button>
+              </div>
+              <div id="cat-colors" style="max-height:220px;overflow-y:auto"></div>
+            </div>
+          </div>
+        </div><!-- /tab-data -->
+
+        <!-- TAB: BIBLIOTHÈQUE -->
+        <div class="tab-pane" id="tab-library">
+          <div class="section">
+            <div class="section-title">Couches contextuelles</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Chargez vos propres GeoJSON — polygones, lignes ou points.<br>
+              Formats acceptés : <code>.geojson</code>, <code>.json</code>
+            </div>
+
+            <!-- Zone de drop + bouton -->
+            <div class="lib-upload-area" id="lib-drop-zone">
+              <div style="font-size:22px;margin-bottom:6px">📂</div>
+              <div style="font-weight:600;margin-bottom:3px">Glissez un GeoJSON ici</div>
+              <div>ou <span style="color:var(--accent);text-decoration:underline;cursor:pointer" id="lib-browse-link">parcourir</span></div>
+            </div>
+            <input type="file" id="lib-file-input" accept=".geojson,.json" multiple style="display:none">
+
+            <!-- Formulaire de confirmation (1 fichier à la fois) -->
+            <div class="lib-add-form" id="lib-add-form" style="display:none">
+              <div style="font-size:10.5px;color:var(--muted);margin-bottom:7px" id="lib-add-filename"></div>
+              <div class="field">
+                <label>Nom de la couche</label>
+                <input type="text" class="full" id="lib-add-name" placeholder="Ex : Réseau ferroviaire">
+              </div>
+              <div class="lib-color-row">
+                <label>Couleur</label>
+                <div class="lib-color-swatch" id="lib-color-swatch" style="background:#e74c3c"></div>
+                <input type="color" id="lib-add-color" value="#e74c3c" style="position:absolute;opacity:0;width:0;height:0">
+              </div>
+              <div class="lib-add-btns">
+                <button id="lib-add-confirm" class="btn btn-primary" style="flex:1;padding:5px 0">✓ Ajouter</button>
+                <button id="lib-add-cancel" class="btn" style="padding:5px 12px">✕</button>
+              </div>
+            </div>
+
+            <!-- Liste des couches chargées -->
+            <div id="lib-layers-list"></div>
+            <div id="lib-empty-hint" style="text-align:center;padding:10px 8px;font-size:10.5px;color:var(--muted);font-style:italic">
+              Aucune couche chargée
+            </div>
+          </div>
+        </div><!-- /tab-library -->

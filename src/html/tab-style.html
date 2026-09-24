@@ -1,0 +1,181 @@
+
+        <!-- TAB: STYLE -->
+        <div class="tab-pane" id="tab-style">
+          <div class="section">
+            <div class="section-title">Titre & source</div>
+            <div class="field" style="margin-top:8px">
+              <label>Titre</label>
+              <input type="text" id="map-title" placeholder="Titre de la carte" style="width:100%">
+            </div>
+            <div class="field">
+              <label>Chapô</label>
+              <textarea id="map-chapo" rows="2" placeholder="Sous-titre..." style="font-family:var(--font);font-size:12px"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="field">
+                <label>Auteur</label>
+                <input type="text" id="map-author" placeholder="Nom" style="width:100%">
+              </div>
+              <div class="field">
+                <label>Source</label>
+                <input type="text" id="map-source" placeholder="Source" style="width:100%">
+              </div>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section">
+            <div class="section-title">Couleurs des blocs</div>
+            <div id="bloc-colors" style="margin-top:8px"></div>
+          </div>
+
+          <hr class="divider">
+          <div class="section">
+            <div class="section-title">Superposition — épaisseur des frontières</div>
+            <div style="margin-top:8px">
+              <div class="style-row">
+                <label>Blocs</label>
+                <input type="range" id="sw-blocs" min="0.5" max="6" step="0.5" value="1">
+                <span class="val" id="sw-blocs-v">1</span>
+              </div>
+              <div class="style-row">
+                <label>Subdivisions</label>
+                <input type="range" id="sw-subdiv" min="0.3" max="4" step="0.3" value="1.2">
+                <span class="val" id="sw-subdiv-v">1.2</span>
+              </div>
+              <div class="style-row">
+                <label>Cantons</label>
+                <input type="range" id="sw-cantons" min="0.2" max="3" step="0.2" value="0.7">
+                <span class="val" id="sw-cantons-v">0.7</span>
+              </div>
+              <div class="style-row">
+                <label>Communes</label>
+                <input type="range" id="sw-communes" min="0.1" max="2" step="0.1" value="0.3">
+                <span class="val" id="sw-communes-v">0.3</span>
+              </div>
+              <div class="style-row" style="margin-top:8px">
+                <label>Couleur</label>
+                <input type="color" id="stroke-color" value="#2a2a2a" aria-label="Couleur des délimitations" style="width:28px;height:24px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:none">
+                <input type="text" id="stroke-color-hex" value="auto" spellcheck="false" aria-label="Code hexadécimal des délimitations" style="width:62px;font-family:monospace;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">
+                <button class="btn btn-secondary btn-sm" id="stroke-color-auto" title="Revenir à la couleur automatique">Auto</button>
+              </div>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section" id="section-choro-num">
+            <div class="section-title">Choroplèthe (si données CSV)</div>
+            <div style="margin-top:8px">
+              <div class="pal-grid" id="choro-pals"></div>
+              <div class="style-row" style="margin-top:10px">
+                <label>Classes</label>
+                <div style="display:flex;gap:4px">
+                  <button class="btn btn-secondary btn-sm" data-steps="3">3</button>
+                  <button class="btn btn-secondary btn-sm active" data-steps="5">5</button>
+                  <button class="btn btn-secondary btn-sm" data-steps="7">7</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section">
+            <div class="section-title">Étiquettes — noms sur la carte</div>
+            <div class="layer-item" style="margin-top:8px">
+              <div class="layer-left">
+                <div>
+                  <div class="layer-name">Capitales des blocs</div>
+                  <div class="layer-sub">Metz · Mayence · Sarrebruck · Namur · Luxembourg</div>
+                </div>
+              </div>
+              <div class="layer-right">
+                <label class="toggle"><input type="checkbox" id="lbl-capitals"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+
+            <div class="section-title collapsible" id="toggle-chefslieux" style="margin-top:10px">Chefs-lieux par circonscription</div>
+            <div class="collapsible-body" id="body-chefslieux">
+              <div style="font-size:10px;color:var(--muted);margin:6px 0 6px">Chaque liste affiche un point et le nom du chef-lieu. Les noms s'écartent ou se masquent automatiquement en cas de chevauchement.</div>
+              <div class="terr-layers" style="padding:2px 2px 6px">
+                <div class="terr-layer-row">
+                  <span>Préfectures — départements lorrains <small style="color:#aaa">4</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-depts_lor"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Chefs-lieux — arrondissements lorrains <small style="color:#aaa">15</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-arr_lor"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Chefs-lieux — Kreise (Rhénanie-Palatinat) <small style="color:#aaa">30</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-kreise_rlp"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Chefs-lieux — Landkreise (Sarre) <small style="color:#aaa">6</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-landkreise_sar"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Chefs-lieux — provinces wallonnes <small style="color:#aaa">5</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-provinces_wal"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Chefs-lieux — arrondissements wallons <small style="color:#aaa">20</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-arr_wal"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="terr-layer-row">
+                  <span>Chefs-lieux — cantons luxembourgeois <small style="color:#aaa">12</small></span>
+                  <label class="toggle"><input type="checkbox" id="grp-cantons_lux"><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+            <div class="field" style="margin-top:8px">
+              <label>Ajouter un nom</label>
+              <div style="display:flex;gap:6px">
+                <input type="text" id="label-search" placeholder="Commune… ou « Nom @ 6.13, 49.61 »" style="flex:1;font-family:var(--font)">
+                <button class="btn btn-secondary btn-sm" id="btn-add-label">+ Ajouter</button>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px">Recherche dans les couches chargées (activez la couche Communes pour les noms de communes), ou coordonnées libres avec « @ lon, lat ».</div>
+            </div>
+            <div id="labels-list"></div>
+            <div class="style-row" style="margin-top:6px">
+              <label>Taille</label>
+              <input type="range" id="label-size" min="9" max="18" step="0.5" value="11.5">
+              <span class="val" id="label-size-v">11.5</span>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section">
+            <div class="section-title">Infobulle</div>
+              <div class="field" style="margin-top:6px">
+                <label>Image dans l'infobulle</label>
+                <select class="full" id="tt-img-mode" style="font-family:var(--font)">
+                  <option value="none">Aucune</option>
+                  <option value="pays">Drapeau du pays</option>
+                  <option value="region">Drapeau régional (Land / Région)</option>
+                  <option value="custom">Image personnalisée (URL)</option>
+                </select>
+              </div>
+              <div class="field" id="tt-img-url-wrap" style="display:none">
+                <label>URL de l'image — variables : {{name}} {{code}} {{region}} {{pays}}</label>
+                <input type="text" id="tt-img-url" placeholder="https://exemple.com/blasons/{{code}}.png" style="width:100%">
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;margin:12px 0 6px">
+                <label class="toggle"><input type="checkbox" id="tt-html-mode"><span class="toggle-slider"></span></label>
+                <span style="font-size:11.5px;font-weight:600;color:#444">Infobulle HTML personnalisée</span>
+              </div>
+              <div class="field" id="tt-html-wrap" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                  <label style="margin:0">Modèle HTML</label>
+                  <button class="btn btn-secondary btn-sm" id="btn-tt-tpl-auto" type="button" title="Générer un modèle à partir des champs cochés">↺ Modèle auto</button>
+                </div>
+                <textarea id="tt-html-tpl" rows="6" placeholder='<img src="{{flag_pays}}" width="36">&#10;<div style="font-weight:700">{{name}}</div>&#10;<div>{{pays}} — {{valeur}}</div>'></textarea>
+                <div style="font-size:10.5px;color:#555;margin-top:6px;margin-bottom:3px;font-weight:600">Variables disponibles — cliquer pour insérer :</div>
+                <div id="tt-vars-static">
+                  <span class="tt-var-chip" data-var="chipLabel">chipLabel</span><span class="tt-var-chip" data-var="chipColor">chipColor</span><span class="tt-var-chip" data-var="name">name</span><span class="tt-var-chip" data-var="pays">pays</span><span class="tt-var-chip" data-var="region">region</span><span class="tt-var-chip" data-var="dept">dept</span><span class="tt-var-chip" data-var="canton">canton</span><span class="tt-var-chip" data-var="arrondissement">arrondissement</span><span class="tt-var-chip" data-var="kreis">kreis</span><span class="tt-var-chip" data-var="province">province</span><span class="tt-var-chip" data-var="vg">vg</span><span class="tt-var-chip" data-var="code">code</span><span class="tt-var-chip" data-var="valeur">valeur</span><span class="tt-var-chip" data-var="colonne">colonne</span><span class="tt-var-chip" data-var="flag_pays">flag_pays</span><span class="tt-var-chip" data-var="flag_region">flag_region</span>
+                </div>
+                <div id="tt-vars-dynamic" style="margin-top:2px;margin-bottom:4px"></div>
+                <div style="font-size:10px;color:#b45309;margin-top:3px;line-height:1.5">⚠ Le HTML du modèle est inséré tel quel : n'y collez que du code dont vous êtes l'auteur. Les valeurs {{…}} issues des données sont, elles, toujours échappées.</div>
+              </div>
+          </div>
+        </div><!-- /tab-style -->

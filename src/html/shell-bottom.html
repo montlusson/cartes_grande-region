@@ -1,0 +1,59 @@
+
+      </div><!-- /sidebar-body -->
+    </aside>
+
+    <!-- RIGHT PANEL -->
+    <main id="preview">
+      <!-- Barre DevTools (visible en mode preview uniquement) -->
+      <div id="preview-bar">
+        <select id="device-select" title="Choisir un appareil">
+          <option value="375x667">&#128241; iPhone SE &middot; 375&times;667</option>
+          <option value="390x844">&#128241; iPhone 14 &middot; 390&times;844</option>
+          <option value="393x852">&#128241; iPhone 14 Pro &middot; 393&times;852</option>
+          <option value="360x800">&#128241; Galaxy S &middot; 360&times;800</option>
+          <option value="412x915">&#128241; Pixel 7 &middot; 412&times;915</option>
+          <option value="768x1024">&#128187; iPad &middot; 768&times;1024</option>
+          <option value="custom">&#9999; Personnalis&eacute;&hellip;</option>
+        </select>
+        <input type="number" id="pv-custom-w" min="280" max="1400" value="375" title="Largeur en px">
+        <span id="pv-dim-x">&times;</span>
+        <input type="number" id="pv-custom-h" min="400" max="1200" value="667" title="Hauteur en px">
+        <button id="btn-pv-rotate" title="Rotation paysage / portrait">&#8644;</button>
+        <span id="pv-dims-label">375 &times; 667 px</span>
+        <button id="btn-exit-preview">&#10005; Quitter le preview</button>
+      </div>
+      <div id="preview-shell">
+      <div id="map-frame">
+        <!-- Barre de recherche flottante -->
+        <div id="map-search" role="search" aria-label="Rechercher une commune">
+          <svg id="map-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="map-search-input" placeholder="Commune…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Chercher une commune (raccourci /)" aria-autocomplete="list" aria-controls="map-search-list">
+          <button id="map-search-clear" aria-label="Effacer">&#215;</button>
+          <div id="map-search-list" role="listbox"></div>
+        </div>
+        <!-- SVG injected by D3 -->
+        <div id="map-loading">
+          <div class="loading-box">
+            <div class="spin-big"></div>
+            <div class="loading-msg" id="loading-msg">Chargement…</div>
+            <div class="loading-sub" id="loading-sub"></div>
+          </div>
+        </div>
+        <div id="map-tt"></div>
+    <div id="map-meta"></div>
+        <div id="zoom-level" title="Niveau de zoom">×1.0</div>
+        <div id="zoom-reset"><button title="Réinitialiser zoom">&#8635;</button></div>
+        <div id="zoom-btns">
+          <button id="zoom-in">+</button>
+          <button id="zoom-out" disabled>&#8722;</button>
+        </div>
+        <div id="map-legend"></div>
+      </div><!-- /#map-frame -->
+      <div id="status-bar">
+        <span id="status-msg">Sélectionnez une vue ou activez des couches</span>
+        <span id="status-right" style="color:var(--muted)"></span>
+      </div>
+      </div><!-- /#preview-shell -->
+    </main>
+  </div>
+</div>

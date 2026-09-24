@@ -28,12 +28,19 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      # Réassemble carte_granderegion_v2026-06-12.html depuis src/ (chaque
+      # fichier source < 500 lignes) avant de publier — voir build.py.
+      - name: Build (assemble src/ → HTML autonome)
+        run: python3 build.py
+
       # Crée un dossier _site et y copie tous les fichiers HTML + assets
       - name: Build site
         run: |
           mkdir -p _site
           # Tous les HTML à la racine du repo → racine du site Pages
           find . -maxdepth 1 -name "*.html" -exec cp {} _site/ \;
+          # Manifeste des cartes publiées (js/16-publish.js), lu publiquement
+          [ -f manifest.json ] && cp manifest.json _site/ || true
           # Sous-dossiers éventuels (embeds organisés par date, etc.)
           for dir in embeds assets data; do
             [ -d "$dir" ] && cp -r "$dir" _site/ || true

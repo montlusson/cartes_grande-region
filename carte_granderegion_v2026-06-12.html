@@ -473,14 +473,11 @@ body.preview-mode #map-search{
         <button class="modal-close" id="embed-modal-close" aria-label="Fermer">&#215;</button>
       </div>
       <div class="modal-body">
-        <p class="modal-hint">
-          ① <strong>Téléchargez</strong> le fichier HTML ci-dessous.<br>
-          ② <strong>Ajoutez-le</strong> au dépôt <a href="https://github.com/montlusson/cartes_grande-region" target="_blank" rel="noopener" style="color:var(--accent)">cartes_grande-region</a> — GitHub Pages le publie automatiquement.<br>
-          ③ L'URL est pré-remplie ci-dessous ; copiez le code <code>&lt;iframe&gt;</code>.
-        </p>
         <div class="modal-field">
-          <label>URL GitHub Pages</label>
-          <input type="text" id="embed-url" placeholder="https://montlusson.github.io/cartes_grande-region/grande-region-abc123.html" />
+          <label>Publier comme</label>
+          <select class="full" id="embed-publish-target">
+            <option value="">Nouvelle carte</option>
+          </select>
         </div>
         <div class="modal-dims">
           <div class="modal-field">
@@ -492,17 +489,37 @@ body.preview-mode #map-search{
             <input type="number" id="embed-h" value="520" min="200" max="1200" step="10" />
           </div>
         </div>
-        <div class="modal-field">
-          <label>Code d'intégration <span id="embed-code-hint" style="font-weight:400;color:#bbb">(entrez l'URL ci-dessus d'abord)</span></label>
-          <textarea id="embed-code" readonly placeholder="L'URL est requise pour générer le code iframe."></textarea>
-        </div>
         <div class="modal-size-note" id="embed-size-note">
-          ⚠ La vue actuelle contient beaucoup de données — le fichier téléchargé peut être volumineux (&gt; 3 Mo).
+          ⚠ La vue actuelle contient beaucoup de données — le fichier publié peut être volumineux (&gt; 3 Mo).
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="btn-publish-embed">&#128640; Publier</button>
+        </div>
+        <div id="publish-status" class="publish-status"></div>
+
+        <div class="modal-field">
+          <label>URL GitHub Pages</label>
+          <input type="text" id="embed-url" placeholder="https://montlusson.github.io/cartes_grande-region/grande-region-abc123.html" />
+        </div>
+        <div class="modal-field">
+          <label>Code d'intégration <span id="embed-code-hint" style="font-weight:400;color:#bbb">(publiez d'abord, ou saisissez une URL existante)</span></label>
+          <textarea id="embed-code" readonly placeholder="Publiez la carte, ou saisissez une URL existante ci-dessus, pour générer le code iframe."></textarea>
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary btn-sm" id="btn-copy-embed">Copier le code</button>
-          <button class="btn btn-primary" id="btn-dl-embed">&#8659; Télécharger le fichier HTML</button>
         </div>
+
+        <details class="modal-fallback">
+          <summary>Publication manuelle (sans jeton GitHub)</summary>
+          <p class="modal-hint">
+            ① <strong>Téléchargez</strong> le fichier HTML.<br>
+            ② <strong>Ajoutez-le</strong> au dépôt <a href="https://github.com/montlusson/cartes_grande-region" target="_blank" rel="noopener" style="color:var(--accent)">cartes_grande-region</a> — GitHub Pages le publie automatiquement.<br>
+            ③ Collez l'URL ci-dessus une fois en ligne pour générer le code.
+          </p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-dl-embed">&#8659; Télécharger le fichier HTML</button>
+          </div>
+        </details>
       </div>
     </div>
   </div>
@@ -555,6 +572,7 @@ body.preview-mode #map-search{
         <button class="tab-btn" data-tab="style">Style</button>
         <button class="tab-btn" data-tab="data">Données</button>
         <button class="tab-btn" data-tab="library">Bib.</button>
+        <button class="tab-btn" data-tab="publish">Publié</button>
       </div>
 
       <div id="sidebar-body">
@@ -981,6 +999,45 @@ body.preview-mode #map-search{
             </div>
           </div>
         </div><!-- /tab-library -->
+        <!-- TAB: PUBLICATION -->
+        <div class="tab-pane" id="tab-publish">
+
+          <div class="section">
+            <div class="section-title">Jeton GitHub</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Un <strong>jeton à grain fin</strong> limité au dépôt
+              <code>cartes_grande-region</code>, permission <code>Contents: Read and write</code>
+              uniquement. Rien d'autre — jamais un jeton classique à accès large.<br>
+              <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:var(--accent)">Créer ce jeton &#8599;</a>
+            </div>
+            <div class="field">
+              <input type="password" class="full" id="gh-token-input" placeholder="github_pat_…" autocomplete="off">
+            </div>
+            <div class="lib-add-btns">
+              <button id="gh-token-save" class="btn btn-primary" style="flex:1;padding:5px 0">Enregistrer</button>
+              <button id="gh-token-clear" class="btn btn-secondary" style="padding:5px 12px">Oublier</button>
+            </div>
+            <div id="gh-token-status" style="font-size:10.5px;margin-top:6px;color:var(--muted)"></div>
+            <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">
+              Stocké uniquement dans ce navigateur (localStorage), jamais envoyé ailleurs
+              qu'à <code>api.github.com</code>, jamais inclus dans une carte publiée.
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Cartes publiées</span>
+              <button class="btn btn-ghost btn-sm" id="pub-refresh" title="Actualiser">&#8635;</button>
+            </div>
+            <div id="pub-list"></div>
+            <div id="pub-empty-hint" style="text-align:center;padding:10px 8px;font-size:10.5px;color:var(--muted);font-style:italic">
+              Aucune carte publiée pour l’instant.
+            </div>
+          </div>
+
+        </div><!-- /tab-publish -->
 
       </div><!-- /sidebar-body -->
     </aside>
@@ -1045,6 +1102,17 @@ body.preview-mode #map-search{
 // ══════════════════════════════════════════════════════════════════
 //  CONFIGURATION — URLS & HIÉRARCHIE
 // ══════════════════════════════════════════════════════════════════
+
+// ── Publication GitHub Pages (voir js/16-publish.js) ────────────
+// Jeton personnel stocké uniquement dans le localStorage de ce navigateur,
+// jamais envoyé ailleurs qu'à api.github.com, jamais inclus dans un fichier
+// publié (le générateur d'embed n'a aucun accès à _ghToken()).
+var GH_OWNER = 'montlusson';
+var GH_REPO  = 'cartes_grande-region';
+var GH_BRANCH = 'main';
+var GITHUB_PAGES_BASE = 'https://' + GH_OWNER + '.github.io/' + GH_REPO + '/';
+var LS_TOKEN_KEY = 'grtool_gh_pat';
+var MANIFEST_PATH = 'manifest.json';
 
 var GR_URLS = {
   communes:       'https://download.data.public.lu/resources/municipalities-in-the-greater-region-2026/20260121-020153/municipalities-gr-2026.geojson',
@@ -3934,6 +4002,9 @@ function wireEvents() {
     URL.revokeObjectURL(a.href);
     setStatus('✓ Fichier embed téléchargé : ' + a.download);
   });
+
+  // Publication GitHub (js/16-publish.js)
+  if (typeof _wirePublishUI === 'function') _wirePublishUI();
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -4721,7 +4792,6 @@ function _openEmbedModal() {
   if (note) note.classList.toggle('show', info.bytes > 3 * 1024 * 1024);
 
   // Pré-remplir avec l'URL GitHub Pages + nom de fichier
-  var GITHUB_PAGES_BASE = 'https://montlusson.github.io/cartes_grande-region/';
   var urlInput = document.getElementById('embed-url');
   if (urlInput) {
     urlInput.placeholder = GITHUB_PAGES_BASE + _embedFilename;
@@ -4730,6 +4800,11 @@ function _openEmbedModal() {
 
   // Générer le code iframe immédiatement (URL pré-remplie)
   _updateEmbedCode();
+
+  // Onglet publication (js/16-publish.js) : liste des cartes déjà publiées
+  // pour proposer une mise à jour en place plutôt qu'une nouvelle URL.
+  if (typeof _populatePublishTargetSelect === 'function') _populatePublishTargetSelect();
+  if (typeof _setPublishStatus === 'function') _setPublishStatus('');
 
   document.getElementById('embed-modal').classList.remove('hidden');
 }
@@ -4758,6 +4833,302 @@ function _updateEmbedCode() {
 }
 
 // ══════════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════════
+//  PUBLICATION — GitHub Pages en un clic (jeton + manifeste)
+// ══════════════════════════════════════════════════════════════════
+// Remplace le workflow manuel (télécharger → glisser dans le dépôt →
+// attendre le déploiement → copier l'URL) par un appel direct à l'API
+// GitHub Contents depuis le navigateur (api.github.com supporte CORS,
+// vérifié en conditions réelles). Le jeton ne quitte jamais ce module :
+// _serializeEmbedPayload()/_generateEmbedHTML() (js/13) n'y ont pas accès.
+
+function _ghToken() {
+  try { return localStorage.getItem(LS_TOKEN_KEY) || ''; } catch (e) { return ''; }
+}
+
+function _setGhToken(tok) {
+  try {
+    if (tok) localStorage.setItem(LS_TOKEN_KEY, tok);
+    else localStorage.removeItem(LS_TOKEN_KEY);
+  } catch (e) {}
+}
+
+function _b64EncodeUtf8(str) { return btoa(unescape(encodeURIComponent(str))); }
+function _b64DecodeUtf8(b64) { return decodeURIComponent(escape(atob(b64.replace(/\n/g, '')))); }
+
+function _ghApi(path, opts) {
+  opts = opts || {};
+  var headers = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  var tok = _ghToken();
+  if (tok) headers['Authorization'] = 'Bearer ' + tok;
+  return fetch('https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/' + path, {
+    method: opts.method || 'GET',
+    headers: headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  }).then(function (resp) {
+    if (resp.status === 401) throw new Error('Jeton invalide ou expiré.');
+    if (resp.status === 403) throw new Error('Jeton sans les permissions requises (Contents: Read and write sur ce dépôt).');
+    if (resp.status === 404) return null;
+    if (!resp.ok) {
+      return resp.text().then(function (t) {
+        throw new Error('Erreur GitHub (' + resp.status + ') : ' + t.slice(0, 200));
+      });
+    }
+    return resp.status === 204 ? null : resp.json();
+  });
+}
+
+function _ghGetFile(path) {
+  return _ghApi('contents/' + path + '?ref=' + GH_BRANCH).then(function (res) {
+    if (!res) return null;
+    return { sha: res.sha, content: _b64DecodeUtf8(res.content) };
+  });
+}
+
+function _ghPutFile(path, content, message, sha) {
+  var body = { message: message, content: _b64EncodeUtf8(content), branch: GH_BRANCH };
+  if (sha) body.sha = sha;
+  return _ghApi('contents/' + path, { method: 'PUT', body: body });
+}
+
+function _ghDeleteFile(path, message, sha) {
+  return _ghApi('contents/' + path, { method: 'DELETE', body: { message: message, sha: sha, branch: GH_BRANCH } });
+}
+
+// ── Manifeste des cartes publiées (manifest.json à la racine du dépôt) ──
+function _loadManifestForWrite() {
+  return _ghGetFile(MANIFEST_PATH).then(function (f) {
+    if (!f) return { sha: null, list: [] };
+    var list;
+    try { list = JSON.parse(f.content); } catch (e) { list = []; }
+    return { sha: f.sha, list: Array.isArray(list) ? list : [] };
+  });
+}
+
+function _loadManifestPublic() {
+  // Lecture publique (page GitHub Pages), aucun jeton requis.
+  return fetch(GITHUB_PAGES_BASE + MANIFEST_PATH, { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .catch(function () { return []; })
+    .then(function (list) { return Array.isArray(list) ? list : []; });
+}
+
+// ── Publication ──────────────────────────────────────────────────
+function _waitUntilLive(url, timeoutMs) {
+  var start = Date.now();
+  timeoutMs = timeoutMs || 45000;
+  function attempt() {
+    return fetch(url, { method: 'HEAD', cache: 'no-store' })
+      .then(function (r) { return !!r.ok; })
+      .catch(function () { return false; })
+      .then(function (ok) {
+        if (ok) return true;
+        if (Date.now() - start > timeoutMs) return false;
+        return new Promise(function (res) { setTimeout(res, 3000); }).then(attempt);
+      });
+  }
+  return attempt();
+}
+
+function _publishCurrentMap() {
+  if (!_mapReady) return Promise.reject(new Error('Carte non prête.'));
+  if (!_ghToken()) return Promise.reject(new Error('Renseignez votre jeton GitHub dans l’onglet "Publié" d’abord.'));
+
+  var sel = document.getElementById('embed-publish-target');
+  var updateFilename = sel && sel.value ? sel.value : null;
+
+  var info = _serializeEmbedPayload();
+  var filename = updateFilename || ('grande-region-' + info.id + '.html');
+  var html = _generateEmbedHTML(info.payload);
+  var meta = _getMapMeta();
+  var title = (meta && meta.title) || 'Carte Grande Région';
+  var width = Number(document.getElementById('embed-w').value) || 800;
+  var height = Number(document.getElementById('embed-h').value) || 520;
+
+  return _ghGetFile(filename)
+    .then(function (existing) {
+      return _ghPutFile(filename, html, 'Publie ' + filename, existing ? existing.sha : null);
+    })
+    .then(function () { return _loadManifestForWrite(); })
+    .then(function (m) {
+      var url = GITHUB_PAGES_BASE + filename;
+      var now = new Date().toISOString();
+      var idx = -1;
+      m.list.forEach(function (e, i) { if (e.filename === filename) idx = i; });
+      var entry = {
+        id: idx >= 0 ? m.list[idx].id : info.id,
+        filename: filename, title: title, url: url,
+        width: width, height: height, updatedAt: now,
+        createdAt: idx >= 0 ? (m.list[idx].createdAt || now) : now
+      };
+      if (idx >= 0) m.list[idx] = entry; else m.list.push(entry);
+      return _ghPutFile(MANIFEST_PATH, JSON.stringify(m.list, null, 2), 'Met à jour manifest.json', m.sha)
+        .then(function () { return { url: url, width: width, height: height }; });
+    })
+    .then(function (result) {
+      return _waitUntilLive(result.url).then(function (isLive) {
+        return { url: result.url, width: result.width, height: result.height, isLive: isLive };
+      });
+    });
+}
+
+function _deletePublishedMap(filename, title) {
+  if (!_ghToken()) return Promise.reject(new Error('Jeton GitHub requis.'));
+  if (!window.confirm('Supprimer "' + title + '" ? Le lien cessera de fonctionner s’il est déjà intégré ailleurs.')) {
+    return Promise.resolve(false);
+  }
+  return _ghGetFile(filename).then(function (existing) {
+    return existing ? _ghDeleteFile(filename, 'Supprime ' + filename, existing.sha) : null;
+  }).then(function () {
+    return _loadManifestForWrite();
+  }).then(function (m) {
+    m.list = m.list.filter(function (e) { return e.filename !== filename; });
+    return _ghPutFile(MANIFEST_PATH, JSON.stringify(m.list, null, 2), 'Retire ' + filename + ' du manifeste', m.sha);
+  }).then(function () { return true; });
+}
+
+// ── UI : statuts ─────────────────────────────────────────────────
+function _setPublishStatus(msg, kind) {
+  var el = document.getElementById('publish-status');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'publish-status' + (kind ? ' ' + kind : '');
+}
+
+function _refreshTokenUI() {
+  var input = document.getElementById('gh-token-input');
+  var status = document.getElementById('gh-token-status');
+  var has = !!_ghToken();
+  if (input) input.placeholder = has ? '•••••••••••••••••• (enregistré)' : 'github_pat_…';
+  if (status) {
+    status.textContent = has ? '✓ Jeton enregistré sur cet appareil.' : 'Aucun jeton enregistré.';
+    status.style.color = has ? '#1e8449' : '';
+  }
+}
+
+// ── Cible de mise à jour dans le modal embed ─────────────────────
+function _populatePublishTargetSelect() {
+  var sel = document.getElementById('embed-publish-target');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Nouvelle carte</option>';
+  _loadManifestPublic().then(function (entries) {
+    entries.forEach(function (e) {
+      var opt = document.createElement('option');
+      opt.value = e.filename;
+      opt.textContent = 'Mettre à jour : ' + (e.title || e.filename);
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// ── Galerie des cartes publiées (onglet "Publié") ────────────────
+var _pubEntries = [];
+
+function _pubCopyCode(entry) {
+  var code = '<iframe\n  src="' + entry.url + '"\n  width="' + entry.width + '" height="' + entry.height + '"\n'
+           + '  style="border:0" loading="lazy" title="' + _escAttr(entry.title || 'Carte Grande Région') + '"></iframe>';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(function () {
+      setStatus('✓ Code copié — ' + (entry.title || entry.filename));
+    });
+  }
+}
+
+function _pubUpdateTarget(entry) {
+  _openEmbedModal();
+  var sel = document.getElementById('embed-publish-target');
+  if (sel) sel.value = entry.filename;
+  var w = document.getElementById('embed-w'); if (w) w.value = entry.width;
+  var h = document.getElementById('embed-h'); if (h) h.value = entry.height;
+}
+
+function _pubDelete(entry) {
+  _deletePublishedMap(entry.filename, entry.title || entry.filename).then(function (done) {
+    if (done) _refreshPublishedList();
+  }).catch(function (err) { setStatus('✗ ' + err.message); });
+}
+
+function _refreshPublishedList() {
+  var list = document.getElementById('pub-list');
+  var hint = document.getElementById('pub-empty-hint');
+  if (!list) return;
+  list.innerHTML = '<div class="msl-hint">Chargement…</div>';
+  _loadManifestPublic().then(function (entries) {
+    entries.sort(function (a, b) { return (b.updatedAt || '').localeCompare(a.updatedAt || ''); });
+    _pubEntries = entries;
+    if (hint) hint.style.display = entries.length ? 'none' : 'block';
+    list.innerHTML = entries.map(function (e) {
+      var d = e.updatedAt ? new Date(e.updatedAt).toLocaleDateString('fr-FR') : '';
+      return '<div class="pub-item">'
+        + '<div class="pub-item-name">' + _escHtml(e.title || e.filename) + '</div>'
+        + '<div class="pub-item-sub">' + d + ' · ' + e.width + '×' + e.height + '</div>'
+        + '<div class="pub-item-actions">'
+        + '<button class="btn btn-ghost btn-sm" data-pub="copy" data-filename="' + _escAttr(e.filename) + '">Copier le code</button>'
+        + '<a class="btn btn-ghost btn-sm" href="' + _escAttr(e.url) + '" target="_blank" rel="noopener">Ouvrir</a>'
+        + '<button class="btn btn-ghost btn-sm" data-pub="update" data-filename="' + _escAttr(e.filename) + '">Mettre à jour</button>'
+        + '<button class="btn btn-ghost btn-sm" data-pub="delete" data-filename="' + _escAttr(e.filename) + '">Supprimer</button>'
+        + '</div></div>';
+    }).join('');
+  });
+}
+
+// ── Câblage (appelé depuis wireEvents(), js/11-events.js) ────────
+function _wirePublishUI() {
+  _refreshTokenUI();
+
+  var saveBtn = document.getElementById('gh-token-save');
+  if (saveBtn) saveBtn.addEventListener('click', function () {
+    var input = document.getElementById('gh-token-input');
+    var tok = (input && input.value || '').trim();
+    if (!tok) { var s = document.getElementById('gh-token-status'); if (s) { s.textContent = 'Collez un jeton avant d’enregistrer.'; s.style.color = '#c0392b'; } return; }
+    _setGhToken(tok);
+    if (input) input.value = '';
+    _refreshTokenUI();
+  });
+
+  var clearBtn = document.getElementById('gh-token-clear');
+  if (clearBtn) clearBtn.addEventListener('click', function () {
+    _setGhToken('');
+    _refreshTokenUI();
+  });
+
+  var pubBtn = document.getElementById('btn-publish-embed');
+  if (pubBtn) pubBtn.addEventListener('click', function () {
+    pubBtn.disabled = true;
+    _setPublishStatus('Publication en cours…', 'pending');
+    _publishCurrentMap().then(function (res) {
+      pubBtn.disabled = false;
+      var urlInput = document.getElementById('embed-url');
+      if (urlInput) urlInput.value = res.url;
+      _updateEmbedCode();
+      _setPublishStatus(res.isLive ? '✓ En ligne.' : '✓ Publié (mise en ligne en cours — quelques secondes de plus).', 'ok');
+      _populatePublishTargetSelect();
+      _refreshPublishedList();
+    }).catch(function (err) {
+      pubBtn.disabled = false;
+      _setPublishStatus('✗ ' + err.message, 'err');
+    });
+  });
+
+  var refreshBtn = document.getElementById('pub-refresh');
+  if (refreshBtn) refreshBtn.addEventListener('click', _refreshPublishedList);
+
+  var pubList = document.getElementById('pub-list');
+  if (pubList) pubList.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-pub]');
+    if (!btn) return;
+    var filename = btn.dataset.filename;
+    var entry = null;
+    _pubEntries.forEach(function (x) { if (x.filename === filename) entry = x; });
+    if (!entry) return;
+    if (btn.dataset.pub === 'copy') _pubCopyCode(entry);
+    else if (btn.dataset.pub === 'update') _pubUpdateTarget(entry);
+    else if (btn.dataset.pub === 'delete') _pubDelete(entry);
+  });
+
+  _refreshPublishedList();
+}
 //  INIT
 // ══════════════════════════════════════════════════════════════════
 

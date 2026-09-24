@@ -1,0 +1,147 @@
+
+<div id="app">
+  <header id="header">
+    <div class="hdr-logo">
+      <svg class="hdr-logo-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+        <path d="M3 6.5l5-1.8 6 1.8 7-1.8v13l-7 1.8-6-1.8-5 1.8z"/>
+        <path d="M8 4.9v13M14 6.5v13" stroke-width="1.1" opacity=".5"/>
+      </svg>
+      Grande Région
+      <span class="hdr-sub">Carte multi-niveaux</span> <span class="hdr-sub" style="opacity:.4;font-size:9px">v2026-06-12j</span>
+    </div>
+    <div class="hdr-actions">
+      <span id="data-badge" class="badge badge-warn">Aucune donnée</span>
+      <button class="btn btn-ghost btn-sm" id="btn-table" title="Alternative accessible : les données de la vue courante en tableau">&#9776; Tableau</button>
+      <button class="btn btn-ghost btn-sm" id="btn-export" disabled>&#8659; PNG</button>
+      <button class="btn btn-ghost btn-sm" id="btn-embed"  disabled>&lt;/&gt; Embed</button>
+      <span class="hdr-sep"></span>
+      <button class="btn btn-ghost btn-sm pv-btn" id="btn-preview-desktop" title="Vue Desktop" aria-pressed="true">&#128421; Desktop</button>
+      <button class="btn btn-ghost btn-sm pv-btn" id="btn-preview-mobile"  title="Vue Mobile 375&thinsp;px" aria-pressed="false">&#128241; Mobile</button>
+    </div>
+  </header>
+
+  <!-- Modal embed -->
+  <div id="embed-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-hdr">
+        <span class="modal-hdr-title">Exporter — carte interactive</span>
+        <button class="modal-close" id="embed-modal-close" aria-label="Fermer">&#215;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <label>Publier comme</label>
+          <select class="full" id="embed-publish-target">
+            <option value="">Nouvelle carte</option>
+          </select>
+        </div>
+        <div class="modal-dims">
+          <div class="modal-field">
+            <label>Largeur (px)</label>
+            <input type="number" id="embed-w" value="800" min="300" max="2000" step="10" />
+          </div>
+          <div class="modal-field">
+            <label>Hauteur (px)</label>
+            <input type="number" id="embed-h" value="520" min="200" max="1200" step="10" />
+          </div>
+        </div>
+        <div class="modal-size-note" id="embed-size-note">
+          ⚠ La vue actuelle contient beaucoup de données — le fichier publié peut être volumineux (&gt; 3 Mo).
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="btn-publish-embed">&#128640; Publier</button>
+        </div>
+        <div id="publish-status" class="publish-status"></div>
+
+        <div class="modal-field">
+          <label>URL GitHub Pages</label>
+          <input type="text" id="embed-url" placeholder="https://montlusson.github.io/cartes_grande-region/grande-region-abc123.html" />
+        </div>
+        <div class="modal-field">
+          <label>Code d'intégration <span id="embed-code-hint" style="font-weight:400;color:#bbb">(publiez d'abord, ou saisissez une URL existante)</span></label>
+          <textarea id="embed-code" readonly placeholder="Publiez la carte, ou saisissez une URL existante ci-dessus, pour générer le code iframe."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary btn-sm" id="btn-copy-embed">Copier le code</button>
+        </div>
+
+        <details class="modal-fallback">
+          <summary>Publication manuelle (sans jeton GitHub)</summary>
+          <p class="modal-hint">
+            ① <strong>Téléchargez</strong> le fichier HTML.<br>
+            ② <strong>Ajoutez-le</strong> au dépôt <a href="https://github.com/montlusson/cartes_grande-region" target="_blank" rel="noopener" style="color:var(--accent)">cartes_grande-region</a> — GitHub Pages le publie automatiquement.<br>
+            ③ Collez l'URL ci-dessus une fois en ligne pour générer le code.
+          </p>
+          <div class="modal-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-dl-embed">&#8659; Télécharger le fichier HTML</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal tableau de données (alternative accessible à la carte) -->
+  <div id="table-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="table-modal-title">
+    <div class="modal-box" style="width:660px">
+      <div class="modal-hdr">
+        <span class="modal-hdr-title" id="table-modal-title">Données de la vue courante</span>
+        <button class="modal-close" id="table-modal-close" aria-label="Fermer">&#215;</button>
+      </div>
+      <div class="modal-body">
+        <div id="table-modal-meta" style="font-size:11.5px;color:#666"></div>
+        <div id="table-modal-wrap" style="max-height:50vh;overflow:auto;border:1px solid var(--border);border-radius:6px"></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary btn-sm" id="btn-table-csv">&#8659; Exporter CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="workspace">
+    <aside id="sidebar">
+      <!-- PRESET VIEWS -->
+      <div id="presets">
+        <div class="preset-label">Vue rapide</div>
+        <div class="preset-grid">
+          <button class="preset-btn active" data-preset="blocs">
+            <svg class="preset-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.5"/></svg>
+            <span class="preset-name">Blocs</span>
+          </button>
+          <button class="preset-btn" data-preset="subdivisions">
+            <svg class="preset-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M8 2v12" stroke-width="1" opacity=".55"/></svg>
+            <span class="preset-name">Subdivisions</span>
+          </button>
+          <button class="preset-btn" data-preset="cantons">
+            <svg class="preset-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M6 2v12M10 2v12M2 6h12M2 10h12" stroke-width="1" opacity=".55"/></svg>
+            <span class="preset-name">Cantons</span>
+          </button>
+          <button class="preset-btn" data-preset="communes">
+            <svg class="preset-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 2v12M8 2v12M11 2v12M2 5h12M2 8h12M2 11h12" stroke-width="1" opacity=".55"/></svg>
+            <span class="preset-name">Communes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="layers">Couches</button>
+        <button class="tab-btn" data-tab="style">Style</button>
+        <button class="tab-btn" data-tab="data">Données</button>
+        <button class="tab-btn" data-tab="library">Bib.</button>
+        <button class="tab-btn" data-tab="publish">Publié</button>
+      </div>
+
+      <div id="sidebar-body">
+
+        <!-- SÉLECTEUR DE BLOCS — affiché sur tous les onglets -->
+        <div id="bloc-selector-wrap">
+          <div class="bloc-selector-lbl">Blocs actifs</div>
+          <div class="bloc-selector-row">
+            <button class="bloc-chip active" data-bloc="Grand Est"       style="--c:#7ebf7e" title="Grand Est (Lorraine)">Grand Est</button>
+            <button class="bloc-chip active" data-bloc="Rheinland-Pfalz" style="--c:#6baed6" title="Rhénanie-Palatinat">RLP</button>
+            <button class="bloc-chip active" data-bloc="Saarland"        style="--c:#74aed0" title="Sarre">Sarre</button>
+            <button class="bloc-chip active" data-bloc="Wallonie"        style="--c:#e07b7b" title="Wallonie">Wallonie</button>
+            <button class="bloc-chip active" data-bloc="Luxembourg"      style="--c:#e6a84a" title="Luxembourg">Lux.</button>
+          </div>
+        </div>
+
+        <!-- TAB: COUCHES -->
