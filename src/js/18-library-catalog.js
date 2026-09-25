@@ -263,6 +263,10 @@ function _addCatalogItem(item, btn) {
       _libPaletteIdx++;
       item._addedLayerId = layer.id;
       _setCatalogBtnAdded(item, true);
+      // Toutes les couches Bibliothèque (pas seulement les "+ Charger"
+      // joignables) sont exploitables depuis l'onglet Données — palette,
+      // classes, légende, tableau — donc on y bascule aussi dans ce cas.
+      document.querySelector('.tab-btn[data-tab="data"]').click();
     })
     .catch(function(err) {
       setStatus('✗ « ' + item.label + ' » : échec du chargement (' + err.message + ')' +

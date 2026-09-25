@@ -61,6 +61,16 @@ function _detectNumericFields(geojson) {
   return result;
 }
 
+// Libellé lisible pour un nom de champ technique (ex. "evo_pop_total_2025_2070_txt"
+// → "Evo pop total 2025 2070") — GIS-GR suffixe "_txt" ses champs texte
+// formatés (ex. "5,0%"), ce qui ressemblait à tort à une extension de
+// fichier .txt dans le sélecteur. Purement cosmétique : la valeur réelle
+// utilisée pour la couleur reste le nom de champ brut (option.value).
+function _prettyFieldLabel(key) {
+  return key.replace(/_txt$/i, '').replace(/_/g, ' ').trim()
+    .replace(/^./, function(c) { return c.toUpperCase(); });
+}
+
 // Seuils quantiles + palette pour un champ donné — indépendant du CSV/join
 // (cf. _buildChoroScale, js/06-choropleth-scale.js, qui lui reste dédié au
 // flux CSV). Écrit aussi la valeur numérique normalisée dans chaque feature
@@ -166,6 +176,7 @@ function _renderUserLayerOnMap(layer) {
       paint: { 'circle-color':col, 'circle-radius':5, 'circle-opacity': opa,
                'circle-stroke-color':'#fff', 'circle-stroke-width':1 } });
   }
+  _wireLibraryLayerTooltip(layer, lyr); // infobulle propre (js/19-library-focus.js)
   _bringOverlaysToFront();
 }
 
@@ -219,8 +230,10 @@ function _updateLibEmptyHint() {
   if (hint) hint.style.display = _userLayers.length ? 'none' : 'block';
 }
 
-function _appendLibLayerItem(layer) {
-  var list = document.getElementById('lib-layers-list');
+function _appendLibLayerItem(layer, opts) {
+  opts = opts || {};
+  var px = opts.idPrefix || '';
+  var list = document.getElementById(opts.containerId || 'lib-layers-list');
   if (!list) return;
   var n = (layer.geojson.features || []).length;
   var typeIcon = { polygon:'▪', line:'〰', point:'●' }[layer.geomType] || '·';
@@ -228,13 +241,13 @@ function _appendLibLayerItem(layer) {
 
   // Item row
   var div = document.createElement('div');
-  div.id = 'lib-item-' + layer.id;
+  div.id = 'lib-item-' + px + layer.id;
   div.className = 'lib-item';
   div.innerHTML =
-    '<input type="checkbox" class="lib-item-check" id="lib-chk-' + layer.id + '" checked>' +
-    '<span class="lib-item-dot" id="lib-dot-' + layer.id + '"' +
+    '<input type="checkbox" class="lib-item-check" id="lib-chk-' + px + layer.id + '" checked>' +
+    '<span class="lib-item-dot" id="lib-dot-' + px + layer.id + '"' +
       ' style="background:' + layer.color + ';cursor:pointer" title="Changer la couleur"></span>' +
-    '<input type="color" id="lib-color-' + layer.id + '" value="' + layer.color + '"' +
+    '<input type="color" id="lib-color-' + px + layer.id + '" value="' + layer.color + '"' +
       ' style="position:absolute;opacity:0;width:0;height:0">' +
     '<div style="flex:1;min-width:0">' +
       '<div class="lib-item-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
@@ -248,12 +261,12 @@ function _appendLibLayerItem(layer) {
   // Opacity row
   var opaDiv = document.createElement('div');
   opaDiv.className = 'lib-opa-row';
-  opaDiv.id = 'lib-opa-row-' + layer.id;
+  opaDiv.id = 'lib-opa-row-' + px + layer.id;
   opaDiv.style.display = 'flex';
   opaDiv.innerHTML =
     '<input type="range" min="0" max="1" step=".05" value="' + layer.opacity + '"' +
-      ' id="lib-opa-' + layer.id + '">' +
-    '<span id="lib-opa-v-' + layer.id + '">' + pct + '%</span>';
+      ' id="lib-opa-' + px + layer.id + '">' +
+    '<span id="lib-opa-v-' + px + layer.id + '">' + pct + '%</span>';
   list.appendChild(opaDiv);
 
   // Choroplèthe (uniquement si des champs numériques ont été détectés)
@@ -261,7 +274,7 @@ function _appendLibLayerItem(layer) {
   if (layer.numericFields.length) {
     choroDiv = document.createElement('div');
     choroDiv.className = 'lib-opa-row';
-    choroDiv.id = 'lib-choro-row-' + layer.id;
+    choroDiv.id = 'lib-choro-row-' + px + layer.id;
     choroDiv.style.cssText = 'flex-wrap:wrap;gap:5px 6px;padding:2px 4px 6px 34px';
     var choroSel = document.createElement('select');
     choroSel.style.cssText = 'flex:1;min-width:0;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px';
@@ -269,7 +282,7 @@ function _appendLibLayerItem(layer) {
     optFlat.value = ''; optFlat.textContent = '— couleur unie —';
     choroSel.appendChild(optFlat);
     layer.numericFields.forEach(function(f) {
-      var o = document.createElement('option'); o.value = f; o.textContent = f;
+      var o = document.createElement('option'); o.value = f; o.textContent = _prettyFieldLabel(f);
       choroSel.appendChild(o);
     });
     var choroPalSel = document.createElement('select');
@@ -342,8 +355,8 @@ function _appendLibLayerItem(layer) {
   });
 
   // Color swatch → color picker
-  var dot = document.getElementById('lib-dot-' + id);
-  var colorPicker = document.getElementById('lib-color-' + id);
+  var dot = document.getElementById('lib-dot-' + px + id);
+  var colorPicker = document.getElementById('lib-color-' + px + id);
   dot.addEventListener('click', function() { colorPicker.click(); });
   colorPicker.addEventListener('input', function() {
     layer.color = colorPicker.value;
@@ -483,6 +496,3 @@ function _wireLibUpload() {
     if (_pendingIdx >= _pending.length) form.style.display = 'none';
   });
 }
-
-
-// ══════════════════════════════════════════════════════════════════

@@ -112,6 +112,11 @@ function _drawBlocs() {
       id: BLOCS_LINE_ID, type: 'line', source: BLOCS_SOURCE_ID,
       paint: { 'line-color': '#0D0E12', 'line-width': _strokeWidths.blocs, 'line-opacity': 0.85 }
     });
+    // _wireTooltipEvents() est appelée trop tôt ailleurs (avant que cette
+    // couche existe) et ne réessaie jamais — sans cet appel ici, juste après
+    // la création, le survol de "Blocs" n'affiche jamais d'infobulle (seules
+    // les couches non-blocs, câblées dans _drawActiveFillLayer, marchaient).
+    _wireTooltipEvents();
   }
   _setVisible(BLOCS_FILL_ID, true);
   _setVisible(BLOCS_LINE_ID, !!_activeLayers['blocs']);

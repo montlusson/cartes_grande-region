@@ -1,6 +1,53 @@
 //  BIBLIOTHÈQUE — mise en valeur des données, badge, table générique
 // ══════════════════════════════════════════════════════════════════
 
+// Infobulle propre à une couche Bibliothèque : _wireTooltipEvents() (js/
+// 06-choropleth-scale.js) ne connaît que les couches administratives
+// intégrées (blocs, couche active) — sans ce câblage dédié, survoler une
+// couche Bibliothèque n'affichait aucune infobulle propre à ses données ;
+// au mieux celle, incorrecte, de la couche "blocs" restée en dessous.
+function _wireLibraryLayerTooltip(layer, lyrId) {
+  _map.on('mousemove', lyrId, function(e) {
+    if (_ttPinned) return;
+    if (!e.features || !e.features.length) return;
+    _showLibraryTooltip(e, e.features[0], layer);
+    _map.getCanvas().style.cursor = 'pointer';
+  });
+  _map.on('mouseleave', lyrId, function() {
+    _map.getCanvas().style.cursor = '';
+    if (!_ttPinned) _hideTooltip();
+  });
+  _map.on('click', lyrId, function(e) {
+    if (!e.features || !e.features.length) return;
+    _ttPinned = !_ttPinned;
+    _showLibraryTooltip(e, e.features[0], layer);
+  });
+}
+
+function _showLibraryTooltip(e, feat, layer) {
+  var p = feat.properties || {};
+  var html = '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' +
+    layer.color + ';color:#1a1a1a">' + _escHtml(layer.name) + '</span></div>';
+  if (p.name) html += '<div class="tt-name">' + _escHtml(p.name) + '</div>';
+  if (layer.choro) {
+    var raw = p[layer.choro.field];
+    if (raw !== undefined && raw !== null && raw !== '') {
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_prettyFieldLabel(layer.choro.field)) +
+        '</span><span class="tt-data-val">' + _escHtml(raw) + '</span></div>';
+    }
+  }
+  html += '<div style="font-size:9.5px;color:#bbb;margin-top:5px;text-align:right">' +
+    (_ttPinned ? '🔒 Cliquer pour déverrouiller' : 'Clic = verrouiller') + '</div>';
+  var tt = document.getElementById('map-tt');
+  tt.innerHTML = html;
+  tt.classList.add('vis');
+  var fr = document.getElementById('map-frame').getBoundingClientRect();
+  var mx = e.point.x, my = e.point.y;
+  var ttW = tt.offsetWidth || 220, ttH = tt.offsetHeight || 160;
+  tt.style.left = Math.max(4, Math.min(mx + 14, fr.width - ttW - 4)) + 'px';
+  tt.style.top  = Math.max(4, my - ttH - 12 < 4 ? my + 14 : my - ttH - 12) + 'px';
+}
+
 // Légende choroplèthe d'une couche Bibliothèque : pastille + intervalle,
 // et CHAQUE pastille est éditable (clic → sélecteur de couleur natif) pour
 // permettre à la rédaction d'ajuster les teintes au besoin éditorial.
@@ -66,19 +113,29 @@ function _updateLibraryBasemapFocus() {
       if (sel) sel.value = 'none';
       _redrawFill();
     }
+    // _redrawFill('none') ne fait que retirer la couche active — le fond
+    // "blocs" lui-même reste rendu (et donc survolable) en dessous à son
+    // opacité normale. Sans ce masquage explicite, le survol y déclenche
+    // encore l'infobulle des blocs à la place de celle de la couche
+    // Bibliothèque au-dessus (même si elle est visuellement recouverte).
+    if (_map && _map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
     if (legend) legend.style.display = 'none';
   } else if (_libFocusPrevFill !== null) {
     _fillLayer = _libFocusPrevFill;
     _libFocusPrevFill = null;
     var sel2 = document.getElementById('fill-layer-sel');
     if (sel2) sel2.value = _fillLayer;
+    if (_map && _map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'visible');
     _redrawFill();
     if (legend) legend.style.display = '';
   }
 }
 
-// Onglet Données : liste des couches Bibliothèque chargées, chacune avec un
-// accès à ses données en tableau (accessible, exportable en CSV).
+// Onglet Données : liste des couches Bibliothèque chargées — mêmes contrôles
+// qu'à l'onglet Bibliothèque (visibilité, couleur, opacité, choroplèthe par
+// valeur avec palette/classes/légende), plus un accès aux données en tableau
+// (accessible, exportable en CSV). Miroir de _appendLibLayerItem, pas une
+// UI distincte : évite de dupliquer la logique de choroplèthe.
 function _renderLibraryDataTab() {
   var box = document.getElementById('lib-data-tab-list');
   if (!box) return;
@@ -91,17 +148,15 @@ function _renderLibraryDataTab() {
   hdr.textContent = 'Couches Bibliothèque';
   box.appendChild(hdr);
   _userLayers.forEach(function(layer) {
-    var row = document.createElement('div');
-    row.className = 'lib-item';
-    var name = document.createElement('div');
-    name.style.cssText = 'flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    name.textContent = layer.name;
+    _appendLibLayerItem(layer, { containerId: 'lib-data-tab-list', idPrefix: 'dt-' });
+    var row = document.getElementById('lib-item-dt-' + layer.id);
+    if (!row) return;
     var btn = document.createElement('button');
     btn.className = 'btn btn-secondary btn-sm';
     btn.textContent = '☰ Tableau';
+    btn.title = 'Voir toutes les données brutes de cette couche';
     btn.addEventListener('click', function() { _openGenericLayerTable(layer); });
-    row.appendChild(name); row.appendChild(btn);
-    box.appendChild(row);
+    row.appendChild(btn);
   });
 }
 
@@ -114,7 +169,7 @@ function _openGenericLayerTable(layer) {
   feats.slice(0, 200).forEach(function(f) {
     Object.keys(f.properties || {}).forEach(function(k) { if (k !== '_cv') colSet[k] = true; });
   });
-  var cols = Object.keys(colSet).map(function(k) { return {k:k, l:k}; });
+  var cols = Object.keys(colSet).map(function(k) { return {k:k, l:_prettyFieldLabel(k)}; });
   var rows = feats.map(function(f) { return f.properties || {}; });
 
   document.getElementById('table-modal-title').textContent = layer.name;

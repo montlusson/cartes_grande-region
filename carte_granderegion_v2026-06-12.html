@@ -1952,6 +1952,11 @@ function _drawBlocs() {
       id: BLOCS_LINE_ID, type: 'line', source: BLOCS_SOURCE_ID,
       paint: { 'line-color': '#0D0E12', 'line-width': _strokeWidths.blocs, 'line-opacity': 0.85 }
     });
+    // _wireTooltipEvents() est appelée trop tôt ailleurs (avant que cette
+    // couche existe) et ne réessaie jamais — sans cet appel ici, juste après
+    // la création, le survol de "Blocs" n'affiche jamais d'infobulle (seules
+    // les couches non-blocs, câblées dans _drawActiveFillLayer, marchaient).
+    _wireTooltipEvents();
   }
   _setVisible(BLOCS_FILL_ID, true);
   _setVisible(BLOCS_LINE_ID, !!_activeLayers['blocs']);
@@ -3530,6 +3535,16 @@ function _detectNumericFields(geojson) {
   return result;
 }
 
+// Libellé lisible pour un nom de champ technique (ex. "evo_pop_total_2025_2070_txt"
+// → "Evo pop total 2025 2070") — GIS-GR suffixe "_txt" ses champs texte
+// formatés (ex. "5,0%"), ce qui ressemblait à tort à une extension de
+// fichier .txt dans le sélecteur. Purement cosmétique : la valeur réelle
+// utilisée pour la couleur reste le nom de champ brut (option.value).
+function _prettyFieldLabel(key) {
+  return key.replace(/_txt$/i, '').replace(/_/g, ' ').trim()
+    .replace(/^./, function(c) { return c.toUpperCase(); });
+}
+
 // Seuils quantiles + palette pour un champ donné — indépendant du CSV/join
 // (cf. _buildChoroScale, js/06-choropleth-scale.js, qui lui reste dédié au
 // flux CSV). Écrit aussi la valeur numérique normalisée dans chaque feature
@@ -3635,6 +3650,7 @@ function _renderUserLayerOnMap(layer) {
       paint: { 'circle-color':col, 'circle-radius':5, 'circle-opacity': opa,
                'circle-stroke-color':'#fff', 'circle-stroke-width':1 } });
   }
+  _wireLibraryLayerTooltip(layer, lyr); // infobulle propre (js/19-library-focus.js)
   _bringOverlaysToFront();
 }
 
@@ -3688,8 +3704,10 @@ function _updateLibEmptyHint() {
   if (hint) hint.style.display = _userLayers.length ? 'none' : 'block';
 }
 
-function _appendLibLayerItem(layer) {
-  var list = document.getElementById('lib-layers-list');
+function _appendLibLayerItem(layer, opts) {
+  opts = opts || {};
+  var px = opts.idPrefix || '';
+  var list = document.getElementById(opts.containerId || 'lib-layers-list');
   if (!list) return;
   var n = (layer.geojson.features || []).length;
   var typeIcon = { polygon:'▪', line:'〰', point:'●' }[layer.geomType] || '·';
@@ -3697,13 +3715,13 @@ function _appendLibLayerItem(layer) {
 
   // Item row
   var div = document.createElement('div');
-  div.id = 'lib-item-' + layer.id;
+  div.id = 'lib-item-' + px + layer.id;
   div.className = 'lib-item';
   div.innerHTML =
-    '<input type="checkbox" class="lib-item-check" id="lib-chk-' + layer.id + '" checked>' +
-    '<span class="lib-item-dot" id="lib-dot-' + layer.id + '"' +
+    '<input type="checkbox" class="lib-item-check" id="lib-chk-' + px + layer.id + '" checked>' +
+    '<span class="lib-item-dot" id="lib-dot-' + px + layer.id + '"' +
       ' style="background:' + layer.color + ';cursor:pointer" title="Changer la couleur"></span>' +
-    '<input type="color" id="lib-color-' + layer.id + '" value="' + layer.color + '"' +
+    '<input type="color" id="lib-color-' + px + layer.id + '" value="' + layer.color + '"' +
       ' style="position:absolute;opacity:0;width:0;height:0">' +
     '<div style="flex:1;min-width:0">' +
       '<div class="lib-item-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
@@ -3717,12 +3735,12 @@ function _appendLibLayerItem(layer) {
   // Opacity row
   var opaDiv = document.createElement('div');
   opaDiv.className = 'lib-opa-row';
-  opaDiv.id = 'lib-opa-row-' + layer.id;
+  opaDiv.id = 'lib-opa-row-' + px + layer.id;
   opaDiv.style.display = 'flex';
   opaDiv.innerHTML =
     '<input type="range" min="0" max="1" step=".05" value="' + layer.opacity + '"' +
-      ' id="lib-opa-' + layer.id + '">' +
-    '<span id="lib-opa-v-' + layer.id + '">' + pct + '%</span>';
+      ' id="lib-opa-' + px + layer.id + '">' +
+    '<span id="lib-opa-v-' + px + layer.id + '">' + pct + '%</span>';
   list.appendChild(opaDiv);
 
   // Choroplèthe (uniquement si des champs numériques ont été détectés)
@@ -3730,7 +3748,7 @@ function _appendLibLayerItem(layer) {
   if (layer.numericFields.length) {
     choroDiv = document.createElement('div');
     choroDiv.className = 'lib-opa-row';
-    choroDiv.id = 'lib-choro-row-' + layer.id;
+    choroDiv.id = 'lib-choro-row-' + px + layer.id;
     choroDiv.style.cssText = 'flex-wrap:wrap;gap:5px 6px;padding:2px 4px 6px 34px';
     var choroSel = document.createElement('select');
     choroSel.style.cssText = 'flex:1;min-width:0;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px';
@@ -3738,7 +3756,7 @@ function _appendLibLayerItem(layer) {
     optFlat.value = ''; optFlat.textContent = '— couleur unie —';
     choroSel.appendChild(optFlat);
     layer.numericFields.forEach(function(f) {
-      var o = document.createElement('option'); o.value = f; o.textContent = f;
+      var o = document.createElement('option'); o.value = f; o.textContent = _prettyFieldLabel(f);
       choroSel.appendChild(o);
     });
     var choroPalSel = document.createElement('select');
@@ -3811,8 +3829,8 @@ function _appendLibLayerItem(layer) {
   });
 
   // Color swatch → color picker
-  var dot = document.getElementById('lib-dot-' + id);
-  var colorPicker = document.getElementById('lib-color-' + id);
+  var dot = document.getElementById('lib-dot-' + px + id);
+  var colorPicker = document.getElementById('lib-color-' + px + id);
   dot.addEventListener('click', function() { colorPicker.click(); });
   colorPicker.addEventListener('input', function() {
     layer.color = colorPicker.value;
@@ -3952,9 +3970,6 @@ function _wireLibUpload() {
     if (_pendingIdx >= _pending.length) form.style.display = 'none';
   });
 }
-
-
-// ══════════════════════════════════════════════════════════════════
 //  EVENT WIRING
 // ══════════════════════════════════════════════════════════════════
 
@@ -6065,6 +6080,10 @@ function _addCatalogItem(item, btn) {
       _libPaletteIdx++;
       item._addedLayerId = layer.id;
       _setCatalogBtnAdded(item, true);
+      // Toutes les couches Bibliothèque (pas seulement les "+ Charger"
+      // joignables) sont exploitables depuis l'onglet Données — palette,
+      // classes, légende, tableau — donc on y bascule aussi dans ce cas.
+      document.querySelector('.tab-btn[data-tab="data"]').click();
     })
     .catch(function(err) {
       setStatus('✗ « ' + item.label + ' » : échec du chargement (' + err.message + ')' +
@@ -6075,6 +6094,53 @@ function _addCatalogItem(item, btn) {
 }
 //  BIBLIOTHÈQUE — mise en valeur des données, badge, table générique
 // ══════════════════════════════════════════════════════════════════
+
+// Infobulle propre à une couche Bibliothèque : _wireTooltipEvents() (js/
+// 06-choropleth-scale.js) ne connaît que les couches administratives
+// intégrées (blocs, couche active) — sans ce câblage dédié, survoler une
+// couche Bibliothèque n'affichait aucune infobulle propre à ses données ;
+// au mieux celle, incorrecte, de la couche "blocs" restée en dessous.
+function _wireLibraryLayerTooltip(layer, lyrId) {
+  _map.on('mousemove', lyrId, function(e) {
+    if (_ttPinned) return;
+    if (!e.features || !e.features.length) return;
+    _showLibraryTooltip(e, e.features[0], layer);
+    _map.getCanvas().style.cursor = 'pointer';
+  });
+  _map.on('mouseleave', lyrId, function() {
+    _map.getCanvas().style.cursor = '';
+    if (!_ttPinned) _hideTooltip();
+  });
+  _map.on('click', lyrId, function(e) {
+    if (!e.features || !e.features.length) return;
+    _ttPinned = !_ttPinned;
+    _showLibraryTooltip(e, e.features[0], layer);
+  });
+}
+
+function _showLibraryTooltip(e, feat, layer) {
+  var p = feat.properties || {};
+  var html = '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' +
+    layer.color + ';color:#1a1a1a">' + _escHtml(layer.name) + '</span></div>';
+  if (p.name) html += '<div class="tt-name">' + _escHtml(p.name) + '</div>';
+  if (layer.choro) {
+    var raw = p[layer.choro.field];
+    if (raw !== undefined && raw !== null && raw !== '') {
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_prettyFieldLabel(layer.choro.field)) +
+        '</span><span class="tt-data-val">' + _escHtml(raw) + '</span></div>';
+    }
+  }
+  html += '<div style="font-size:9.5px;color:#bbb;margin-top:5px;text-align:right">' +
+    (_ttPinned ? '🔒 Cliquer pour déverrouiller' : 'Clic = verrouiller') + '</div>';
+  var tt = document.getElementById('map-tt');
+  tt.innerHTML = html;
+  tt.classList.add('vis');
+  var fr = document.getElementById('map-frame').getBoundingClientRect();
+  var mx = e.point.x, my = e.point.y;
+  var ttW = tt.offsetWidth || 220, ttH = tt.offsetHeight || 160;
+  tt.style.left = Math.max(4, Math.min(mx + 14, fr.width - ttW - 4)) + 'px';
+  tt.style.top  = Math.max(4, my - ttH - 12 < 4 ? my + 14 : my - ttH - 12) + 'px';
+}
 
 // Légende choroplèthe d'une couche Bibliothèque : pastille + intervalle,
 // et CHAQUE pastille est éditable (clic → sélecteur de couleur natif) pour
@@ -6141,19 +6207,29 @@ function _updateLibraryBasemapFocus() {
       if (sel) sel.value = 'none';
       _redrawFill();
     }
+    // _redrawFill('none') ne fait que retirer la couche active — le fond
+    // "blocs" lui-même reste rendu (et donc survolable) en dessous à son
+    // opacité normale. Sans ce masquage explicite, le survol y déclenche
+    // encore l'infobulle des blocs à la place de celle de la couche
+    // Bibliothèque au-dessus (même si elle est visuellement recouverte).
+    if (_map && _map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
     if (legend) legend.style.display = 'none';
   } else if (_libFocusPrevFill !== null) {
     _fillLayer = _libFocusPrevFill;
     _libFocusPrevFill = null;
     var sel2 = document.getElementById('fill-layer-sel');
     if (sel2) sel2.value = _fillLayer;
+    if (_map && _map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'visible');
     _redrawFill();
     if (legend) legend.style.display = '';
   }
 }
 
-// Onglet Données : liste des couches Bibliothèque chargées, chacune avec un
-// accès à ses données en tableau (accessible, exportable en CSV).
+// Onglet Données : liste des couches Bibliothèque chargées — mêmes contrôles
+// qu'à l'onglet Bibliothèque (visibilité, couleur, opacité, choroplèthe par
+// valeur avec palette/classes/légende), plus un accès aux données en tableau
+// (accessible, exportable en CSV). Miroir de _appendLibLayerItem, pas une
+// UI distincte : évite de dupliquer la logique de choroplèthe.
 function _renderLibraryDataTab() {
   var box = document.getElementById('lib-data-tab-list');
   if (!box) return;
@@ -6166,17 +6242,15 @@ function _renderLibraryDataTab() {
   hdr.textContent = 'Couches Bibliothèque';
   box.appendChild(hdr);
   _userLayers.forEach(function(layer) {
-    var row = document.createElement('div');
-    row.className = 'lib-item';
-    var name = document.createElement('div');
-    name.style.cssText = 'flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-    name.textContent = layer.name;
+    _appendLibLayerItem(layer, { containerId: 'lib-data-tab-list', idPrefix: 'dt-' });
+    var row = document.getElementById('lib-item-dt-' + layer.id);
+    if (!row) return;
     var btn = document.createElement('button');
     btn.className = 'btn btn-secondary btn-sm';
     btn.textContent = '☰ Tableau';
+    btn.title = 'Voir toutes les données brutes de cette couche';
     btn.addEventListener('click', function() { _openGenericLayerTable(layer); });
-    row.appendChild(name); row.appendChild(btn);
-    box.appendChild(row);
+    row.appendChild(btn);
   });
 }
 
@@ -6189,7 +6263,7 @@ function _openGenericLayerTable(layer) {
   feats.slice(0, 200).forEach(function(f) {
     Object.keys(f.properties || {}).forEach(function(k) { if (k !== '_cv') colSet[k] = true; });
   });
-  var cols = Object.keys(colSet).map(function(k) { return {k:k, l:k}; });
+  var cols = Object.keys(colSet).map(function(k) { return {k:k, l:_prettyFieldLabel(k)}; });
   var rows = feats.map(function(f) { return f.properties || {}; });
 
   document.getElementById('table-modal-title').textContent = layer.name;
