@@ -196,7 +196,7 @@ function _buildChoroUI() {
     sw.className = 'pal-sw' + (_choroPalette === p.id ? ' active' : '');
     sw.dataset.pal = p.id;
     sw.innerHTML = '<div class="sw-b">'+p.c.map(function(c){return '<span style="background:'+c+'"></span>';}).join('')+'</div>'
-                 + '<div class="pal-label">'+p.id+'</div>';
+                 + '<div class="pal-label">'+_escHtml(p.label || p.id)+'</div>';
     sw.addEventListener('click', function() {
       _choroPalette = p.id;
       document.querySelectorAll('.pal-sw').forEach(function(s){s.classList.remove('active');});

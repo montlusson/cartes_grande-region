@@ -210,17 +210,26 @@ var _zoomBase = null;
 //  CHOROPLÈTHE — CONSTANTES & ÉTAT
 // ══════════════════════════════════════════════════════════════════
 
+// `id` = identifiant interne stable (ne pas renommer, sert de clé) ;
+// `label` = nom affiché à l'utilisateur (en français).
 var CHORO_PALS = [
-  {id:'Blues',   c:['#deebf7','#9ecae1','#3182bd']},
-  {id:'Greens',  c:['#e5f5e0','#a1d99b','#31a354']},
-  {id:'Reds',    c:['#fee0d2','#fc9272','#de2d26']},
-  {id:'Oranges', c:['#fee6ce','#fdae6b','#e6550d']},
-  {id:'Purples', c:['#efedf5','#bcbddc','#756bb1']},
-  {id:'YlOrRd',  c:['#ffeda0','#feb24c','#f03b20']},
-  {id:'YlGnBu',  c:['#edf8b1','#7fcdbb','#2c7fb8']},
-  {id:'RdYlGn',  c:['#d73027','#ffffbf','#1a9850']},
-  {id:'BuPu',    c:['#e0ecf4','#9ebcda','#8856a7']},
-  {id:'RdPu',    c:['#feebe2','#f768a1','#7a0177']},
+  {id:'Blues',   label:'Bleus',              c:['#deebf7','#9ecae1','#3182bd']},
+  {id:'Greens',  label:'Verts',              c:['#e5f5e0','#a1d99b','#31a354']},
+  {id:'Reds',    label:'Rouges',             c:['#fee0d2','#fc9272','#de2d26']},
+  {id:'Oranges', label:'Oranges',            c:['#fee6ce','#fdae6b','#e6550d']},
+  {id:'Purples', label:'Violets',            c:['#efedf5','#bcbddc','#756bb1']},
+  {id:'YlOrRd',  label:'Jaune-Orange-Rouge', c:['#ffeda0','#feb24c','#f03b20']},
+  {id:'YlGnBu',  label:'Jaune-Vert-Bleu',    c:['#edf8b1','#7fcdbb','#2c7fb8']},
+  {id:'RdYlGn',  label:'Rouge-Jaune-Vert',   c:['#d73027','#ffffbf','#1a9850']},
+  {id:'BuPu',    label:'Bleu-Violet',        c:['#e0ecf4','#9ebcda','#8856a7']},
+  {id:'RdPu',    label:'Rouge-Rose',         c:['#feebe2','#f768a1','#7a0177']},
+  // Déclinaisons des couleurs officielles Reporter (dégradé clair → couleur
+  // de marque exacte comme teinte la plus foncée, même principe que les
+  // palettes ci-dessus).
+  {id:'ReporterBleu',   label:'Bleu Reporter',   c:['#d7dce8','#9eaac7','#5e71a1']},
+  {id:'ReporterOrange', label:'Orange Reporter', c:['#fee2bf','#fcba66','#fa8c00']},
+  {id:'ReporterJaune',  label:'Jaune Reporter',  c:['#fff8c0','#ffee68','#ffe303']},
+  {id:'ReporterNoir',   label:'Noir Reporter',   c:['#bfbfbf','#666666','#000000']},
 ];
 
 var _csvData      = null;  // {rows, cols}

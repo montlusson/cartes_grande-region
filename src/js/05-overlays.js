@@ -28,6 +28,11 @@ function _getStrokeColor(layerId) {
   var region = _LAYER_REGION[layerId];
   var base = region && BLOC_COLORS[region];
   if (!base) return '#555';
+  // Même bascule que _autoStrokeFor : si la couleur du bloc est déjà sombre
+  // (recolorée en noir/bleu foncé via "Couleurs des blocs"), un trait encore
+  // assombri deviendrait invisible — blanc dans ce cas plutôt qu'un simple
+  // assombrissement proportionnel au niveau.
+  if (_relLuminance(base) < 0.3) return '#ffffff';
   var factor = _STROKE_LEVEL_FACTORS[_STROKE_LEVEL[layerId] || 0];
   var rgb = _hexToRgb(base);
   return _rgbToHex(rgb[0] * factor, rgb[1] * factor, rgb[2] * factor);
@@ -37,8 +42,7 @@ function _getStrokeColor(layerId) {
 function _choroStrokeColor() {
   if (_catMode) return '#444444';
   var palObj = CHORO_PALS.find(function(p) { return p.id === _choroPalette; }) || CHORO_PALS[0];
-  var rgb = _hexToRgb(palObj.c[palObj.c.length - 1]);
-  return _rgbToHex(rgb[0] * 0.55, rgb[1] * 0.55, rgb[2] * 0.55);
+  return _autoStrokeFor(palObj.c[palObj.c.length - 1]);
 }
 function _strokeColorFor(layerId) {
   if (_strokeOverride) return _strokeOverride;
@@ -51,9 +55,19 @@ function _strokeColorFor(layerId) {
 function _applyStrokeColors() {
   if (!_mapReady) return;
   _refreshAllOverlays();
+  var choroActive = Object.keys(_dataMap).length && _valueCol;
   if (_map.getLayer(ACTIVE_LINE_ID)) {
     _map.setPaintProperty(ACTIVE_LINE_ID, 'line-color',
-      _strokeOverride || ((Object.keys(_dataMap).length && _valueCol) ? _choroStrokeColor() : '#2a2a2a'));
+      _strokeOverride || (choroActive ? _choroStrokeColor() : '#2a2a2a'));
+  }
+  // Contour extérieur des blocs : normalement fixe (neutre, cf. vue "Blocs"
+  // par défaut), mais quand une choroplèthe est appliquée sur les blocs
+  // eux-mêmes, il doit suivre la même bascule blanc/assombri — sinon un
+  // contour toujours sombre devient invisible sur les classes les plus
+  // foncées (ex. palette Noir Reporter).
+  if (_map.getLayer(BLOCS_LINE_ID)) {
+    _map.setPaintProperty(BLOCS_LINE_ID, 'line-color',
+      (_fillLayer === 'blocs' && choroActive) ? (_strokeOverride || _choroStrokeColor()) : '#0D0E12');
   }
 }
 
@@ -191,6 +205,7 @@ function _redrawFill() {
       _drawBlocs();
       _removeActiveFillLayer();
       _setBlocsAsBackground(false);
+      _applyStrokeColors();
       var n = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
       setStatus('✓ Vue "Blocs" — ' + n + ' région' + (n > 1 ? 's' : '') + ' affichée' + (n > 1 ? 's' : '') + '.');
     };

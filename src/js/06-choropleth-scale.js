@@ -63,6 +63,23 @@ function _rgbToHex(r, g, b) {
   }).join('');
 }
 
+// Luminance perçue (pondération standard, sans correction gamma — suffisant
+// pour un choix d'UI, pas une vérification de contraste WCAG stricte).
+function _relLuminance(hex) {
+  var rgb = _hexToRgb(hex);
+  return (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+}
+
+// Couleur des délimitations pour un ton donné : blanc si le ton lui-même
+// est déjà sombre (l'assombrir encore le rendrait indiscernable de la
+// classe la plus foncée — cas de la palette Noir), sinon une version
+// assombrie du ton comme avant. Bascule automatique, pas de réglage manuel.
+function _autoStrokeFor(hex) {
+  if (_relLuminance(hex) < 0.3) return '#ffffff';
+  var rgb = _hexToRgb(hex);
+  return _rgbToHex(rgb[0] * 0.55, rgb[1] * 0.55, rgb[2] * 0.55);
+}
+
 // Interpole N couleurs entre les stops d'une palette (3 stops → N couleurs)
 function _interpolatePalette(stops, n) {
   if (n <= 1) return [stops[Math.floor(stops.length / 2)]];
@@ -145,6 +162,7 @@ function _choroColor(val) {
 function _repaintChoro() {
   if (_fillLayer === 'blocs' && _mapReady && _map.getLayer(BLOCS_FILL_ID)) {
     _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
+    _applyStrokeColors();
   } else {
     _redrawFill();
   }

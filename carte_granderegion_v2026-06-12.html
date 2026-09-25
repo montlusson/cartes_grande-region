@@ -1360,17 +1360,26 @@ var _zoomBase = null;
 //  CHOROPLÈTHE — CONSTANTES & ÉTAT
 // ══════════════════════════════════════════════════════════════════
 
+// `id` = identifiant interne stable (ne pas renommer, sert de clé) ;
+// `label` = nom affiché à l'utilisateur (en français).
 var CHORO_PALS = [
-  {id:'Blues',   c:['#deebf7','#9ecae1','#3182bd']},
-  {id:'Greens',  c:['#e5f5e0','#a1d99b','#31a354']},
-  {id:'Reds',    c:['#fee0d2','#fc9272','#de2d26']},
-  {id:'Oranges', c:['#fee6ce','#fdae6b','#e6550d']},
-  {id:'Purples', c:['#efedf5','#bcbddc','#756bb1']},
-  {id:'YlOrRd',  c:['#ffeda0','#feb24c','#f03b20']},
-  {id:'YlGnBu',  c:['#edf8b1','#7fcdbb','#2c7fb8']},
-  {id:'RdYlGn',  c:['#d73027','#ffffbf','#1a9850']},
-  {id:'BuPu',    c:['#e0ecf4','#9ebcda','#8856a7']},
-  {id:'RdPu',    c:['#feebe2','#f768a1','#7a0177']},
+  {id:'Blues',   label:'Bleus',              c:['#deebf7','#9ecae1','#3182bd']},
+  {id:'Greens',  label:'Verts',              c:['#e5f5e0','#a1d99b','#31a354']},
+  {id:'Reds',    label:'Rouges',             c:['#fee0d2','#fc9272','#de2d26']},
+  {id:'Oranges', label:'Oranges',            c:['#fee6ce','#fdae6b','#e6550d']},
+  {id:'Purples', label:'Violets',            c:['#efedf5','#bcbddc','#756bb1']},
+  {id:'YlOrRd',  label:'Jaune-Orange-Rouge', c:['#ffeda0','#feb24c','#f03b20']},
+  {id:'YlGnBu',  label:'Jaune-Vert-Bleu',    c:['#edf8b1','#7fcdbb','#2c7fb8']},
+  {id:'RdYlGn',  label:'Rouge-Jaune-Vert',   c:['#d73027','#ffffbf','#1a9850']},
+  {id:'BuPu',    label:'Bleu-Violet',        c:['#e0ecf4','#9ebcda','#8856a7']},
+  {id:'RdPu',    label:'Rouge-Rose',         c:['#feebe2','#f768a1','#7a0177']},
+  // Déclinaisons des couleurs officielles Reporter (dégradé clair → couleur
+  // de marque exacte comme teinte la plus foncée, même principe que les
+  // palettes ci-dessus).
+  {id:'ReporterBleu',   label:'Bleu Reporter',   c:['#d7dce8','#9eaac7','#5e71a1']},
+  {id:'ReporterOrange', label:'Orange Reporter', c:['#fee2bf','#fcba66','#fa8c00']},
+  {id:'ReporterJaune',  label:'Jaune Reporter',  c:['#fff8c0','#ffee68','#ffe303']},
+  {id:'ReporterNoir',   label:'Noir Reporter',   c:['#bfbfbf','#666666','#000000']},
 ];
 
 var _csvData      = null;  // {rows, cols}
@@ -2089,6 +2098,11 @@ function _getStrokeColor(layerId) {
   var region = _LAYER_REGION[layerId];
   var base = region && BLOC_COLORS[region];
   if (!base) return '#555';
+  // Même bascule que _autoStrokeFor : si la couleur du bloc est déjà sombre
+  // (recolorée en noir/bleu foncé via "Couleurs des blocs"), un trait encore
+  // assombri deviendrait invisible — blanc dans ce cas plutôt qu'un simple
+  // assombrissement proportionnel au niveau.
+  if (_relLuminance(base) < 0.3) return '#ffffff';
   var factor = _STROKE_LEVEL_FACTORS[_STROKE_LEVEL[layerId] || 0];
   var rgb = _hexToRgb(base);
   return _rgbToHex(rgb[0] * factor, rgb[1] * factor, rgb[2] * factor);
@@ -2098,8 +2112,7 @@ function _getStrokeColor(layerId) {
 function _choroStrokeColor() {
   if (_catMode) return '#444444';
   var palObj = CHORO_PALS.find(function(p) { return p.id === _choroPalette; }) || CHORO_PALS[0];
-  var rgb = _hexToRgb(palObj.c[palObj.c.length - 1]);
-  return _rgbToHex(rgb[0] * 0.55, rgb[1] * 0.55, rgb[2] * 0.55);
+  return _autoStrokeFor(palObj.c[palObj.c.length - 1]);
 }
 function _strokeColorFor(layerId) {
   if (_strokeOverride) return _strokeOverride;
@@ -2112,9 +2125,19 @@ function _strokeColorFor(layerId) {
 function _applyStrokeColors() {
   if (!_mapReady) return;
   _refreshAllOverlays();
+  var choroActive = Object.keys(_dataMap).length && _valueCol;
   if (_map.getLayer(ACTIVE_LINE_ID)) {
     _map.setPaintProperty(ACTIVE_LINE_ID, 'line-color',
-      _strokeOverride || ((Object.keys(_dataMap).length && _valueCol) ? _choroStrokeColor() : '#2a2a2a'));
+      _strokeOverride || (choroActive ? _choroStrokeColor() : '#2a2a2a'));
+  }
+  // Contour extérieur des blocs : normalement fixe (neutre, cf. vue "Blocs"
+  // par défaut), mais quand une choroplèthe est appliquée sur les blocs
+  // eux-mêmes, il doit suivre la même bascule blanc/assombri — sinon un
+  // contour toujours sombre devient invisible sur les classes les plus
+  // foncées (ex. palette Noir Reporter).
+  if (_map.getLayer(BLOCS_LINE_ID)) {
+    _map.setPaintProperty(BLOCS_LINE_ID, 'line-color',
+      (_fillLayer === 'blocs' && choroActive) ? (_strokeOverride || _choroStrokeColor()) : '#0D0E12');
   }
 }
 
@@ -2252,6 +2275,7 @@ function _redrawFill() {
       _drawBlocs();
       _removeActiveFillLayer();
       _setBlocsAsBackground(false);
+      _applyStrokeColors();
       var n = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
       setStatus('✓ Vue "Blocs" — ' + n + ' région' + (n > 1 ? 's' : '') + ' affichée' + (n > 1 ? 's' : '') + '.');
     };
@@ -2352,6 +2376,23 @@ function _rgbToHex(r, g, b) {
   }).join('');
 }
 
+// Luminance perçue (pondération standard, sans correction gamma — suffisant
+// pour un choix d'UI, pas une vérification de contraste WCAG stricte).
+function _relLuminance(hex) {
+  var rgb = _hexToRgb(hex);
+  return (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+}
+
+// Couleur des délimitations pour un ton donné : blanc si le ton lui-même
+// est déjà sombre (l'assombrir encore le rendrait indiscernable de la
+// classe la plus foncée — cas de la palette Noir), sinon une version
+// assombrie du ton comme avant. Bascule automatique, pas de réglage manuel.
+function _autoStrokeFor(hex) {
+  if (_relLuminance(hex) < 0.3) return '#ffffff';
+  var rgb = _hexToRgb(hex);
+  return _rgbToHex(rgb[0] * 0.55, rgb[1] * 0.55, rgb[2] * 0.55);
+}
+
 // Interpole N couleurs entre les stops d'une palette (3 stops → N couleurs)
 function _interpolatePalette(stops, n) {
   if (n <= 1) return [stops[Math.floor(stops.length / 2)]];
@@ -2434,6 +2475,7 @@ function _choroColor(val) {
 function _repaintChoro() {
   if (_fillLayer === 'blocs' && _mapReady && _map.getLayer(BLOCS_FILL_ID)) {
     _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
+    _applyStrokeColors();
   } else {
     _redrawFill();
   }
@@ -2718,7 +2760,7 @@ function _buildChoroUI() {
     sw.className = 'pal-sw' + (_choroPalette === p.id ? ' active' : '');
     sw.dataset.pal = p.id;
     sw.innerHTML = '<div class="sw-b">'+p.c.map(function(c){return '<span style="background:'+c+'"></span>';}).join('')+'</div>'
-                 + '<div class="pal-label">'+p.id+'</div>';
+                 + '<div class="pal-label">'+_escHtml(p.label || p.id)+'</div>';
     sw.addEventListener('click', function() {
       _choroPalette = p.id;
       document.querySelectorAll('.pal-sw').forEach(function(s){s.classList.remove('active');});
@@ -3522,6 +3564,15 @@ function _layerColorExpr(layer) {
   return ['case', ['==', ['get', '_cv'], null], '#ccc', expr];
 }
 
+// Couleur de délimitation d'une couche : bascule auto blanc/assombri selon
+// la teinte la plus foncée de la palette (cf. _autoStrokeFor, même logique
+// que la choroplèthe CSV — ex. palette Noir → blanc, pas un noir "encore
+// plus noir" illisible sur la classe la plus sombre).
+function _layerStrokeColor(layer) {
+  if (!layer.choro) return layer.color;
+  return _autoStrokeFor(layer.choro.colors[layer.choro.colors.length - 1]);
+}
+
 function _addUserLayer(name, geojson, color) {
   var id = 'ul' + Date.now().toString(36);
   var geomType = _detectGeomType(geojson);
@@ -3575,7 +3626,7 @@ function _renderUserLayerOnMap(layer) {
     _map.addLayer({ id:lyr,  type:'fill', source:src,
       paint: { 'fill-color':col, 'fill-opacity': opa * (layer.choro ? 0.75 : 0.38) } });
     _map.addLayer({ id:lyr2, type:'line', source:src,
-      paint: { 'line-color':layer.choro ? '#fff' : col, 'line-width':1.4, 'line-opacity': opa } });
+      paint: { 'line-color':_layerStrokeColor(layer), 'line-width':1.4, 'line-opacity': opa } });
   } else if (layer.geomType === 'line') {
     _map.addLayer({ id:lyr, type:'line', source:src,
       paint: { 'line-color':col, 'line-width':1.8, 'line-opacity': opa } });
@@ -3623,7 +3674,7 @@ function _setUserLayerColor(layer) {
   var col  = _layerColorExpr(layer);
   if (layer.geomType === 'polygon') {
     if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'fill-color',  col);
-    if (_map.getLayer(lyr2)) _map.setPaintProperty(lyr2, 'line-color',  layer.choro ? '#fff' : col);
+    if (_map.getLayer(lyr2)) _map.setPaintProperty(lyr2, 'line-color',  _layerStrokeColor(layer));
     _setUserLayerOpacity(layer);
   } else if (layer.geomType === 'line') {
     if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'line-color',  col);
@@ -3693,7 +3744,7 @@ function _appendLibLayerItem(layer) {
     var choroPalSel = document.createElement('select');
     choroPalSel.style.cssText = 'flex:0 0 auto;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;display:none';
     CHORO_PALS.forEach(function(p) {
-      var o = document.createElement('option'); o.value = p.id; o.textContent = p.id;
+      var o = document.createElement('option'); o.value = p.id; o.textContent = p.label || p.id;
       choroPalSel.appendChild(o);
     });
     var choroStepsSel = document.createElement('select');

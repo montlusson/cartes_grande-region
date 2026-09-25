@@ -95,6 +95,15 @@ function _layerColorExpr(layer) {
   return ['case', ['==', ['get', '_cv'], null], '#ccc', expr];
 }
 
+// Couleur de délimitation d'une couche : bascule auto blanc/assombri selon
+// la teinte la plus foncée de la palette (cf. _autoStrokeFor, même logique
+// que la choroplèthe CSV — ex. palette Noir → blanc, pas un noir "encore
+// plus noir" illisible sur la classe la plus sombre).
+function _layerStrokeColor(layer) {
+  if (!layer.choro) return layer.color;
+  return _autoStrokeFor(layer.choro.colors[layer.choro.colors.length - 1]);
+}
+
 function _addUserLayer(name, geojson, color) {
   var id = 'ul' + Date.now().toString(36);
   var geomType = _detectGeomType(geojson);
@@ -148,7 +157,7 @@ function _renderUserLayerOnMap(layer) {
     _map.addLayer({ id:lyr,  type:'fill', source:src,
       paint: { 'fill-color':col, 'fill-opacity': opa * (layer.choro ? 0.75 : 0.38) } });
     _map.addLayer({ id:lyr2, type:'line', source:src,
-      paint: { 'line-color':layer.choro ? '#fff' : col, 'line-width':1.4, 'line-opacity': opa } });
+      paint: { 'line-color':_layerStrokeColor(layer), 'line-width':1.4, 'line-opacity': opa } });
   } else if (layer.geomType === 'line') {
     _map.addLayer({ id:lyr, type:'line', source:src,
       paint: { 'line-color':col, 'line-width':1.8, 'line-opacity': opa } });
@@ -196,7 +205,7 @@ function _setUserLayerColor(layer) {
   var col  = _layerColorExpr(layer);
   if (layer.geomType === 'polygon') {
     if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'fill-color',  col);
-    if (_map.getLayer(lyr2)) _map.setPaintProperty(lyr2, 'line-color',  layer.choro ? '#fff' : col);
+    if (_map.getLayer(lyr2)) _map.setPaintProperty(lyr2, 'line-color',  _layerStrokeColor(layer));
     _setUserLayerOpacity(layer);
   } else if (layer.geomType === 'line') {
     if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'line-color',  col);
@@ -266,7 +275,7 @@ function _appendLibLayerItem(layer) {
     var choroPalSel = document.createElement('select');
     choroPalSel.style.cssText = 'flex:0 0 auto;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;display:none';
     CHORO_PALS.forEach(function(p) {
-      var o = document.createElement('option'); o.value = p.id; o.textContent = p.id;
+      var o = document.createElement('option'); o.value = p.id; o.textContent = p.label || p.id;
       choroPalSel.appendChild(o);
     });
     var choroStepsSel = document.createElement('select');
