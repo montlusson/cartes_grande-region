@@ -77,7 +77,7 @@ function getHierarchy(feat) {
 
   if (region === 'Grand Est') {
     var d = code.substring(0, 2);
-    h.dept = FR_DEPTS[d] || (d ? ('Dpt ' + d) : '');
+    h.dept = FR_DEPTS[d] || NUTS3_FR_DEPTS[code] || (d ? ('Dpt ' + d) : '');
     // Arrondissement lorrain : PIP géographique sur arr_lor (pas de préfixe INSEE)
     if (feat.geometry) h.arrondissement = _pipLookup('arr_lor', _featCenter(feat));
     if (_lookups['cantons_lor']) h.canton = _lookups['cantons_lor'][code.substring(0, 5)] || '';
@@ -104,10 +104,13 @@ function getHierarchy(feat) {
 
 var _inflightLayers = {};   // id → Promise (dédoublonne les téléchargements concurrents)
 function _fetchLayer(id, onProgress) {
-  if (_cache[id]) return Promise.resolve(_cache[id]);
-  if (_inflightLayers[id]) return _inflightLayers[id];
+  // Sous-couches "communes_*" (une par territoire) : alias vers le même
+  // GeoJSON partagé 'communes', téléchargé et mis en cache une seule fois.
+  var srcId = COMMUNES_SUBLAYER_REGION[id] ? 'communes' : id;
+  if (_cache[srcId]) return Promise.resolve(_cache[srcId]);
+  if (_inflightLayers[srcId]) return _inflightLayers[srcId];
   var p = new Promise(function(resolve, reject) {
-    var url = GR_URLS[id];
+    var url = GR_URLS[srcId];
     if (!url) { reject('No URL for layer: ' + id); return; }
     if (onProgress) onProgress('Chargement...', url);
 
@@ -140,14 +143,14 @@ function _fetchLayer(id, onProgress) {
       })
       .then(function(text) {
         var geo = JSON.parse(text);
-        _cache[id] = geo;
-        _buildLookup(id, geo);
+        _cache[srcId] = geo;
+        _buildLookup(srcId, geo);
         resolve(geo);
       })
       .catch(reject);
   });
-  _inflightLayers[id] = p;
-  p.then(function() { delete _inflightLayers[id]; }, function() { delete _inflightLayers[id]; });
+  _inflightLayers[srcId] = p;
+  p.then(function() { delete _inflightLayers[srcId]; }, function() { delete _inflightLayers[srcId]; });
   return p;
 }
 

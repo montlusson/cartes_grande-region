@@ -68,56 +68,32 @@ function _updateLegend() {
   });
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  PRESETS — vues rapides
-// ══════════════════════════════════════════════════════════════════
-
-function applyPreset(name) {
-  var cfg = PRESETS[name];
-  if (!cfg) return;
-
-  document.querySelectorAll('.preset-btn').forEach(function(btn) {
-    btn.classList.toggle('active', btn.dataset.preset === name);
-  });
-
-  var sel = document.getElementById('fill-layer-sel');
-  if (sel) sel.value = cfg.fill;
-  _fillLayer = cfg.fill;
-
-  // Mettre à jour les cases à cocher d'overlays selon le preset
-  var allKnownOverlays = Object.keys(_activeLayers).concat(Object.keys(cfg.overlays));
-  allKnownOverlays.forEach(function(id) {
-    var on = !!cfg.overlays[id];
-    _activeLayers[id] = on;
-    var chk = document.getElementById('chk-' + id);
-    if (chk) chk.checked = on;
-    if (_mapReady) { if (on) _redrawOverlay(id); else _removeOverlay(id); }
-  });
-
-  var layersToLoad = Object.keys(cfg.overlays).filter(function(id) {
-    return cfg.overlays[id] && id !== 'blocs' && !_cache[id];
-  });
-  if (cfg.fill !== 'none' && cfg.fill !== 'blocs' && !_cache[cfg.fill]) {
-    layersToLoad.push(cfg.fill);
-  }
-
-  if (!layersToLoad.length) {
-    _redrawFill();
-    _refreshAllOverlays();
-    _updateLegend();
-    return;
-  }
-
-  showLoading('Chargement des couches…', layersToLoad.join(', '));
-  Promise.all(layersToLoad.map(function(id) { return _ensureLayer(id); }))
-    .then(function() {
-      hideLoading();
-      _redrawFill();
-      _refreshAllOverlays();
+// ── Couleurs des blocs (onglet Style) : un sélecteur par territoire ──
+function _renderBlocColorPickers() {
+  var box = document.getElementById('bloc-colors');
+  if (!box) return;
+  box.innerHTML = '';
+  Object.keys(BLOC_COLORS).forEach(function(region) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;margin:5px 0';
+    var lbl = document.createElement('span');
+    lbl.textContent = BLOC_LABELS[region] || region;
+    lbl.style.cssText = 'font-size:11px;flex:1';
+    var inp = document.createElement('input');
+    inp.type = 'color';
+    inp.value = BLOC_COLORS[region];
+    inp.setAttribute('aria-label', 'Couleur pour ' + region);
+    inp.style.cssText = 'width:28px;height:24px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;flex:none;background:none';
+    inp.addEventListener('input', function() {
+      BLOC_COLORS[region] = this.value;
+      _drawBlocs();
       _updateLegend();
-      setStatus('Vue "' + name + '" chargée — ' + layersToLoad.length + ' couche(s) supplémentaire(s)');
-    })
-    .catch(function(e) { hideLoading(); setStatus('Erreur: ' + e); });
+      _applyStrokeColors(); // recalcule aussi les traits des niveaux intermédiaires (dérivés de BLOC_COLORS)
+    });
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    box.appendChild(row);
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════

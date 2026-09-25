@@ -7,13 +7,30 @@ function _overlayIds(layerId) {
   return { src: 'ov-src-' + layerId, line: 'ov-line-' + layerId };
 }
 
+// Niveau (0 = le plus large, donc le trait le plus sombre) de chaque couche
+// intermédiaire au sein de son territoire — cf. _getStrokeColor ci-dessous.
+var _STROKE_LEVEL = {
+  depts_lor: 0, arr_lor: 1, cantons_lor: 2,
+  kreise_rlp: 0, vg_rlp: 1,
+  landkreise_sar: 0,
+  provinces_wal: 0, arr_wal: 1,
+  cantons_lux: 0,
+};
+var _STROKE_LEVEL_FACTORS = [0.5, 0.65, 0.8];
+
 function _getStrokeColor(layerId) {
-  var colors = {
-    blocs: '#1d2d35', depts_lor: '#2e7d32', arr_lor: '#388e3c', cantons_lor: '#43a047',
-    kreise_rlp: '#1565c0', vg_rlp: '#1976d2', landkreise_sar: '#0288d1',
-    provinces_wal: '#c62828', arr_wal: '#e53935', cantons_lux: '#e65100', communes: '#888',
-  };
-  return colors[layerId] || '#555';
+  if (layerId === 'blocs') return '#1d2d35';
+  if (layerId === 'communes' || COMMUNES_SUBLAYER_REGION[layerId]) return '#888';
+  // Couleur du trait dérivée de la couleur de bloc du territoire (assombrie,
+  // plus le trait est sombre plus le niveau administratif est large) — pour
+  // que les contours suivent automatiquement une recoloration de bloc
+  // (cf. "Couleurs des blocs", onglet Style).
+  var region = _LAYER_REGION[layerId];
+  var base = region && BLOC_COLORS[region];
+  if (!base) return '#555';
+  var factor = _STROKE_LEVEL_FACTORS[_STROKE_LEVEL[layerId] || 0];
+  var rgb = _hexToRgb(base);
+  return _rgbToHex(rgb[0] * factor, rgb[1] * factor, rgb[2] * factor);
 }
 // Quand une choroplèthe est active, les délimitations internes adoptent une
 // version assombrie de la palette choisie (au lieu des couleurs par défaut).
@@ -42,7 +59,7 @@ function _applyStrokeColors() {
 
 function _getStrokeGroup(layerId) {
   if (layerId === 'blocs') return 'blocs';
-  if (layerId === 'communes') return 'communes';
+  if (layerId === 'communes' || COMMUNES_SUBLAYER_REGION[layerId]) return 'communes';
   if (layerId === 'cantons_lux' || layerId === 'cantons_lor' || layerId === 'vg_rlp') return 'cantons';
   return 'subdiv';
 }
@@ -58,13 +75,19 @@ function _drawOverlay(layerId) {
     }
     return;
   }
-  var geo = _cache[layerId];
+  // Sous-couches "communes_*" : puisent dans le GeoJSON partagé 'communes',
+  // restreint à la seule région de ce territoire (indépendamment des blocs
+  // actifs, pour permettre d'afficher les communes territoire par territoire).
+  var communeRegion = COMMUNES_SUBLAYER_REGION[layerId];
+  var geo = _cache[communeRegion ? 'communes' : layerId];
   if (!geo) return;
   var ids = _overlayIds(layerId);
-  var derivedRegion = _LAYER_REGION[layerId];
+  var derivedRegion = communeRegion || _LAYER_REGION[layerId];
   var feats = (geo.features || []).filter(_inGRBounds).filter(function(f) {
     var props = f.properties || {};
-    return !!_activeBlocs[_canonicalRegion(props.region || props.REGION || derivedRegion)];
+    var region = _canonicalRegion(props.region || props.REGION || derivedRegion);
+    if (communeRegion) return region === communeRegion;
+    return !!_activeBlocs[region];
   }).map(function(f) {
     var props = f.properties || {};
     return {

@@ -343,6 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
   _initSearch();
   _initPreviewToggle();
   _updateLegend();
+  _renderBlocColorPickers();
   _activeLayers['blocs'] = true;
 
   showLoading('Initialisation...', 'Chargement des données administratives');

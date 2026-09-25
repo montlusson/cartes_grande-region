@@ -27,15 +27,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh
 
 #sidebar{width:var(--panel-w);min-width:var(--panel-w);background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 
-/* PRESETS */
-#presets{padding:12px 14px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
-.preset-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.preset-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.preset-btn{border:2px solid var(--border);border-radius:var(--r);background:#fff;cursor:pointer;padding:8px 4px 6px;text-align:center;transition:border-color .15s,background .15s}
-.preset-btn.active{border-color:var(--accent);background:rgba(24,160,251,.06)}
-.preset-btn:hover:not(.active){border-color:#bbb;background:#fafafa}
-.preset-icon{font-size:18px;display:block;margin-bottom:3px}
-.preset-name{font-size:9.5px;font-weight:600;color:#555;line-height:1.2}
 
 #sidebar-body{flex:1;overflow-y:auto;padding:0 14px 14px}
 #sidebar-body::-webkit-scrollbar{width:6px}

@@ -210,13 +210,15 @@ function _buildChoroUI() {
 
 function _generateDefaultTpl() {
   var lines = [];
-  if (_ttImageMode !== 'none') {
-    var iv = _ttImageMode === 'pays' ? 'flag_pays' : _ttImageMode === 'region' ? 'flag_region' : '';
-    if (iv) lines.push('<img class="tt-img" src="{{'+iv+'}}" alt="" onerror="this.style.display=\'none\'">');
-    else if (_ttImageMode === 'custom') lines.push('<img class="tt-img" src="{{img}}" alt="" onerror="this.style.display=\'none\'">');
+  // Si un drapeau (pays ou régional) est déjà actif, l'infobulle par défaut
+  // affiche déjà l'image + la pastille de territoire + le nom — le modèle
+  // personnalisé n'a pas besoin de les redupliquer.
+  var isFlagMode = (_ttImageMode === 'pays' || _ttImageMode === 'region');
+  if (!isFlagMode) {
+    if (_ttImageMode === 'custom') lines.push('<img class="tt-img" src="{{img}}" alt="" onerror="this.style.display=\'none\'">');
+    lines.push('<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:{{chipColor}};color:#1a1a1a">{{chipLabel}}</span></div>');
+    if (_ttFields.name !== false) lines.push('<div class="tt-name">{{name}}</div>');
   }
-  lines.push('<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:{{chipColor}};color:#1a1a1a">{{chipLabel}}</span></div>');
-  if (_ttFields.name !== false) lines.push('<div class="tt-name">{{name}}</div>');
   var fmap = [
     {k:'canton',l:'Canton'},{k:'dept',l:'D\u00e9partement'},{k:'arrondissement',l:'Arrondissement'},
     {k:'kreis',l:'Kreis / Landkreis'},{k:'province',l:'Province'},{k:'vg',l:'Verbandsgemeinde'},
@@ -268,12 +270,15 @@ function _showTooltip(e, feat) {
   var bc = BLOC_COLORS[h.region] || '#888';
   var _parts = _chipParts(h);
   var _chipInner = _escHtml(_parts[0]);
-  if (_parts[1]) _chipInner += '<span class="tt-chip-sep">›</span><span class="tt-chip-sub">' + _escHtml(_parts[1]) + '</span>';
+  // Drapeau régional : le drapeau + la pastille de territoire suffisent —
+  // pas de sous-entité (ex. "Lorraine › Nancy") ni de nom répété en dessous.
+  if (_parts[1] && _ttImageMode !== 'region') _chipInner += '<span class="tt-chip-sep">›</span><span class="tt-chip-sub">' + _escHtml(_parts[1]) + '</span>';
   html += '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' + bc + ';color:#1a1a1a">' + _chipInner + '</span></div>';
   // Pas de repli sur BLOC_LABELS : le territoire est déjà dans le cadre
   // coloré ci-dessus (chip) — ne répéter le nom que s'il y a une entité
-  // précise (commune, canton…) distincte de ce territoire.
-  if (tf.name !== false && (p.name || p.NAME)) {
+  // précise (commune, canton…) distincte de ce territoire, et seulement si
+  // une image est affichée (sans image, le chip coloré suffit à lui seul).
+  if ((_ttImageMode === 'pays' || _ttImageMode === 'custom') && tf.name !== false && (p.name || p.NAME)) {
     html += '<div class="tt-name">' + _escHtml(p.name || p.NAME) + '</div>';
   }
 

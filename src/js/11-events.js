@@ -13,11 +13,6 @@ function wireEvents() {
     });
   });
 
-  // Presets
-  document.querySelectorAll('.preset-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() { applyPreset(btn.dataset.preset); });
-  });
-
   // Champs Titre/Chapô/Auteur/Source → cartouche sur la carte + exports
   ['map-title', 'map-chapo', 'map-author', 'map-source'].forEach(function(id) {
     var el = document.getElementById(id);

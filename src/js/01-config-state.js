@@ -67,6 +67,9 @@ var BLOC_SUBDIV_PALETTES = {
 // Département FR depuis le préfixe INSEE à 2 chiffres
 var FR_DEPTS = { '54':'Meurthe-et-Moselle', '55':'Meuse', '57':'Moselle', '88':'Vosges' };
 
+// Département FR depuis le code NUTS3 (utilisé par depts_lor, ex. 'FRF31'), pas de préfixe INSEE
+var NUTS3_FR_DEPTS = { 'FRF31':'Meurthe-et-Moselle', 'FRF32':'Meuse', 'FRF33':'Moselle', 'FRF34':'Vosges' };
+
 // Codes AGS (5 premières chiffres) → nom du Kreis/Landkreis
 // Source: grandes régions DE calculées par intersection spatiale (PIP) sur communes-gr-2026
 var AGS_KREISE = {
@@ -119,6 +122,18 @@ var _LAYER_REGION = {
   'cantons_lor':    'Grand Est',
   'arr_wal':        'Wallonie',
   'vg_rlp':         'Rheinland-Pfalz',
+};
+
+// Sous-couches "Communes" par territoire — toutes puisent dans le même
+// GeoJSON partagé (_cache['communes']), filtré par région à l'affichage
+// (cf. _drawOverlay, js/05-overlays.js) pour permettre d'activer le niveau
+// communal territoire par territoire plutôt qu'en bloc unique.
+var COMMUNES_SUBLAYER_REGION = {
+  'communes_rlp': 'Rheinland-Pfalz',
+  'communes_sar': 'Saarland',
+  'communes_wal': 'Wallonie',
+  'communes_lor': 'Grand Est',
+  'communes_lux': 'Luxembourg',
 };
 
 // Couches affichées comme "subdivisions" coloriées par palette/index
@@ -174,26 +189,6 @@ var _ttImageMode = 'none';        // none | pays | region | custom
 var _ttImageUrl = '';
 var _ttHtmlMode = false;
 var _ttHtmlTemplate = '';
-
-// Vues rapides — quelle couche de fond + quels contours afficher
-var PRESETS = {
-  blocs: {
-    fill: 'blocs',
-    overlays: { blocs: true },
-  },
-  subdivisions: {
-    fill: 'blocs',
-    overlays: { blocs: true, depts_lor: true, kreise_rlp: true, landkreise_sar: true, provinces_wal: true, cantons_lux: true },
-  },
-  cantons: {
-    fill: 'blocs',
-    overlays: { blocs: true, depts_lor: true, kreise_rlp: true, landkreise_sar: true, arr_wal: true, cantons_lux: true, cantons_lor: true },
-  },
-  communes: {
-    fill: 'communes',
-    overlays: { blocs: true, depts_lor: true, kreise_rlp: true, landkreise_sar: true, provinces_wal: true, cantons_lux: true },
-  },
-};
 
 // ══════════════════════════════════════════════════════════════════
 //  ÉTAT GLOBAL
