@@ -39,7 +39,7 @@ function exportMap() {
           var x = pt.x * dprL, y = pt.y * dprL;
           ctx.beginPath();
           ctx.arc(x, y, 3.5 * dprL, 0, Math.PI * 2);
-          ctx.fillStyle = '#1d2d35'; ctx.fill();
+          ctx.fillStyle = '#0D0E12'; ctx.fill();
           ctx.lineWidth = 1.5 * dprL; ctx.strokeStyle = '#fff'; ctx.stroke();
           if (!m.placement) return;          // nom masqué pour cause de chevauchement
           var tx = x, ty = y;

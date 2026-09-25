@@ -102,7 +102,7 @@ function _generateEmbedHTML(payload) {
 
 '  // Contour blocs',
 '  map.addLayer({id:"blocs-line",type:"line",source:"blocs",',
-'    paint:{"line-color":"#1d2d35","line-width":1,"line-opacity":0.85}});',
+'    paint:{"line-color":"#0D0E12","line-width":1,"line-opacity":0.85}});',
 
 '  // Overlays',
 '  var OV_WIDTHS = {depts_lor:0.8,kreise_rlp:0.8,landkreise_sar:0.8,provinces_wal:0.8,cantons_lux:0.8,',
@@ -111,7 +111,7 @@ function _generateEmbedHTML(payload) {
 '    if (id === "blocs" || !DATA[id]) return;',
 '    map.addSource("ov-"+id,{type:"geojson",data:DATA[id]});',
 '    map.addLayer({id:"ov-"+id+"-line",type:"line",source:"ov-"+id,',
-'      paint:{"line-color":(STATE.strokeColor||"#1d2d35"),"line-width":OV_WIDTHS[id]||0.6,"line-opacity":0.7}});',
+'      paint:{"line-color":(STATE.strokeColor||"#0D0E12"),"line-width":OV_WIDTHS[id]||0.6,"line-opacity":0.7}});',
 '  });',
 
 '  // Ramener les overlays au premier plan',
@@ -386,7 +386,7 @@ function _generateEmbedHTML(payload) {
 '.tt-chip-row{text-align:center;margin-bottom:5px}',
 '.tt-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#1a1a1a}',
 '.lbl-marker{position:relative;width:0;height:0;pointer-events:none}',
-'.lbl-dot{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#1d2d35;border:1.5px solid #fff;box-shadow:0 0 3px rgba(0,0,0,.35)}',
+'.lbl-dot{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#0D0E12;border:1.5px solid #fff;box-shadow:0 0 3px rgba(0,0,0,.35)}',
 '.lbl-text{position:absolute;font-family:Inter,system-ui,sans-serif;font-weight:600;color:#1a1a1a;white-space:nowrap;',
 '  text-shadow:-1px -1px 0 rgba(255,255,255,.92),1px -1px 0 rgba(255,255,255,.92),-1px 1px 0 rgba(255,255,255,.92),1px 1px 0 rgba(255,255,255,.92),0 0 4px rgba(255,255,255,.92)}',
 '.lbl-marker.p-right .lbl-text{left:8px;top:50%;transform:translateY(-50%)}',
@@ -400,7 +400,7 @@ function _generateEmbedHTML(payload) {
 '  font-size:12.5px;background:rgba(255,255,255,.96);backdrop-filter:blur(2px);box-shadow:0 1px 6px rgba(0,0,0,.12);',
 '  outline:none}',
 '#map-search-input::placeholder{color:#999}',
-'#map-search-input:focus{border-color:#18a0fb;box-shadow:0 0 0 3px rgba(24,160,251,.15)}',
+'#map-search-input:focus{border-color:#5E71A1;box-shadow:0 0 0 3px rgba(94,113,161,.15)}',
 '#map-search-clear{position:absolute;right:6px;top:5px;width:22px;height:22px;border:none;background:transparent;',
 '  color:#999;font-size:15px;cursor:pointer;display:none;align-items:center;justify-content:center;border-radius:50%}',
 '#map-search-clear.vis{display:flex}',

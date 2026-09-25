@@ -110,7 +110,7 @@ function _drawBlocs() {
     });
     _map.addLayer({
       id: BLOCS_LINE_ID, type: 'line', source: BLOCS_SOURCE_ID,
-      paint: { 'line-color': '#1d2d35', 'line-width': _strokeWidths.blocs, 'line-opacity': 0.85 }
+      paint: { 'line-color': '#0D0E12', 'line-width': _strokeWidths.blocs, 'line-opacity': 0.85 }
     });
   }
   _setVisible(BLOCS_FILL_ID, true);

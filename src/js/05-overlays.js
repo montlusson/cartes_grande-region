@@ -19,7 +19,7 @@ var _STROKE_LEVEL = {
 var _STROKE_LEVEL_FACTORS = [0.5, 0.65, 0.8];
 
 function _getStrokeColor(layerId) {
-  if (layerId === 'blocs') return '#1d2d35';
+  if (layerId === 'blocs') return '#0D0E12';
   if (layerId === 'communes' || COMMUNES_SUBLAYER_REGION[layerId]) return '#888';
   // Couleur du trait dérivée de la couleur de bloc du territoire (assombrie,
   // plus le trait est sombre plus le niveau administratif est large) — pour
