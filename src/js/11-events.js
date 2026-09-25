@@ -195,8 +195,7 @@ function wireEvents() {
     _updateTtVarChips();
     document.getElementById('csv-input').value = '';
     document.getElementById('csv-preview-wrap').style.display = 'none';
-    document.getElementById('data-badge').textContent = 'Aucune donnée';
-    document.getElementById('data-badge').className = 'badge badge-warn';
+    _updateDataBadge();
     document.getElementById('btn-apply-data').disabled = true;
     _redrawFill(); _updateLegend(); _refreshAllOverlays();
   });

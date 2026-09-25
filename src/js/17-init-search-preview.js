@@ -344,6 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
   _initPreviewToggle();
   _updateLegend();
   _renderBlocColorPickers();
+  _renderLibraryCatalog();
   _activeLayers['blocs'] = true;
 
   showLoading('Initialisation...', 'Chargement des données administratives');

@@ -377,6 +377,7 @@ function _tableRowsForCurrentView() {
 }
 
 function _openTableModal() {
+  document.getElementById('table-modal-title').textContent = 'Données de la vue courante';
   var rows  = _tableRowsForCurrentView();
   var choro = Object.keys(_dataMap).length > 0 && !!_valueCol;
   var meta  = _getMapMeta();

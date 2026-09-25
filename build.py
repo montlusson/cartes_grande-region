@@ -43,6 +43,8 @@ JS_MODULES = [
     "js/15-export-embed-modal.js",
     "js/16-publish.js",
     "js/17-init-search-preview.js",
+    "js/18-library-catalog.js",
+    "js/19-library-focus.js",
 ]
 
 

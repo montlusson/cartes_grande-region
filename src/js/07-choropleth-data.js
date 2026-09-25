@@ -144,8 +144,7 @@ function loadCSV() {
   _showCSVPreview();
   document.getElementById('csv-preview-wrap').style.display = 'block';
   document.getElementById('csv-row-count').textContent = _csvData.rows.length + ' lignes · ' + _csvData.cols.length + ' colonnes';
-  document.getElementById('data-badge').textContent = _csvData.rows.length + ' lignes';
-  document.getElementById('data-badge').className = 'badge badge-ok';
+  _updateDataBadge();
   document.getElementById('btn-apply-data').disabled = false;
 }
 

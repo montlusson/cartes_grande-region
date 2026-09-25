@@ -993,11 +993,23 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
               </div>
               <div id="cat-colors" style="max-height:220px;overflow-y:auto"></div>
             </div>
+            <div id="lib-data-tab-list" style="display:none"></div>
           </div>
         </div><!-- /tab-data -->
 
         <!-- TAB: BIBLIOTHÈQUE -->
         <div class="tab-pane" id="tab-library">
+          <div class="section">
+            <div class="section-title">Catalogue GIS-GR</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Jeux de données réels du Géoportail de la Grande Région — cliquez « + Ajouter »
+              pour les récupérer et les afficher comme n'importe quelle couche importée.
+            </div>
+            <div id="lib-catalog"></div>
+          </div>
+
+          <hr class="divider">
+
           <div class="section">
             <div class="section-title">Couches contextuelles</div>
             <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
@@ -2654,8 +2666,7 @@ function loadCSV() {
   _showCSVPreview();
   document.getElementById('csv-preview-wrap').style.display = 'block';
   document.getElementById('csv-row-count').textContent = _csvData.rows.length + ' lignes · ' + _csvData.cols.length + ' colonnes';
-  document.getElementById('data-badge').textContent = _csvData.rows.length + ' lignes';
-  document.getElementById('data-badge').className = 'badge badge-ok';
+  _updateDataBadge();
   document.getElementById('btn-apply-data').disabled = false;
 }
 
@@ -3309,6 +3320,7 @@ function _tableRowsForCurrentView() {
 }
 
 function _openTableModal() {
+  document.getElementById('table-modal-title').textContent = 'Données de la vue courante';
   var rows  = _tableRowsForCurrentView();
   var choro = Object.keys(_dataMap).length > 0 && !!_valueCol;
   var meta  = _getMapMeta();
@@ -3441,17 +3453,113 @@ function _escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// ── Choroplèthe par valeur (couches Bibliothèque / import) ─────────
+// Champs à ignorer même s'ils sont numériques : identifiants, métadonnées
+// géométriques — jamais des valeurs qu'on voudrait cartographier.
+var _LIB_FIELD_EXCLUDE_RE = /^(gml_?id|objectid.*|fid|id|code|.*_shape_|st_area.*|st_length.*)$/i;
+
+// Nombre depuis une valeur brute GeoJSON : gère "5,0%" (virgule + %) et les
+// nombres déjà propres. null si non interprétable.
+function _coerceNum(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  if (v === null || v === undefined) return null;
+  var n = parseFloat(String(v).trim().replace('%', '').replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+
+// Détecte les propriétés majoritairement numériques sur un échantillon de
+// features — ce sont les candidats proposés pour la coloration par valeur.
+function _detectNumericFields(geojson) {
+  var feats = (geojson.features || []).slice(0, 30);
+  var keys = {};
+  feats.forEach(function(f) { Object.keys(f.properties || {}).forEach(function(k) { keys[k] = true; }); });
+  var result = [];
+  Object.keys(keys).forEach(function(k) {
+    if (_LIB_FIELD_EXCLUDE_RE.test(k)) return;
+    var n = 0, ok = 0;
+    feats.forEach(function(f) {
+      var v = (f.properties || {})[k];
+      if (v === undefined || v === null || v === '') return;
+      n++;
+      if (_coerceNum(v) !== null) ok++;
+    });
+    if (n >= 3 && ok / n >= 0.8) result.push(k);
+  });
+  return result;
+}
+
+// Seuils quantiles + palette pour un champ donné — indépendant du CSV/join
+// (cf. _buildChoroScale, js/06-choropleth-scale.js, qui lui reste dédié au
+// flux CSV). Écrit aussi la valeur numérique normalisée dans chaque feature
+// (_cv) : les expressions MapLibre ne savent pas parser "5,0%" elles-mêmes.
+function _computeLayerChoro(layer, field, paletteId, steps) {
+  var vals = [];
+  (layer.geojson.features || []).forEach(function(f) {
+    var n = _coerceNum((f.properties || {})[field]);
+    f.properties._cv = n;
+    if (n !== null) vals.push(n);
+  });
+  if (!vals.length) return null;
+  vals.sort(function(a, b) { return a - b; });
+  steps = Math.min(steps || 5, Math.max(2, vals.length));
+  var breaks = [];
+  for (var i = 1; i < steps; i++) breaks.push(vals[Math.floor(vals.length * i / steps)]);
+  var palObj = CHORO_PALS.find(function(p) { return p.id === paletteId; }) || CHORO_PALS[0];
+  return { field: field, breaks: breaks, colors: _interpolatePalette(palObj.c, steps),
+           min: vals[0], max: vals[vals.length - 1] };
+}
+
+// Format court pour les bornes de légende (entier si c'en est un, sinon 1 décimale)
+function _fmtChoroNum(v) {
+  return (Math.round(v) === v ? v : v.toFixed(1)).toString().replace('.', ',');
+}
+
+// Couleur (unie ou expression MapLibre pilotée par _cv) pour le style d'une couche
+function _layerColorExpr(layer) {
+  if (!layer.choro) return layer.color;
+  var expr = ['step', ['get', '_cv'], layer.choro.colors[0]];
+  layer.choro.breaks.forEach(function(b, i) { expr.push(b, layer.choro.colors[i + 1]); });
+  return ['case', ['==', ['get', '_cv'], null], '#ccc', expr];
+}
+
 function _addUserLayer(name, geojson, color) {
   var id = 'ul' + Date.now().toString(36);
   var geomType = _detectGeomType(geojson);
   var n = (geojson.features || []).length;
   var layer = { id:id, name:name, geojson:geojson, geomType:geomType,
-                color:color, opacity:0.82, visible:true };
+                color:color, opacity:0.82, visible:true,
+                numericFields: _detectNumericFields(geojson), choro:null };
   _userLayers.push(layer);
   if (_mapReady) _renderUserLayerOnMap(layer);
   _appendLibLayerItem(layer);
   _updateLibEmptyHint();
   setStatus('✓ "' + name + '" — ' + n + ' objet' + (n > 1 ? 's' : '') + ' chargé' + (n > 1 ? 's' : '') + '.');
+  _updateDataBadge();
+  _updateLibraryBasemapFocus();
+  _renderLibraryDataTab();
+  return layer;
+}
+
+// Fonctions notifiées après suppression d'une couche (id) — permet à un
+// autre module (ex. catalogue Bibliothèque, js/18-library-catalog.js) de
+// resynchroniser son propre état sans dépendance directe entre fichiers.
+var _libLayerRemovedListeners = [];
+
+function _removeUserLayer(id) {
+  var layer = _userLayers.find(function(l) { return l.id === id; });
+  if (!layer) return;
+  _removeUserLayerFromMap(layer);
+  _userLayers = _userLayers.filter(function(l) { return l.id !== id; });
+  ['lib-item-', 'lib-opa-row-', 'lib-choro-row-'].forEach(function(prefix) {
+    var el = document.getElementById(prefix + id);
+    if (el) el.remove();
+  });
+  _updateLibEmptyHint();
+  setStatus('Couche "' + layer.name + '" supprimée.');
+  _updateDataBadge();
+  _updateLibraryBasemapFocus();
+  _renderLibraryDataTab();
+  _libLayerRemovedListeners.forEach(function(fn) { fn(id); });
 }
 
 function _renderUserLayerOnMap(layer) {
@@ -3462,17 +3570,18 @@ function _renderUserLayerOnMap(layer) {
   if (_map.getSource(src)) return;
   _map.addSource(src, { type: 'geojson', data: layer.geojson });
   var opa = layer.opacity;
+  var col = _layerColorExpr(layer);
   if (layer.geomType === 'polygon') {
     _map.addLayer({ id:lyr,  type:'fill', source:src,
-      paint: { 'fill-color':layer.color, 'fill-opacity': opa * 0.38 } });
+      paint: { 'fill-color':col, 'fill-opacity': opa * (layer.choro ? 0.75 : 0.38) } });
     _map.addLayer({ id:lyr2, type:'line', source:src,
-      paint: { 'line-color':layer.color, 'line-width':1.4, 'line-opacity': opa } });
+      paint: { 'line-color':layer.choro ? '#fff' : col, 'line-width':1.4, 'line-opacity': opa } });
   } else if (layer.geomType === 'line') {
     _map.addLayer({ id:lyr, type:'line', source:src,
-      paint: { 'line-color':layer.color, 'line-width':1.8, 'line-opacity': opa } });
+      paint: { 'line-color':col, 'line-width':1.8, 'line-opacity': opa } });
   } else {
     _map.addLayer({ id:lyr, type:'circle', source:src,
-      paint: { 'circle-color':layer.color, 'circle-radius':5, 'circle-opacity': opa,
+      paint: { 'circle-color':col, 'circle-radius':5, 'circle-opacity': opa,
                'circle-stroke-color':'#fff', 'circle-stroke-width':1 } });
   }
   _bringOverlaysToFront();
@@ -3493,7 +3602,7 @@ function _setUserLayerOpacity(layer) {
   var lyr2 = 'ulyr2-' + layer.id;
   var opa  = layer.opacity;
   if (layer.geomType === 'polygon') {
-    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'fill-opacity',  opa * 0.38);
+    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'fill-opacity',  opa * (layer.choro ? 0.75 : 0.38));
     if (_map.getLayer(lyr2)) _map.setPaintProperty(lyr2, 'line-opacity',  opa);
   } else if (layer.geomType === 'line') {
     if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'line-opacity',  opa);
@@ -3506,13 +3615,20 @@ function _setUserLayerColor(layer) {
   if (!_map) return;
   var lyr  = 'ulyr-' + layer.id;
   var lyr2 = 'ulyr2-' + layer.id;
+  // _computeLayerChoro écrit _cv dans les properties du GeoJSON déjà chargé
+  // dans la source — sans ce setData(), MapLibre garde sa copie d'origine
+  // et continue de rendre les anciennes valeurs (ou aucune).
+  var src = _map.getSource('usrc-' + layer.id);
+  if (src) src.setData(layer.geojson);
+  var col  = _layerColorExpr(layer);
   if (layer.geomType === 'polygon') {
-    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'fill-color',  layer.color);
-    if (_map.getLayer(lyr2)) _map.setPaintProperty(lyr2, 'line-color',  layer.color);
+    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'fill-color',  col);
+    if (_map.getLayer(lyr2)) _map.setPaintProperty(lyr2, 'line-color',  layer.choro ? '#fff' : col);
+    _setUserLayerOpacity(layer);
   } else if (layer.geomType === 'line') {
-    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'line-color',  layer.color);
+    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'line-color',  col);
   } else {
-    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'circle-color',layer.color);
+    if (_map.getLayer(lyr))  _map.setPaintProperty(lyr,  'circle-color',col);
   }
 }
 
@@ -3558,6 +3674,64 @@ function _appendLibLayerItem(layer) {
     '<span id="lib-opa-v-' + layer.id + '">' + pct + '%</span>';
   list.appendChild(opaDiv);
 
+  // Choroplèthe (uniquement si des champs numériques ont été détectés)
+  var choroDiv = null;
+  if (layer.numericFields.length) {
+    choroDiv = document.createElement('div');
+    choroDiv.className = 'lib-opa-row';
+    choroDiv.id = 'lib-choro-row-' + layer.id;
+    choroDiv.style.cssText = 'flex-wrap:wrap;gap:5px 6px;padding:2px 4px 6px 34px';
+    var choroSel = document.createElement('select');
+    choroSel.style.cssText = 'flex:1;min-width:0;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px';
+    var optFlat = document.createElement('option');
+    optFlat.value = ''; optFlat.textContent = '— couleur unie —';
+    choroSel.appendChild(optFlat);
+    layer.numericFields.forEach(function(f) {
+      var o = document.createElement('option'); o.value = f; o.textContent = f;
+      choroSel.appendChild(o);
+    });
+    var choroPalSel = document.createElement('select');
+    choroPalSel.style.cssText = 'flex:0 0 auto;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;display:none';
+    CHORO_PALS.forEach(function(p) {
+      var o = document.createElement('option'); o.value = p.id; o.textContent = p.id;
+      choroPalSel.appendChild(o);
+    });
+    var choroStepsSel = document.createElement('select');
+    choroStepsSel.title = 'Nombre de classes';
+    choroStepsSel.style.cssText = 'flex:0 0 auto;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;display:none';
+    [3,4,5,6,7].forEach(function(n) {
+      var o = document.createElement('option'); o.value = n; o.textContent = n + ' classes';
+      if (n === 5) o.selected = true;
+      choroStepsSel.appendChild(o);
+    });
+    var choroLegend = document.createElement('div');
+    choroLegend.style.cssText = 'flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px';
+    choroDiv.appendChild(choroSel);
+    choroDiv.appendChild(choroPalSel);
+    choroDiv.appendChild(choroStepsSel);
+    choroDiv.appendChild(choroLegend);
+    list.appendChild(choroDiv);
+
+    function _applyChoro() {
+      var field = choroSel.value;
+      if (!field) {
+        layer.choro = null;
+        choroPalSel.style.display = 'none';
+        choroStepsSel.style.display = 'none';
+        choroLegend.innerHTML = '';
+      } else {
+        layer.choro = _computeLayerChoro(layer, field, choroPalSel.value, parseInt(choroStepsSel.value, 10));
+        choroPalSel.style.display = '';
+        choroStepsSel.style.display = '';
+        _renderChoroLegend(layer, choroLegend);
+      }
+      _setUserLayerColor(layer);
+    }
+    choroSel.addEventListener('change', _applyChoro);
+    choroPalSel.addEventListener('change', _applyChoro);
+    choroStepsSel.addEventListener('change', _applyChoro);
+  }
+
   // ── Events ───────────────────────────────────────────────────────
   var id = layer.id;
 
@@ -3572,6 +3746,8 @@ function _appendLibLayerItem(layer) {
       });
     }
     opaDiv.style.display = layer.visible ? 'flex' : 'none';
+    if (choroDiv) choroDiv.style.display = layer.visible ? 'flex' : 'none';
+    _updateLibraryBasemapFocus();
   });
 
   // Opacity
@@ -3596,12 +3772,7 @@ function _appendLibLayerItem(layer) {
   // Delete
   div.querySelector('.lib-del-btn').addEventListener('click', function() {
     if (!confirm('Supprimer la couche "' + layer.name + '" ?')) return;
-    _removeUserLayerFromMap(layer);
-    _userLayers = _userLayers.filter(function(l) { return l.id !== id; });
-    div.remove();
-    opaDiv.remove();
-    _updateLibEmptyHint();
-    setStatus('Couche "' + layer.name + '" supprimée.');
+    _removeUserLayer(id);
   });
 }
 
@@ -3930,8 +4101,7 @@ function wireEvents() {
     _updateTtVarChips();
     document.getElementById('csv-input').value = '';
     document.getElementById('csv-preview-wrap').style.display = 'none';
-    document.getElementById('data-badge').textContent = 'Aucune donnée';
-    document.getElementById('data-badge').className = 'badge badge-warn';
+    _updateDataBadge();
     document.getElementById('btn-apply-data').disabled = true;
     _redrawFill(); _updateLegend(); _refreshAllOverlays();
   });
@@ -5546,6 +5716,7 @@ document.addEventListener('DOMContentLoaded', function() {
   _initPreviewToggle();
   _updateLegend();
   _renderBlocColorPickers();
+  _renderLibraryCatalog();
   _activeLayers['blocs'] = true;
 
   showLoading('Initialisation...', 'Chargement des données administratives');
@@ -5578,6 +5749,426 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   })).then(afterInitialLoad);
 });
+//  BIBLIOTHÈQUE — CATALOGUE GIS-GR (jeux de données réels, WFS)
+// ══════════════════════════════════════════════════════════════════
+// Chaque item pointe vers un vrai service WFS du Géoportail (ws.geoportail.lu,
+// CORS ouvert) — trouvé et vérifié via le catalogue GeoNetwork public
+// (geocatalogue.gis-gr.eu). Cliquer "+" récupère le GeoJSON réel et l'ajoute
+// comme couche via _addUserLayer(), exactement comme un import manuel.
+//
+// `joinable` (optionnel) : pour les jeux de données "une valeur par commune"
+// dont la couverture correspond exactement à la couche "communes" déjà
+// intégrée à l'outil (fond de carte propre, cohérent partout ailleurs) —
+// au lieu de dessiner la géométrie du fichier récupéré (qui peut mal
+// s'emboîter aux découpes fines), on route les valeurs vers le pipeline
+// CSV/jointure existant (onglet Données) : mêmes limites communales que
+// partout dans l'outil, et on bénéficie gratuitement des palettes, du
+// nombre de classes réglable, des couleurs par catégorie et de l'export.
+// Ne s'applique qu'aux jeux de données communaux à couverture unique —
+// les jeux de données infrarégionaux (Kreise+provinces+cantons mélangés)
+// n'ont pas d'équivalent fusionné côté outil et restent en couche directe.
+
+var LIBRARY_CATALOG = [
+  { cat: 'Démographie', items: [
+    { label: 'Densité de population par commune (2024)', service: 'GR_Pop_density_WFS', layer: 'Pop_density:Pop_density_2024',
+      joinable: { nameField: 'name', valueField: 'pop_density', valueLabel: 'Densité de population (hab/km²)' } },
+    { label: 'Densité par entité infrarégionale (2025)', service: 'GR_Pop_density_WFS', layer: 'Pop_density:Pop_density_2025' },
+    { label: 'Évolution de la population 2000–2025', service: 'GR_Population_change_WFS', layer: 'Population_change:Pop_change_2000_2025' },
+    { label: 'Projection de la population 2025–2070', service: 'GR_Population_projection_WFS', layer: 'Population_projection:Projection_total_pop_2025_2070' },
+    { label: 'Population en âge de travailler — projection 2025–2070', service: 'GR_Population_projection_WFS', layer: 'Population_projection:Projection_20_64_years_2025_2070' },
+  ]},
+  { cat: 'Mobilité', items: [
+    { label: 'Bus transfrontaliers — Luxembourg ↔ Lorraine (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_bus_lines_Luxembourg_Lorraine_2026' },
+    { label: 'Bus transfrontaliers — Luxembourg ↔ Rhénanie-Palatinat (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_bus_lines_Luxembourg_Rhineland_Palatinate_2026' },
+    { label: 'Bus transfrontaliers — Luxembourg ↔ Sarre (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_bus_lines_Luxembourg_Saarland_2026' },
+    { label: 'Bus transfrontaliers — Luxembourg ↔ Wallonie (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_bus_lines_Luxembourg_Belgium_2026' },
+    { label: 'Bus transfrontaliers — Lorraine ↔ Sarre (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_bus_lines_France_Germany_2026' },
+    { label: 'Bus transfrontaliers — Wallonie ↔ Lorraine (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_bus_lines_Belgium_France_2026' },
+    { label: 'Bus transfrontaliers — Rhénanie-Palatinat ↔ Wallonie (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_bus_lines_Germany_Belgium_2026' },
+    { label: 'Trains transfrontaliers — Luxembourg ↔ France (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_railway_Luxembourg_France_2026' },
+    { label: 'Trains transfrontaliers — Luxembourg ↔ Allemagne (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_trains_Luxembourg_Germany_2026' },
+    { label: 'Trains transfrontaliers — Luxembourg ↔ Belgique (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_trains_Luxembourg_Belgium_2026' },
+    { label: 'Trains transfrontaliers — France ↔ Allemagne (2026)', service: 'GR_Cross_border_railway_bus_lines_WFS', layer: 'Cross_border_railway_bus_lines:Cross_border_trains_France_Germany_2026' },
+    { label: 'Pistes cyclables — réseau transfrontalier (2026)', service: 'GR_Cycle_paths_WFS', layer: 'Cycle_paths:Cross_border_cycle_paths_GR_2026' },
+    { label: 'Pistes cyclables — EuroVelo (2026)', service: 'GR_Cycle_paths_WFS', layer: 'Cycle_paths:EuroVelo_GR_2026' },
+    { label: 'Aires de covoiturage (2026)', service: 'GR_Carpool_parkings_WFS', layer: 'Carpool_parkings:Carpool_parkings_2026' },
+    { label: 'Bornes de recharge électrique (2021)', service: 'GR_Charging_stations_electric_vehicles_WFS', layer: 'Charging_stations_electric_vehicles:Charging_stations_electric_vehicles_2021' },
+    { label: 'Aéroports — passagers annuels (2017)', service: 'GR_Transport_infrastructures_WFS', layer: 'Transport_infrastructures:Airport_passengers_2017' },
+  ]},
+  { cat: 'Marché du travail', items: [
+    { label: 'Frontaliers vers le Luxembourg — total (2023)', service: 'GR_Commuter_flows_to_Luxembourg_WFS', layer: 'Commuter_flows_to_Luxembourg:Commuters_Lux_2023' },
+    { label: 'Frontaliers vers le Luxembourg — depuis la Lorraine (2023)', service: 'GR_Commuter_flows_to_Luxembourg_WFS', layer: 'Commuter_flows_to_Luxembourg:Commuters_LOR_LUX_2013_2023_share' },
+    { label: 'Frontaliers vers le Luxembourg — depuis la Rhénanie-Palatinat (2023)', service: 'GR_Commuter_flows_to_Luxembourg_WFS', layer: 'Commuter_flows_to_Luxembourg:Commuters_RLP_LUX_2013_2023_share' },
+    { label: 'Frontaliers vers le Luxembourg — depuis la Sarre (2023)', service: 'GR_Commuter_flows_to_Luxembourg_WFS', layer: 'Commuter_flows_to_Luxembourg:Commuters_SL_LUX_2013_2023_share' },
+    { label: 'Frontaliers vers le Luxembourg — depuis la Wallonie (2023)', service: 'GR_Commuter_flows_to_Luxembourg_WFS', layer: 'Commuter_flows_to_Luxembourg:Commuters_WAL_LUX_2013_2023_share' },
+    { label: 'Frontaliers — France vers la Sarre (2023)', service: 'GR_Commuter_flows_France_to_Germany_WFS', layer: 'Commuter_flows_France_to_Germany:Commuters_FR_SL_2023_share' },
+    { label: 'Frontaliers — France vers la Rhénanie-Palatinat (2023)', service: 'GR_Commuter_flows_France_to_Germany_WFS', layer: 'Commuter_flows_France_to_Germany:Commuters_FR_RLP_share_2023' },
+    { label: 'Frontaliers — Wallonie ↔ France (2023)', service: 'GR_Commuters_between_Wallonia_and_France_WFS', layer: 'Commuters_between_Wallonia_and_France:Commuters_WAL_to_FR_2023_share' },
+    { label: 'Taux de chômage par territoire (2016)', service: 'GR_Unemployment_WFS', layer: 'Unemployment:Unemployement_rate_2016' },
+  ]},
+  { cat: 'Environnement', items: [
+    { label: 'Types de forêts — Regiowood (2021)', service: 'GR_land_cover_WFS', layer: 'land_cover:Forest_types_Regiowood_2021' },
+    { label: 'Sites Natura 2000 — directive habitats (2022)', service: 'GR_Nature_protection_WFS', layer: 'Nature_protection:Habitats_directive_zones_2022' },
+    { label: 'Sites Natura 2000 — directive oiseaux (2022)', service: 'GR_Nature_protection_WFS', layer: 'Nature_protection:Birds_directive_zones_2022' },
+    { label: 'Réserves de biosphère (2022)', service: 'GR_Nature_protection_WFS', layer: 'Nature_protection:Biosphere_reserves_perimeter_2022' },
+    { label: 'Cours d\'eau — linéaires (2019)', service: 'GR_Hydrographic_network_GeoConnectGR_WFS', layer: 'Hydrographic_network_GeoConnectGR:Linear_watercourses_2019' },
+    { label: 'Cours d\'eau — plans d\'eau (2019)', service: 'GR_Hydrographic_network_GeoConnectGR_WFS', layer: 'Hydrographic_network_GeoConnectGR:Areal_watercourses_2019' },
+  ]},
+  { cat: 'Énergie', items: [
+    { label: 'Centrales nucléaires et sites Seveso (2018)', service: 'GR_Industrial_nuclear_risks_WFS', layer: 'Industrial_nuclear_risks:Nuclear_power_plants_2018', knownDown: true },
+    { label: 'Production d\'énergie solaire — niveau communal', service: 'GR_Energy_WFS', layer: 'Energy:BIPV_Potential_Municipality',
+      joinable: { nameField: 'name', valueField: 'Jahresertrag_je_Gebietsfläche__MWh_km2_', valueLabel: 'Production solaire (MWh/km²/an)' } },
+    { label: 'Production d\'énergie solaire — Kreise / arrondissements / cantons', service: 'GR_Energy_WFS', layer: 'Energy:BIPV_Potential_Kreise_Arrondissements_Cantons' },
+  ]},
+  { cat: 'Culture / Tourisme', items: [
+    { label: 'Centres d\'art et lieux d\'exposition (2026)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Centre_d_Art' },
+    { label: 'Cinémas (2026)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Cinema' },
+    { label: 'Théâtres (2026)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Théâtre' },
+    { label: 'Musées (2026)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Musee' },
+    { label: 'Bibliothèques (2026)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Bibliothèque' },
+    { label: 'Salles de concert (2026)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Salle_de_concert' },
+    { label: 'Sites UNESCO — patrimoine mondial (2025)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:World_heritage_2025' },
+    { label: 'Sites touristiques (2020)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Tourist_sites_GR_2020' },
+    { label: 'Nuitées touristiques (2024)', service: 'GR_Culture_tourism_WFS', layer: 'Culture_tourism:Nights_spent_tourist_accomodations_2024_absolute' },
+  ]},
+  { cat: 'Sécurité', items: [
+    { label: 'Sites Seveso et centrales nucléaires (2018)', service: 'GR_Industrial_nuclear_risks_WFS', layer: 'Industrial_nuclear_risks:Nuclear_power_plants_2018', knownDown: true },
+    { label: 'Accidents de la route — tués / 1M hab. (2020–2024)', service: 'GR_Road_safety_WFS', layer: 'Road_safety:Road_accidents_2020_2024_deaths' },
+  ]},
+];
+
+function _catalogItemUrl(item) {
+  return 'https://ws.geoportail.lu/wss/service/' + item.service + '/guest'
+    + '?service=WFS&version=2.0.0&request=GetFeature'
+    + '&typeName=' + encodeURIComponent(item.layer)
+    + '&outputFormat=geojson';
+}
+
+// Date de la dernière vérification manuelle du catalogue contre le vrai
+// géocatalogue GIS-GR (recherche + liens WFS réels) — pas une vérification
+// automatique : si GIS-GR publie de nouvelles éditions, redemander une
+// repasse (même méthode que la constitution initiale de cette liste) mettra
+// à jour les libellés/URLs le cas échéant.
+var LIBRARY_CATALOG_CHECKED = '2026-09-25';
+
+function _renderLibraryCatalog() {
+  var box = document.getElementById('lib-catalog');
+  if (!box) return;
+  box.innerHTML = '';
+
+  var note = document.createElement('div');
+  note.style.cssText = 'font-size:9.5px;color:var(--muted);margin:-4px 0 10px';
+  note.textContent = 'Catalogue vérifié le ' + LIBRARY_CATALOG_CHECKED +
+    ' — demandez une repasse si vous pensez que GIS-GR a publié plus récent.';
+  box.appendChild(note);
+
+  LIBRARY_CATALOG.forEach(function(group, gi) {
+    var wrap = document.createElement('div');
+    wrap.className = 'terr-group';
+    var hdr = document.createElement('div');
+    hdr.className = 'terr-header collapsible collapsed';
+    hdr.textContent = group.cat;
+    wrap.appendChild(hdr);
+    var body = document.createElement('div');
+    body.className = 'terr-layers collapsible-body collapsed';
+    hdr.addEventListener('click', function() {
+      hdr.classList.toggle('collapsed');
+      body.classList.toggle('collapsed');
+    });
+    group.items.forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'terr-layer-row';
+      row.style.alignItems = 'center';
+      var span = document.createElement('span');
+      span.textContent = item.label;
+      span.style.cssText = 'flex:1;padding-right:8px;line-height:1.35';
+      var btn = document.createElement('button');
+      btn.className = 'btn btn-secondary btn-sm';
+      btn.textContent = item.joinable ? '+ Charger' : '+ Ajouter';
+      btn.title = item.knownDown
+        ? 'Ce service GIS-GR est temporairement en panne côté serveur — réessayez plus tard.'
+        : item.joinable
+          ? 'Charger ces valeurs dans l\'onglet Données (jointure sur les communes de l\'outil, pour un rendu optimal)'
+          : 'Récupérer ce jeu de données réel (GIS-GR) et l\'ajouter comme couche';
+      btn.addEventListener('click', function() { _onCatalogBtnClick(item, btn); });
+      row.appendChild(span);
+      row.appendChild(btn);
+      body.appendChild(row);
+    });
+    wrap.appendChild(body);
+    box.appendChild(wrap);
+  });
+
+  // Si une couche liée à un item du catalogue est supprimée depuis "Couches
+  // contextuelles", remettre son bouton à "+ Ajouter" au lieu de rester sur
+  // "✕ Retirer" pour une couche qui n'existe plus.
+  _libLayerRemovedListeners.push(function(layerId) {
+    LIBRARY_CATALOG.forEach(function(group) {
+      group.items.forEach(function(item) {
+        if (item._addedLayerId === layerId) {
+          item._addedLayerId = null;
+          if (item._btn) _setCatalogBtnAdded(item, false);
+        }
+      });
+    });
+  });
+}
+
+function _setCatalogBtnAdded(item, added) {
+  var btn = item._btn;
+  if (!btn) return;
+  btn.disabled = false;
+  btn.classList.toggle('btn-secondary', !added);
+  if (added) {
+    btn.textContent = '✕ Retirer';
+    btn.title = 'Retirer cette couche de la carte';
+  } else {
+    btn.textContent = '+ Ajouter';
+    btn.title = item.knownDown
+      ? 'Ce service GIS-GR est temporairement en panne côté serveur — réessayez plus tard.'
+      : 'Récupérer ce jeu de données réel (GIS-GR) et l\'ajouter comme couche';
+  }
+}
+
+// Convertit une valeur brute en cellule CSV sûre (guillemets si nécessaire)
+function _csvCell(v) {
+  v = String(v === undefined || v === null ? '' : v);
+  return /[",;\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+
+// Jeux de données "une valeur par commune" : plutôt que de dessiner la
+// géométrie récupérée, on republie les valeurs sur les communes déjà
+// intégrées à l'outil via le pipeline CSV/jointure existant (cf. note en
+// tête de fichier) — même mécanisme que si l'utilisateur avait collé un CSV.
+function _addCatalogItemAsData(item, btn) {
+  btn.disabled = true;
+  btn.textContent = '…';
+  setStatus('Récupération de « ' + item.label + ' »…');
+  fetch(_catalogItemUrl(item))
+    .then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    })
+    .then(function(geojson) {
+      if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
+      var nf = item.joinable.nameField, vf = item.joinable.valueField, vl = item.joinable.valueLabel || vf;
+      var lines = ['nom,' + _csvCell(vl)];
+      geojson.features.forEach(function(f) {
+        var p = f.properties || {};
+        if (p[nf] === undefined) return;
+        lines.push(_csvCell(p[nf]) + ',' + _csvCell(p[vf]));
+      });
+      document.getElementById('csv-input').value = lines.join('\n');
+      loadCSV();
+      document.getElementById('join-type').value = 'name';
+      _joinCol = 'nom'; _valueCol = vl;
+      document.getElementById('join-col').value = 'nom';
+      document.getElementById('value-col').value = vl;
+      // Le niveau communal est connu d'avance (item.joinable) : on force le
+      // chargement + l'affichage de "communes" AVANT la jointure, sinon
+      // l'auto-détection de la meilleure couche peut se caler par coïncidence
+      // sur une couche déjà chargée (arrondissements, Kreise…) dont quelques
+      // noms recoupent des noms de communes, et jointer presque à vide.
+      setStatus('Chargement de la couche communes pour la jointure…');
+      return _ensureLayer('communes').then(function() {
+        _fillLayer = 'communes';
+        var fsel = document.getElementById('fill-layer-sel');
+        if (fsel) fsel.value = 'communes';
+        applyData();
+        document.querySelector('.tab-btn[data-tab="data"]').click();
+        btn.textContent = '✓ Chargé';
+        setTimeout(function() { btn.textContent = '+ Charger'; btn.disabled = false; }, 1800);
+      });
+    })
+    .catch(function(err) {
+      setStatus('✗ « ' + item.label + ' » : échec du chargement (' + err.message + ')');
+      btn.textContent = '✗ Échec';
+      setTimeout(function() { btn.textContent = '+ Charger'; btn.disabled = false; }, 2200);
+    });
+}
+
+function _onCatalogBtnClick(item, btn) {
+  if (item.joinable) { _addCatalogItemAsData(item, btn); return; }
+  item._btn = btn;
+  if (item._addedLayerId) {
+    _removeUserLayer(item._addedLayerId);
+    item._addedLayerId = null;
+    _setCatalogBtnAdded(item, false);
+    return;
+  }
+  _addCatalogItem(item, btn);
+}
+
+function _addCatalogItem(item, btn) {
+  btn.disabled = true;
+  btn.textContent = '…';
+  setStatus('Récupération de « ' + item.label + ' »…');
+  fetch(_catalogItemUrl(item))
+    .then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    })
+    .then(function(geojson) {
+      if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
+      var layer = _addUserLayer(item.label, geojson, _nextLibColor());
+      _libPaletteIdx++;
+      item._addedLayerId = layer.id;
+      _setCatalogBtnAdded(item, true);
+    })
+    .catch(function(err) {
+      setStatus('✗ « ' + item.label + ' » : échec du chargement (' + err.message + ')' +
+        (item.knownDown ? ' — service GIS-GR actuellement en panne.' : ''));
+      btn.textContent = '✗ Échec';
+      setTimeout(function() { _setCatalogBtnAdded(item, false); }, 2200);
+    });
+}
+//  BIBLIOTHÈQUE — mise en valeur des données, badge, table générique
+// ══════════════════════════════════════════════════════════════════
+
+// Légende choroplèthe d'une couche Bibliothèque : pastille + intervalle,
+// et CHAQUE pastille est éditable (clic → sélecteur de couleur natif) pour
+// permettre à la rédaction d'ajuster les teintes au besoin éditorial.
+function _renderChoroLegend(layer, container) {
+  container.innerHTML = '';
+  if (!layer.choro) return;
+  var b = layer.choro.breaks, c = layer.choro.colors;
+  c.forEach(function(color, i) {
+    var lo = i === 0 ? layer.choro.min : b[i - 1];
+    var hi = i === c.length - 1 ? layer.choro.max : b[i];
+    var item = document.createElement('span');
+    item.className = 'leg-item';
+    item.style.cursor = 'pointer';
+    item.title = 'Cliquer pour changer cette couleur';
+    var sw = document.createElement('span');
+    sw.className = 'leg-swatch'; sw.style.background = color;
+    var picker = document.createElement('input');
+    picker.type = 'color'; picker.value = color;
+    picker.style.cssText = 'position:absolute;opacity:0;width:0;height:0';
+    picker.addEventListener('input', function() {
+      layer.choro.colors[i] = picker.value;
+      sw.style.background = picker.value;
+      _setUserLayerColor(layer);
+    });
+    var txt = document.createElement('span');
+    txt.textContent = _fmtChoroNum(lo) + '–' + _fmtChoroNum(hi);
+    item.appendChild(sw); item.appendChild(picker); item.appendChild(txt);
+    item.addEventListener('click', function(e) { if (e.target !== picker) picker.click(); });
+    container.appendChild(item);
+  });
+}
+
+// Badge « Aucune donnée » du bandeau : reflète aussi la présence de couches
+// Bibliothèque (import manuel ou catalogue GIS-GR), pas seulement le CSV.
+function _updateDataBadge() {
+  var badge = document.getElementById('data-badge');
+  if (!badge) return;
+  if (_csvData && _csvData.rows.length) {
+    badge.textContent = _csvData.rows.length + ' lignes';
+    badge.className = 'badge badge-ok';
+  } else if (_userLayers.length) {
+    badge.textContent = _userLayers.length + ' couche' + (_userLayers.length > 1 ? 's' : '') + ' (Bib.)';
+    badge.className = 'badge badge-ok';
+  } else {
+    badge.textContent = 'Aucune donnée';
+    badge.className = 'badge badge-warn';
+  }
+}
+
+// Quand au moins une couche Bibliothèque est visible, on efface le fond de
+// carte (couche de fond + sa légende) pour que les données importées
+// ressortent sans concurrence visuelle — et on restaure l'état précédent
+// dès qu'il n'y en a plus.
+var _libFocusPrevFill = null;
+function _updateLibraryBasemapFocus() {
+  var anyVisible = _userLayers.some(function(l) { return l.visible; });
+  var legend = document.getElementById('map-legend');
+  if (anyVisible) {
+    if (_libFocusPrevFill === null) {
+      _libFocusPrevFill = _fillLayer;
+      _fillLayer = 'none';
+      var sel = document.getElementById('fill-layer-sel');
+      if (sel) sel.value = 'none';
+      _redrawFill();
+    }
+    if (legend) legend.style.display = 'none';
+  } else if (_libFocusPrevFill !== null) {
+    _fillLayer = _libFocusPrevFill;
+    _libFocusPrevFill = null;
+    var sel2 = document.getElementById('fill-layer-sel');
+    if (sel2) sel2.value = _fillLayer;
+    _redrawFill();
+    if (legend) legend.style.display = '';
+  }
+}
+
+// Onglet Données : liste des couches Bibliothèque chargées, chacune avec un
+// accès à ses données en tableau (accessible, exportable en CSV).
+function _renderLibraryDataTab() {
+  var box = document.getElementById('lib-data-tab-list');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!_userLayers.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  var hdr = document.createElement('div');
+  hdr.className = 'section-title';
+  hdr.style.margin = '14px 0 8px';
+  hdr.textContent = 'Couches Bibliothèque';
+  box.appendChild(hdr);
+  _userLayers.forEach(function(layer) {
+    var row = document.createElement('div');
+    row.className = 'lib-item';
+    var name = document.createElement('div');
+    name.style.cssText = 'flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    name.textContent = layer.name;
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-secondary btn-sm';
+    btn.textContent = '☰ Tableau';
+    btn.addEventListener('click', function() { _openGenericLayerTable(layer); });
+    row.appendChild(name); row.appendChild(btn);
+    box.appendChild(row);
+  });
+}
+
+// Tableau accessible générique pour une couche Bibliothèque (colonnes
+// dynamiques, contrairement à _openTableModal qui suppose le schéma fixe
+// des couches administratives). Réutilise la même modale.
+function _openGenericLayerTable(layer) {
+  var feats = layer.geojson.features || [];
+  var colSet = {};
+  feats.slice(0, 200).forEach(function(f) {
+    Object.keys(f.properties || {}).forEach(function(k) { if (k !== '_cv') colSet[k] = true; });
+  });
+  var cols = Object.keys(colSet).map(function(k) { return {k:k, l:k}; });
+  var rows = feats.map(function(f) { return f.properties || {}; });
+
+  document.getElementById('table-modal-title').textContent = layer.name;
+  document.getElementById('table-modal-meta').textContent =
+    rows.length + ' objet' + (rows.length > 1 ? 's' : '') + ' · Bibliothèque';
+
+  var html = '<table style="border-collapse:collapse;width:100%;font-size:12px">'
+           + '<caption style="text-align:left;padding:6px 9px;font-size:11px;color:#888">'
+           + 'Alternative accessible : données de la couche « ' + _escHtml(layer.name) + ' »</caption><thead><tr>';
+  cols.forEach(function(c) {
+    html += '<th scope="col" style="position:sticky;top:0;background:#f9f9f9;text-align:left;padding:6px 9px;border-bottom:1px solid #e4e4e4;white-space:nowrap">'
+          + _escHtml(c.l) + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr>';
+    cols.forEach(function(c) {
+      var v = r[c.k];
+      html += '<td style="padding:4px 9px;border-bottom:1px solid #f3f3f3;white-space:nowrap">'
+            + _escHtml(v === undefined || v === null ? '' : v) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('table-modal-wrap').innerHTML = html;
+  document.getElementById('table-modal').classList.remove('hidden');
+  _tableRowsCache = { rows: rows, cols: cols };
+  var closeBtn = document.getElementById('table-modal-close');
+  if (closeBtn) closeBtn.focus();
+}
 </script>
 </body>
 </html>
