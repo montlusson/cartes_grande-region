@@ -2771,20 +2771,11 @@ function _showTooltip(e, feat) {
     // Modèle d'auteur : HTML inséré tel quel, valeurs {{\u2026}} échappées
     html += _renderTpl(_ttHtmlTemplate, ctx, true);
   } else {
+  // Seule la pastille colorée avec le nom du territoire apparaît — jamais
+  // de sous-entité (département, canton…) ni de nom répété en dessous,
+  // quelle que soit l'image sélectionnée (aucune / pays / région / perso).
   var bc = BLOC_COLORS[h.region] || '#888';
-  var _parts = _chipParts(h);
-  var _chipInner = _escHtml(_parts[0]);
-  // Drapeau régional : le drapeau + la pastille de territoire suffisent —
-  // pas de sous-entité (ex. "Lorraine › Nancy") ni de nom répété en dessous.
-  if (_parts[1] && _ttImageMode !== 'region') _chipInner += '<span class="tt-chip-sep">›</span><span class="tt-chip-sub">' + _escHtml(_parts[1]) + '</span>';
-  html += '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' + bc + ';color:#1a1a1a">' + _chipInner + '</span></div>';
-  // Pas de repli sur BLOC_LABELS : le territoire est déjà dans le cadre
-  // coloré ci-dessus (chip) — ne répéter le nom que s'il y a une entité
-  // précise (commune, canton…) distincte de ce territoire, et seulement si
-  // une image est affichée (sans image, le chip coloré suffit à lui seul).
-  if ((_ttImageMode === 'pays' || _ttImageMode === 'custom') && tf.name !== false && (p.name || p.NAME)) {
-    html += '<div class="tt-name">' + _escHtml(p.name || p.NAME) + '</div>';
-  }
+  html += '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' + bc + ';color:#1a1a1a">' + _escHtml(_chipLabel(h)) + '</span></div>';
 
   var rows = [];
   if (tf.canton  && h.canton && h.region !== 'Grand Est') rows.push({l:'Canton', v:h.canton});
@@ -3252,33 +3243,18 @@ function _renderTpl(tpl, ctx, esc) {
   });
 }
 
-// Pastille de l'infobulle : entité « régionale » pertinente selon le bloc
-function _chipParts(h) {
-  if (h.region === 'Wallonie') {
-    var p1 = h.province
-      ? ((/^(Brabant|Hainaut)/.test(h.province) ? 'Prov. du ' : 'Prov. de ') + h.province)
-      : 'Wallonie';
-    var p2 = (h.arrondissement && h.arrondissement !== h.province) ? ('Arr. de ' + h.arrondissement) : '';
-    return p2 ? [p1, p2] : [p1];
-  }
-  if (h.region === 'Grand Est') {
-    var p1 = h.dept || 'Lorraine';
-    var sub = h.arrondissement || h.canton || '';
-    return sub ? [p1, sub] : [p1];
-  }
-  if (h.region === 'Saarland') {
-    return h.kreis ? ['Sarre', h.kreis] : ['Sarre'];
-  }
-  if (h.region === 'Rheinland-Pfalz') {
-    return h.kreis ? ['Rhénanie-Palatinat', h.kreis] : ['Rhénanie-Palatinat'];
-  }
-  if (h.region === 'Luxembourg') {
-    return h.canton ? ['Luxembourg', 'Canton de ' + h.canton] : ['Luxembourg'];
-  }
-  return [h.pays || h.region || ''];
-}
+// Pastille de l'infobulle : uniquement le nom du territoire (pas de
+// sous-entité — département, canton, arrondissement… — ni d'initiales de
+// pays), quelle que soit la configuration d'image sélectionnée.
+var BLOC_CHIP_LABEL = {
+  'Rheinland-Pfalz': 'Rhénanie-Palatinat',
+  'Saarland':        'Sarre',
+  'Wallonie':         'Wallonie',
+  'Grand Est':        'Lorraine',
+  'Luxembourg':       'Luxembourg',
+};
 function _chipLabel(h) {
-  return _chipParts(h).join(' › ');
+  return BLOC_CHIP_LABEL[h.region] || h.pays || h.region || '';
 }
 
 function _ttImageSrc(ctx) {

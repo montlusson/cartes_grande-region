@@ -267,20 +267,11 @@ function _showTooltip(e, feat) {
     // Modèle d'auteur : HTML inséré tel quel, valeurs {{\u2026}} échappées
     html += _renderTpl(_ttHtmlTemplate, ctx, true);
   } else {
+  // Seule la pastille colorée avec le nom du territoire apparaît — jamais
+  // de sous-entité (département, canton…) ni de nom répété en dessous,
+  // quelle que soit l'image sélectionnée (aucune / pays / région / perso).
   var bc = BLOC_COLORS[h.region] || '#888';
-  var _parts = _chipParts(h);
-  var _chipInner = _escHtml(_parts[0]);
-  // Drapeau régional : le drapeau + la pastille de territoire suffisent —
-  // pas de sous-entité (ex. "Lorraine › Nancy") ni de nom répété en dessous.
-  if (_parts[1] && _ttImageMode !== 'region') _chipInner += '<span class="tt-chip-sep">›</span><span class="tt-chip-sub">' + _escHtml(_parts[1]) + '</span>';
-  html += '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' + bc + ';color:#1a1a1a">' + _chipInner + '</span></div>';
-  // Pas de repli sur BLOC_LABELS : le territoire est déjà dans le cadre
-  // coloré ci-dessus (chip) — ne répéter le nom que s'il y a une entité
-  // précise (commune, canton…) distincte de ce territoire, et seulement si
-  // une image est affichée (sans image, le chip coloré suffit à lui seul).
-  if ((_ttImageMode === 'pays' || _ttImageMode === 'custom') && tf.name !== false && (p.name || p.NAME)) {
-    html += '<div class="tt-name">' + _escHtml(p.name || p.NAME) + '</div>';
-  }
+  html += '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' + bc + ';color:#1a1a1a">' + _escHtml(_chipLabel(h)) + '</span></div>';
 
   var rows = [];
   if (tf.canton  && h.canton && h.region !== 'Grand Est') rows.push({l:'Canton', v:h.canton});

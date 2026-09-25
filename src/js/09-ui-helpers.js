@@ -317,33 +317,18 @@ function _renderTpl(tpl, ctx, esc) {
   });
 }
 
-// Pastille de l'infobulle : entité « régionale » pertinente selon le bloc
-function _chipParts(h) {
-  if (h.region === 'Wallonie') {
-    var p1 = h.province
-      ? ((/^(Brabant|Hainaut)/.test(h.province) ? 'Prov. du ' : 'Prov. de ') + h.province)
-      : 'Wallonie';
-    var p2 = (h.arrondissement && h.arrondissement !== h.province) ? ('Arr. de ' + h.arrondissement) : '';
-    return p2 ? [p1, p2] : [p1];
-  }
-  if (h.region === 'Grand Est') {
-    var p1 = h.dept || 'Lorraine';
-    var sub = h.arrondissement || h.canton || '';
-    return sub ? [p1, sub] : [p1];
-  }
-  if (h.region === 'Saarland') {
-    return h.kreis ? ['Sarre', h.kreis] : ['Sarre'];
-  }
-  if (h.region === 'Rheinland-Pfalz') {
-    return h.kreis ? ['Rhénanie-Palatinat', h.kreis] : ['Rhénanie-Palatinat'];
-  }
-  if (h.region === 'Luxembourg') {
-    return h.canton ? ['Luxembourg', 'Canton de ' + h.canton] : ['Luxembourg'];
-  }
-  return [h.pays || h.region || ''];
-}
+// Pastille de l'infobulle : uniquement le nom du territoire (pas de
+// sous-entité — département, canton, arrondissement… — ni d'initiales de
+// pays), quelle que soit la configuration d'image sélectionnée.
+var BLOC_CHIP_LABEL = {
+  'Rheinland-Pfalz': 'Rhénanie-Palatinat',
+  'Saarland':        'Sarre',
+  'Wallonie':         'Wallonie',
+  'Grand Est':        'Lorraine',
+  'Luxembourg':       'Luxembourg',
+};
 function _chipLabel(h) {
-  return _chipParts(h).join(' › ');
+  return BLOC_CHIP_LABEL[h.region] || h.pays || h.region || '';
 }
 
 function _ttImageSrc(ctx) {
