@@ -24,16 +24,29 @@ function _wireLibraryLayerTooltip(layer, lyrId) {
   });
 }
 
+var _libTtLast = null; // {e, feat, layer} — pour _refreshLibraryTooltipIfShown (js/28-library-tooltip-custom.js)
+
 function _showLibraryTooltip(e, feat, layer) {
+  _libTtLast = { e: e, feat: feat, layer: layer };
   var p = feat.properties || {};
-  var html = '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' +
-    layer.color + ';color:#1a1a1a">' + _escHtml(layer.name) + '</span></div>';
-  if (p.name) html += '<div class="tt-name">' + _escHtml(p.name) + '</div>';
-  if (layer.choro) {
-    var raw = p[layer.choro.field];
-    if (raw !== undefined && raw !== null && raw !== '') {
-      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(layer.choro.label || _prettyFieldLabel(layer.choro.field)) +
-        '</span><span class="tt-data-val">' + _escHtml(raw) + '</span></div>';
+  var html;
+  if (layer.ttCustom && layer.ttTemplate && layer.ttTemplate.trim()) {
+    // Modèle propre à CETTE couche (js/28-library-tooltip-custom.js) —
+    // toutes les propriétés brutes de la feature sont exposées telles
+    // quelles comme variables, plus layerName/layerColor.
+    var ctx = Object.assign({}, p, { layerName: layer.name, layerColor: layer.color });
+    html = _renderTpl(layer.ttTemplate, ctx, true);
+  } else {
+    html = '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' +
+      layer.color + ';color:#1a1a1a">' + _escHtml(layer.name) + '</span></div>';
+    var title = _guessFeatureTitle(p);
+    if (title) html += '<div class="tt-name">' + _escHtml(title) + '</div>';
+    if (layer.choro) {
+      var raw = p[layer.choro.field];
+      if (raw !== undefined && raw !== null && raw !== '') {
+        html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(layer.choro.label || _prettyFieldLabel(layer.choro.field)) +
+          '</span><span class="tt-data-val">' + _escHtml(raw) + '</span></div>';
+      }
     }
   }
   html += '<div style="font-size:9.5px;color:#bbb;margin-top:5px;text-align:right">' +
@@ -41,11 +54,20 @@ function _showLibraryTooltip(e, feat, layer) {
   var tt = document.getElementById('map-tt');
   tt.innerHTML = html;
   tt.classList.add('vis');
+  tt.style.background = layer.ttBg || _ttBoxBg || '';
+  tt.style.color = layer.ttColor || _ttBoxColor || '';
   var fr = document.getElementById('map-frame').getBoundingClientRect();
-  var mx = e.point.x, my = e.point.y;
-  var ttW = tt.offsetWidth || 220, ttH = tt.offsetHeight || 160;
-  tt.style.left = Math.max(4, Math.min(mx + 14, fr.width - ttW - 4)) + 'px';
-  tt.style.top  = Math.max(4, my - ttH - 12 < 4 ? my + 14 : my - ttH - 12) + 'px';
+  _positionTooltip(tt, fr, e.point.x, e.point.y);
+}
+
+// Un changement dans l'éditeur d'infobulle (js/28-library-tooltip-custom.js)
+// doit se refléter immédiatement si cette couche est déjà affichée/épinglée
+// — même principe que _refreshTooltip() pour la couche administrative.
+function _refreshLibraryTooltipIfShown(layer) {
+  var tt = document.getElementById('map-tt');
+  if (tt && tt.classList.contains('vis') && _libTtLast && _libTtLast.layer === layer) {
+    _showLibraryTooltip(_libTtLast.e, _libTtLast.feat, layer);
+  }
 }
 
 // Légende choroplèthe d'une couche Bibliothèque : pastille + intervalle,

@@ -86,7 +86,8 @@ function _addUserLayer(name, geojson, color) {
   var n = (geojson.features || []).length;
   var layer = { id:id, name:name, geojson:geojson, geomType:geomType,
                 color:color, opacity:0.82, visible:true,
-                numericFields: _detectNumericFields(geojson), choro:null };
+                numericFields: _detectNumericFields(geojson), choro:null,
+                ttCustom:false, ttTemplate:'', ttBg:'', ttColor:'' };
   _userLayers.push(layer);
   if (_mapReady) _renderUserLayerOnMap(layer);
   _appendLibLayerItem(layer);
@@ -306,6 +307,8 @@ function _appendLibLayerItem(layer, opts) {
       if (layer.choro) layer.choro.label = choroLabelInp.value.trim() || _prettyFieldLabel(layer.choro.field);
     });
   }
+
+  _appendLibTooltipEditor(layer, list, px); // js/28-library-tooltip-custom.js
 
   // ── Events ───────────────────────────────────────────────────────
   var id = layer.id;

@@ -54,6 +54,7 @@ JS_MODULES = [
     "js/25-catalog-search-ui.js",
     "js/26-embed-style-css.js",
     "js/27-embed-tooltip-mobile.js",
+    "js/28-library-tooltip-custom.js",
 ]
 
 
