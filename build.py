@@ -50,6 +50,8 @@ JS_MODULES = [
     "js/21-flow-geometry.js",
     "js/22-flow-draw-csv.js",
     "js/23-flow-ui.js",
+    "js/24-catalog-search.js",
+    "js/25-catalog-search-ui.js",
 ]
 
 

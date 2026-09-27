@@ -58,6 +58,24 @@
         <!-- TAB: BIBLIOTHÈQUE -->
         <div class="tab-pane" id="tab-library">
           <div class="section">
+            <div class="section-title">Recherche en direct</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Interroge en direct les géocatalogues GIS-GR, Géoportail Luxembourg, Open Data
+              Luxembourg (data.public.lu) et STATEC/LUSTAT — pour trouver un jeu de données
+              absent du catalogue ci-dessous. Seuls les résultats en GeoJSON (directement
+              intégrables comme couche) proposent « + Ajouter » ; les autres formats
+              (CSV, KML, PDF…) ne sont pas affichés.
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <input type="text" id="catalog-search-input" class="full" placeholder="Ex : pistes cyclables, chômage, écoles…" style="flex:1">
+              <button class="btn btn-secondary" id="btn-catalog-search">Rechercher</button>
+            </div>
+            <div id="catalog-search-results"></div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="section">
             <div class="section-title">Catalogue GIS-GR</div>
             <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
               Jeux de données réels du Géoportail de la Grande Région — cliquez « + Ajouter »

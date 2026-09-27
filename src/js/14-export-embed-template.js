@@ -442,7 +442,14 @@ function _generateEmbedHTML(payload) {
 '    font-size:10px;border-top:1px solid #e9e9e9;border-radius:0;background:transparent;padding:4px 10px}',
 '  /* Recherche compacte, alignée comme sur desktop plutôt qu\'étirée pleine largeur */',
 '  #map-search{left:10px;width:230px}',
-'  #map-search-list{top:36px}',
+'  #map-search-list{top:44px}',
+  // Cibles tactiles ≥40px (recommandation WCAG/Apple HIG ~44px) — la
+  // taille desktop (30px pour les boutons de zoom, ex.) est pensée pour une
+  // souris précise, pas pour un pouce sur écran tactile.
+'  .zoom-btn{width:40px;height:40px;font-size:19px}',
+'  #map-search-input{height:40px;padding:0 34px 0 34px}',
+'  #map-search-icon{top:13px;left:12px;width:15px;height:15px}',
+'  #map-search-clear{width:30px;height:30px;top:5px;right:5px}',
 '}',
 '@media (prefers-reduced-motion: reduce){',
 '  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}',
