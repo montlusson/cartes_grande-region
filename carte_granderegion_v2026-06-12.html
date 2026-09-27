@@ -147,6 +147,13 @@ select.full{font-family:var(--font)}
 /* Legend */
 #map-legend{position:absolute;left:10px;bottom:10px;z-index:40;background:rgba(255,255,255,.93);border-radius:8px;padding:8px 11px;display:flex;flex-direction:column;gap:4px;max-width:min(46%,250px);box-shadow:0 1px 6px rgba(0,0,0,.12)}
 #map-legend:empty{display:none}
+/* Position choisie (onglet Style) — décalages qui évitent les autres
+   éléments flottants de la carte (recherche en haut-gauche, contrôles de
+   zoom en bas-droite) plutôt qu'un simple 10px partout. */
+#map-legend.pos-bl{left:10px;right:auto;top:auto;bottom:10px}
+#map-legend.pos-br{right:10px;left:auto;top:auto;bottom:56px}
+#map-legend.pos-tl{left:10px;right:auto;bottom:auto;top:56px}
+#map-legend.pos-tr{right:10px;left:auto;bottom:auto;top:10px}
 .leg-item{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#444}
 .leg-swatch{width:13px;height:13px;border-radius:2px;flex-shrink:0;border:1px solid rgba(0,0,0,.08)}
 
@@ -781,6 +788,20 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
 
           <hr class="divider">
           <div class="section">
+            <div class="section-title">Légende</div>
+            <div class="field" style="margin-top:8px">
+              <label>Position</label>
+              <select class="full" id="legend-pos">
+                <option value="bl" selected>Bas gauche</option>
+                <option value="br">Bas droite</option>
+                <option value="tl">Haut gauche</option>
+                <option value="tr">Haut droite</option>
+              </select>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section">
             <div class="section-title collapsible collapsed" id="toggle-st-colors">Couleurs des blocs</div>
             <div class="collapsible-body collapsed" id="body-st-colors">
               <div id="bloc-colors" style="margin-top:8px"></div>
@@ -835,6 +856,19 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
                   <button class="btn btn-secondary btn-sm active" data-steps="5">5</button>
                   <button class="btn btn-secondary btn-sm" data-steps="7">7</button>
                 </div>
+              </div>
+              <div class="style-row" style="margin-top:8px">
+                <label>Décimales</label>
+                <select id="legend-decimals" style="flex:1">
+                  <option value="auto" selected>Auto</option>
+                  <option value="0">0 (entiers)</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </div>
+              <div class="style-row" style="margin-top:4px">
+                <label></label>
+                <button class="btn btn-secondary btn-sm" id="btn-choro-color-reset" title="Revenir aux couleurs de la palette">↺ Couleurs par défaut</button>
               </div>
             </div>
             </div>
@@ -1063,6 +1097,7 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
             <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
               Représentez un déplacement entre deux points (frontaliers, migrations, échanges…) —
               cliquez deux points sur la carte, ou importez un tableau origine → destination.
+              Une étiquette peut aussi se glisser librement sur la carte (clic maintenu).
             </div>
             <button class="btn btn-primary" id="btn-flow-draw" style="width:100%">&#9998; Dessiner sur la carte</button>
             <div id="flow-draw-hint" style="font-size:10.5px;color:var(--accent);margin-top:6px;display:none"></div>
@@ -1371,6 +1406,7 @@ var _labelMarkers = {};           // id → { mk, name, el, placement }
 var _ttLastEvt = null, _ttLastFeat = null;   // pour rafraîchir l'infobulle épinglée
 var _blocTestGeoms = {};   // region → géométrie décimée du bloc (test de confinement des étiquettes)
 
+var _legendPos = 'bl';            // bl | br | tl | tr — position de #map-legend (onglet Style)
 var _ttImageMode = 'none';        // none | pays | region | custom
 var _ttImageUrl = '';
 var _ttHtmlMode = false;
@@ -2503,6 +2539,15 @@ function _buildCatScale(rawVals) {
   _choroBreaks = []; _choroColors = [];
 }
 
+// Couleur personnalisée par classe (index → hex), éditable depuis la légende
+// (clic sur une pastille) — survit à un rechargement de données, mais est
+// remise à zéro si la palette ou le nombre de classes change (le sens des
+// index n'est alors plus le même).
+var _choroColorOverrides = {};
+function _choroColorAt(i) {
+  return _choroColorOverrides[i] !== undefined ? _choroColorOverrides[i] : _choroColors[i];
+}
+
 // Retourne la couleur choroplèthe pour une valeur brute
 function _choroColor(val) {
   if (_catMode) {
@@ -2513,19 +2558,38 @@ function _choroColor(val) {
   if (isNaN(v) || !_choroColors.length) return '#ccc';
   var cls = 0;
   while (cls < _choroBreaks.length && v >= _choroBreaks[cls]) cls++;
-  return _choroColors[cls] || '#ccc';
+  return _choroColorAt(cls) || '#ccc';
+}
+
+// La donnée jointe ne colore RÉELLEMENT les entités que dans deux cas — sert
+// de garde à la légende (js/08-legend-presets.js) pour ne jamais décrire un
+// dégradé qui ne correspond à rien sur la carte (fond "Aucune", couche non
+// jointe par valeur, jointure par région désactivée…), même si _dataMap/
+// _valueCol restent techniquement peuplés en mémoire.
+function _choroIsRendered() {
+  if (!Object.keys(_dataMap).length || !_valueCol) return false;
+  if (_fillLayer === 'none') return false;
+  if (_fillLayer === 'blocs') {
+    var jt = (document.getElementById('join-type') || {}).value || 'name';
+    return jt === 'region';
+  }
+  return true;
 }
 
 // Repeint la choroplèthe (carte + légende) sans toucher au panneau de couleurs
 // — utilisé pendant la sélection au color picker pour ne pas casser l'input.
-function _repaintChoro() {
+// skipLegend=true : la carte est repeinte mais PAS la légende — utilisé par
+// le picker de couleur de classe (js/08-legend-presets.js), qui touche déjà
+// le DOM du swatch lui-même ; reconstruire toute la légende là fermerait le
+// sélecteur de couleur natif du navigateur en pleine sélection.
+function _repaintChoro(skipLegend) {
   if (_fillLayer === 'blocs' && _mapReady && _map.getLayer(BLOCS_FILL_ID)) {
     _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
     _applyStrokeColors();
   } else {
     _redrawFill();
   }
-  _updateLegend();
+  if (!skipLegend) _updateLegend();
   _refreshAllOverlays();
 }
 
@@ -2666,12 +2730,15 @@ function applyData() {
     });
     if (nTot && nNum > nTot * 0.8) {
       setStatus('⚠ Aucune ligne jointe : « ' + _joinCol + ' » contient des nombres. La colonne de jointure doit identifier la commune (ex. « Communes ») ; mettez la donnée à colorier (ex. « Parti vainqueur ») dans « Valeur à cartographier ».');
-      _catMode = false; _catColors = {};
+      // _choroColors/_choroBreaks pas remis à zéro → la légende continuait
+      // d'afficher les seuils/couleurs de la DERNIÈRE jointure réussie alors
+      // que la carte, elle, repasse en gris faute de correspondance.
+      _catMode = false; _catColors = {}; _choroColors = []; _choroBreaks = [];
       _repaintChoro(); _updateLegend();
       return;
     }
     setStatus('⚠ Aucune ligne jointe : vérifiez la colonne de jointure (contient-elle les noms de communes ?) et le type d\'identifiant.');
-    _catMode = false; _catColors = {};
+    _catMode = false; _catColors = {}; _choroColors = []; _choroBreaks = [];
     _repaintChoro(); _updateLegend();
     return;
   }
@@ -2820,6 +2887,7 @@ function _buildChoroUI() {
                  + '<div class="pal-label">'+_escHtml(p.label || p.id)+'</div>';
     sw.addEventListener('click', function() {
       _choroPalette = p.id;
+      _choroColorOverrides = {}; // la palette change de sens : les couleurs personnalisées par classe ne s'appliquent plus
       document.querySelectorAll('.pal-sw').forEach(function(s){s.classList.remove('active');});
       sw.classList.add('active');
       if (_csvData && _valueCol) { _buildChoroScale(); applyData(); }
@@ -2944,12 +3012,25 @@ function _hideTooltip() {
 //  LÉGENDE
 // ══════════════════════════════════════════════════════════════════
 
+// Arrondi des nombres affichés dans les légendes (choroplèthe + échelle des
+// flux) — 'auto' garde le formatage malin existant (entier si rond, sinon 1
+// décimale) ; sinon un nombre de décimales fixe choisi par l'utilisateur
+// (onglet Style) pour toutes les légendes numériques de la carte.
+var _legendDecimals = 'auto';
+function _legendFmtNum(v) {
+  if (_legendDecimals === 'auto') return _fmtChoroNum(v);
+  return parseFloat(v).toFixed(parseInt(_legendDecimals, 10)).toString().replace('.', ',');
+}
+
 function _updateLegend() {
   var el = document.getElementById('map-legend');
+  el.className = 'pos-' + _legendPos;
   el.innerHTML = '';
 
-  // Légende catégorielle (parti vainqueur, etc.)
-  if (Object.keys(_dataMap).length && _valueCol && _catMode) {
+  // Légende catégorielle (parti vainqueur, etc.) — _choroIsRendered() évite
+  // de décrire un remplissage qui n'est plus réellement affiché (fond
+  // "Aucune", jointure par région désactivée, jointure invalidée entretemps…).
+  if (_choroIsRendered() && _catMode) {
     Object.keys(_catColors).forEach(function(cat) {
       var item = document.createElement('span');
       item.className = 'leg-item';
@@ -2966,19 +3047,31 @@ function _updateLegend() {
     return;
   }
 
-  // Légende choroplèthe (prioritaire si données chargées)
-  if (Object.keys(_dataMap).length && _valueCol && _choroColors.length) {
-    _choroColors.forEach(function(color, i) {
+  // Légende choroplèthe (prioritaire si données chargées) — pastilles
+  // éditables au clic (couleur personnalisée par classe), comme la légende
+  // des couches Bibliothèque (_renderChoroLegend, js/19-library-focus.js).
+  if (_choroIsRendered() && _choroColors.length) {
+    _choroColors.forEach(function(_unused, i) {
+      var color = _choroColorAt(i);
       var lo  = _choroBreaks[i - 1];
       var hi  = _choroBreaks[i];
-      var lbl = (lo !== undefined ? '≥' + parseFloat(lo).toFixed(1) : '')
+      var lbl = (lo !== undefined ? '≥' + _legendFmtNum(lo) : '')
               + (lo !== undefined && hi !== undefined ? ' — ' : '')
-              + (hi !== undefined ? '<' + parseFloat(hi).toFixed(1) : (lo !== undefined ? '+' : ''));
+              + (hi !== undefined ? '<' + _legendFmtNum(hi) : (lo !== undefined ? '+' : ''));
       if (!lbl) lbl = '—';
       var item = document.createElement('span');
       item.className = 'leg-item';
-      item.innerHTML = '<span class="leg-swatch" style="background:'+color+'"></span>'
-                     + '<span style="font-size:10px">'+lbl+'</span>';
+      item.innerHTML =
+        '<span class="leg-swatch" style="background:'+color+';cursor:pointer" title="Changer la couleur de cette classe"></span>'
+        + '<input type="color" value="'+color+'" style="position:absolute;opacity:0;width:0;height:0">'
+        + '<span style="font-size:10px">'+lbl+'</span>';
+      var sw = item.querySelector('.leg-swatch'), pk = item.querySelector('input[type=color]');
+      sw.addEventListener('click', function() { pk.click(); });
+      pk.addEventListener('input', function() {
+        _choroColorOverrides[i] = pk.value;
+        sw.style.background = pk.value;
+        _repaintChoro(true); // true = ne pas reconstruire la légende (fermerait le picker natif en pleine sélection)
+      });
       el.appendChild(item);
     });
     _appendFlowLegend(el);
@@ -4030,6 +4123,9 @@ function wireEvents() {
     if (el) el.addEventListener('input', _updateMapMeta);
   });
 
+  var legendPosSel = document.getElementById('legend-pos');
+  if (legendPosSel) legendPosSel.addEventListener('change', function() { _legendPos = this.value; _updateLegend(); });
+
   // Tableau de données accessible
   var btnTable = document.getElementById('btn-table');
   if (btnTable) btnTable.addEventListener('click', _openTableModal);
@@ -4201,7 +4297,7 @@ function wireEvents() {
 
   var btnClear = document.getElementById('btn-clear-csv');
   if (btnClear) btnClear.addEventListener('click', function() {
-    _csvData = null; _dataMap = {}; _rowMap = {}; _choroBreaks = []; _choroColors = []; _catMode = false; _catColors = {}; _catOverrides = {};
+    _csvData = null; _dataMap = {}; _rowMap = {}; _choroBreaks = []; _choroColors = []; _catMode = false; _catColors = {}; _catOverrides = {}; _choroColorOverrides = {};
     _valueCol = ''; _valueColLabel = '';
     var lblInp1 = document.getElementById('value-col-label');
     if (lblInp1) lblInp1.value = '';
@@ -4267,11 +4363,17 @@ function wireEvents() {
   document.querySelectorAll('[data-steps]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       _choroSteps = parseInt(btn.dataset.steps, 10);
+      _choroColorOverrides = {}; // le nombre de classes change de sens : les couleurs personnalisées par index ne s'appliquent plus
       document.querySelectorAll('[data-steps]').forEach(function(b){b.classList.remove('active');});
       btn.classList.add('active');
       if (_csvData && _valueCol) { _buildChoroScale(); applyData(); }
     });
   });
+
+  var legendDecimalsSel = document.getElementById('legend-decimals');
+  if (legendDecimalsSel) legendDecimalsSel.addEventListener('change', function() { _legendDecimals = this.value; _updateLegend(); });
+  var btnChoroColorReset = document.getElementById('btn-choro-color-reset');
+  if (btnChoroColorReset) btnChoroColorReset.addEventListener('click', function() { _choroColorOverrides = {}; _repaintChoro(); });
 
   // Export
   var exportBtn = document.getElementById('btn-export');
@@ -4421,8 +4523,10 @@ function exportMap() {
 
         var boxW = pad + swW + Math.round(6 * dpr) + Math.ceil(maxTxtW) + pad;
         var boxH = pad + items.length * lineH + pad;
-        var bx   = pad;
-        var by   = out.height - boxH - pad;
+        // Même position que le choix de l'onglet Style (_legendPos), pour
+        // que le PNG exporté corresponde à ce qui est affiché à l'écran.
+        var bx = (_legendPos === 'br' || _legendPos === 'tr') ? out.width - boxW - pad : pad;
+        var by = (_legendPos === 'tl' || _legendPos === 'tr') ? pad : out.height - boxH - pad;
 
         // Fond semi-transparent
         ctx.fillStyle = 'rgba(255,255,255,0.88)';
@@ -4614,6 +4718,7 @@ function _serializeEmbedPayload() {
     fillLayer:  _fillLayer,
     overlays:   Object.keys(_activeLayers).filter(function(id) { return _activeLayers[id]; }),
     legend:     legendItems,
+    legendPos:  _legendPos,
     blocColors: BLOC_COLORS,
     blocLabels: BLOC_LABELS,
     strokeWidths: _strokeWidths
@@ -4755,6 +4860,7 @@ function _generateEmbedHTML(payload) {
 
 '  // Légende',
 '  var legEl = document.getElementById("legend");',
+'  legEl.className = "pos-" + (STATE.legendPos || "bl");',
 '  STATE.legend.forEach(function(item){',
 '    var sp = document.createElement("span");',
 '    sp.className = "leg-item";',
@@ -5006,6 +5112,10 @@ function _generateEmbedHTML(payload) {
 '#legend{position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(255,255,255,.93);',
 '  border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:4px;',
 '  font-size:11px;max-width:46%;box-shadow:0 1px 6px rgba(0,0,0,.12)}',
+'#legend.pos-bl{left:8px;right:auto;top:auto;bottom:8px}',
+'#legend.pos-br{right:8px;left:auto;top:auto;bottom:80px}',
+'#legend.pos-tl{left:8px;right:auto;bottom:auto;top:8px}',
+'#legend.pos-tr{right:8px;left:auto;bottom:auto;top:8px}',
 '.leg-item{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}',
 '.leg-sw{display:inline-block;width:18px;height:10px;border-radius:2px;',
 '  border:1px solid rgba(0,0,0,.08);flex-shrink:0}',
@@ -5060,7 +5170,7 @@ function _generateEmbedHTML(payload) {
 '  /* Légende + source/auteur regroupées en pied de page, en restant compactes */',
 '  #mfoot{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;',
 '    background:rgba(255,255,255,.97);box-shadow:0 -1px 6px rgba(0,0,0,.10)}',
-'  #legend{position:static;left:auto;bottom:auto;width:100%;max-width:100%;border-radius:0;',
+'  #legend,#legend.pos-bl,#legend.pos-br,#legend.pos-tl,#legend.pos-tr{position:static;left:auto;right:auto;top:auto;bottom:auto;width:100%;max-width:100%;border-radius:0;',
 '    box-shadow:none;background:transparent;font-size:10px;padding:5px 8px 3px;',
 '    flex-direction:row;flex-wrap:wrap;justify-content:center;gap:3px 9px}',
 '  .leg-sw{width:13px;height:8px}',
@@ -6409,7 +6519,7 @@ function _newFlowArrow(from, to) {
     curve: 25, style: 'linear', color: color, width: 3, headStyle: 'triangle',
     value: '', // proportionnalité : si renseignée, prime sur "width" via une échelle PARTAGÉE (cf. _flowEffWidth)
     dashed: false, arrowStart: false, arrowEnd: true,
-    label: '', labelPos: 'above', visible: true
+    label: '', labelPos: 'above', labelManual: null, visible: true
   };
 }
 
@@ -6607,10 +6717,17 @@ var FLOW_LABEL_POS = {
 
 function _flowLabelFeature(arrow) {
   if (!arrow.label) return null;
+  // Placée manuellement (glisser-déposer sur la carte) : coordonnée exacte,
+  // centrée sur le point déposé — sinon position relative à la flèche
+  // (préréglage au-dessus/en dessous/gauche/droite).
+  if (arrow.labelManual) {
+    return { type:'Feature', properties:{id:arrow.id, label:arrow.label, loffset:[0,0], lanchor:'center'},
+      geometry:{type:'Point', coordinates:arrow.labelManual} };
+  }
   var pc = _flowControlPoint(arrow);
   var mid = _bezierPoint(arrow.from, pc, arrow.to, 0.5);
   var pos = FLOW_LABEL_POS[arrow.labelPos] || FLOW_LABEL_POS.above;
-  return { type:'Feature', properties:{label:arrow.label, loffset:pos.offset, lanchor:pos.anchor},
+  return { type:'Feature', properties:{id:arrow.id, label:arrow.label, loffset:pos.offset, lanchor:pos.anchor},
     geometry:{type:'Point', coordinates:mid} };
 }
 
@@ -6709,7 +6826,7 @@ function _appendFlowLegend(container) {
       '<svg width="28" height="14" style="flex:none;overflow:visible">' +
         '<line x1="2" y1="7" x2="26" y2="7" stroke="#555" stroke-width="' + w.toFixed(1) + '" stroke-linecap="round"/>' +
       '</svg>' +
-      '<span style="font-size:10px">' + _escHtml(_fmtChoroNum(v)) + '</span>';
+      '<span style="font-size:10px">' + _escHtml(_legendFmtNum(v)) + '</span>';
     container.appendChild(item);
   });
 }
@@ -6752,6 +6869,46 @@ function _wireFlowDrawClick() {
       if (hint) hint.textContent = 'Cliquez le point de départ… (« ' + arrow.name + ' » créé)';
     }
   });
+  _wireFlowLabelDrag();
+}
+
+// ── Étiquette déplaçable à la souris (placement manuel) ─────────────
+var _flowLabelDragId = null;
+
+function _wireFlowLabelDrag() {
+  _map.on('mouseenter', 'flow-label', function() {
+    if (!_flowLabelDragId) _map.getCanvas().style.cursor = 'grab';
+  });
+  _map.on('mouseleave', 'flow-label', function() {
+    if (!_flowLabelDragId) _map.getCanvas().style.cursor = _flowDrawMode ? 'crosshair' : '';
+  });
+  _map.on('mousedown', 'flow-label', function(e) {
+    if (!e.features || !e.features.length) return;
+    e.preventDefault();
+    _flowLabelDragId = e.features[0].properties.id;
+    _map.dragPan.disable();
+    _map.getCanvas().style.cursor = 'grabbing';
+  });
+  _map.on('mousemove', function(e) {
+    if (!_flowLabelDragId) return;
+    var arrow = _flowArrows.find(function(a) { return a.id === _flowLabelDragId; });
+    if (!arrow) { _flowLabelDragId = null; return; }
+    arrow.labelManual = [e.lngLat.lng, e.lngLat.lat];
+    _renderFlows();
+  });
+  _map.on('mouseup', function() {
+    if (!_flowLabelDragId) return;
+    var resetBtn = document.getElementById('flow-labelreset-' + _flowLabelDragId);
+    if (resetBtn) resetBtn.style.visibility = 'visible';
+    _flowLabelDragId = null;
+    _map.dragPan.enable();
+    _map.getCanvas().style.cursor = _flowDrawMode ? 'crosshair' : '';
+  });
+}
+
+function _resetFlowLabelPos(arrow) {
+  arrow.labelManual = null;
+  _renderFlows();
 }
 
 // ── Import CSV : noms de territoires connus, ou coordonnées explicites ──
@@ -6785,7 +6942,26 @@ function _loadFlowCSV() {
     return;
   }
 
+  // Détection de la colonne "valeur" : d'abord par mots-clés courants, sinon
+  // repli sur toute colonne numérique restante (hors origine/destination) —
+  // la proportionnalité doit s'appliquer PAR DÉFAUT dès qu'une donnée
+  // chiffrée est fournie, même sous un intitulé non prévu (ex. « Frontaliers »,
+  // « Effectif »…), pas seulement les noms déjà couverts par le mot-clé.
+  var originDestCols = useCoords
+    ? ['lon_origine','lat_origine','lon_destination','lat_destination']
+    : [parsed.cols[0], parsed.cols[1]];
   var valCol = parsed.cols.find(function(c) { return /valeur|value|volume|nb|nombre|total/i.test(c); });
+  if (!valCol) {
+    valCol = parsed.cols.find(function(c) {
+      if (originDestCols.indexOf(c) !== -1) return false;
+      var nNum = 0, nTot = 0;
+      parsed.rows.forEach(function(r) {
+        if (r[c] === undefined || String(r[c]).trim() === '') return;
+        nTot++; if (!isNaN(parseFloat(String(r[c]).replace(',', '.')))) nNum++;
+      });
+      return nTot > 0 && nNum === nTot;
+    });
+  }
 
   var created = 0, skipped = 0;
   parsed.rows.forEach(function(row) {
@@ -6872,7 +7048,10 @@ function _appendFlowItem(arrow, list) {
       '<option value="below"' + (arrow.labelPos==='below'?' selected':'') + '>En dessous</option>' +
       '<option value="left"' + (arrow.labelPos==='left'?' selected':'') + '>À gauche</option>' +
       '<option value="right"' + (arrow.labelPos==='right'?' selected':'') + '>À droite</option>' +
-    '</select>';
+    '</select>' +
+    '<button type="button" id="flow-labelreset-' + arrow.id + '" class="btn btn-secondary btn-sm"' +
+      ' title="Revenir à un positionnement relatif à la flèche"' +
+      (arrow.labelManual ? '' : ' style="visibility:hidden"') + '>↺ Position libre</button>';
   list.appendChild(ctrl);
 
   _wireFlowItemEvents(arrow, div, ctrl);
@@ -6904,7 +7083,15 @@ function _wireFlowItemEvents(arrow, div, ctrl) {
     document.getElementById('flow-width-' + id).disabled = _flowNumValue(arrow) !== null;
     _renderFlows(); _updateLegend();
   });
-  document.getElementById('flow-labelpos-' + id).addEventListener('change', function() { arrow.labelPos = this.value; _renderFlows(); });
+  document.getElementById('flow-labelpos-' + id).addEventListener('change', function() {
+    arrow.labelPos = this.value; arrow.labelManual = null;
+    document.getElementById('flow-labelreset-' + id).style.visibility = 'hidden';
+    _renderFlows();
+  });
+  document.getElementById('flow-labelreset-' + id).addEventListener('click', function() {
+    _resetFlowLabelPos(arrow);
+    this.style.visibility = 'hidden';
+  });
   document.getElementById('flow-curve-' + id).addEventListener('input', function() { arrow.curve = parseInt(this.value, 10); _renderFlows(); });
   document.getElementById('flow-dashed-' + id).addEventListener('change', function() { arrow.dashed = this.checked; _renderFlows(); });
   document.getElementById('flow-astart-' + id).addEventListener('change', function() { arrow.arrowStart = this.checked; _renderFlows(); });

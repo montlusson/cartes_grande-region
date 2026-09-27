@@ -80,8 +80,10 @@ function exportMap() {
 
         var boxW = pad + swW + Math.round(6 * dpr) + Math.ceil(maxTxtW) + pad;
         var boxH = pad + items.length * lineH + pad;
-        var bx   = pad;
-        var by   = out.height - boxH - pad;
+        // Même position que le choix de l'onglet Style (_legendPos), pour
+        // que le PNG exporté corresponde à ce qui est affiché à l'écran.
+        var bx = (_legendPos === 'br' || _legendPos === 'tr') ? out.width - boxW - pad : pad;
+        var by = (_legendPos === 'tl' || _legendPos === 'tr') ? pad : out.height - boxH - pad;
 
         // Fond semi-transparent
         ctx.fillStyle = 'rgba(255,255,255,0.88)';

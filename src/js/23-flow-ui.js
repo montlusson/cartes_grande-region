@@ -60,7 +60,10 @@ function _appendFlowItem(arrow, list) {
       '<option value="below"' + (arrow.labelPos==='below'?' selected':'') + '>En dessous</option>' +
       '<option value="left"' + (arrow.labelPos==='left'?' selected':'') + '>À gauche</option>' +
       '<option value="right"' + (arrow.labelPos==='right'?' selected':'') + '>À droite</option>' +
-    '</select>';
+    '</select>' +
+    '<button type="button" id="flow-labelreset-' + arrow.id + '" class="btn btn-secondary btn-sm"' +
+      ' title="Revenir à un positionnement relatif à la flèche"' +
+      (arrow.labelManual ? '' : ' style="visibility:hidden"') + '>↺ Position libre</button>';
   list.appendChild(ctrl);
 
   _wireFlowItemEvents(arrow, div, ctrl);
@@ -92,7 +95,15 @@ function _wireFlowItemEvents(arrow, div, ctrl) {
     document.getElementById('flow-width-' + id).disabled = _flowNumValue(arrow) !== null;
     _renderFlows(); _updateLegend();
   });
-  document.getElementById('flow-labelpos-' + id).addEventListener('change', function() { arrow.labelPos = this.value; _renderFlows(); });
+  document.getElementById('flow-labelpos-' + id).addEventListener('change', function() {
+    arrow.labelPos = this.value; arrow.labelManual = null;
+    document.getElementById('flow-labelreset-' + id).style.visibility = 'hidden';
+    _renderFlows();
+  });
+  document.getElementById('flow-labelreset-' + id).addEventListener('click', function() {
+    _resetFlowLabelPos(arrow);
+    this.style.visibility = 'hidden';
+  });
   document.getElementById('flow-curve-' + id).addEventListener('input', function() { arrow.curve = parseInt(this.value, 10); _renderFlows(); });
   document.getElementById('flow-dashed-' + id).addEventListener('change', function() { arrow.dashed = this.checked; _renderFlows(); });
   document.getElementById('flow-astart-' + id).addEventListener('change', function() { arrow.arrowStart = this.checked; _renderFlows(); });

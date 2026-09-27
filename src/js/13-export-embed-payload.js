@@ -88,6 +88,7 @@ function _serializeEmbedPayload() {
     fillLayer:  _fillLayer,
     overlays:   Object.keys(_activeLayers).filter(function(id) { return _activeLayers[id]; }),
     legend:     legendItems,
+    legendPos:  _legendPos,
     blocColors: BLOC_COLORS,
     blocLabels: BLOC_LABELS,
     strokeWidths: _strokeWidths

@@ -25,6 +25,20 @@
 
           <hr class="divider">
           <div class="section">
+            <div class="section-title">Légende</div>
+            <div class="field" style="margin-top:8px">
+              <label>Position</label>
+              <select class="full" id="legend-pos">
+                <option value="bl" selected>Bas gauche</option>
+                <option value="br">Bas droite</option>
+                <option value="tl">Haut gauche</option>
+                <option value="tr">Haut droite</option>
+              </select>
+            </div>
+          </div>
+
+          <hr class="divider">
+          <div class="section">
             <div class="section-title collapsible collapsed" id="toggle-st-colors">Couleurs des blocs</div>
             <div class="collapsible-body collapsed" id="body-st-colors">
               <div id="bloc-colors" style="margin-top:8px"></div>
@@ -79,6 +93,19 @@
                   <button class="btn btn-secondary btn-sm active" data-steps="5">5</button>
                   <button class="btn btn-secondary btn-sm" data-steps="7">7</button>
                 </div>
+              </div>
+              <div class="style-row" style="margin-top:8px">
+                <label>Décimales</label>
+                <select id="legend-decimals" style="flex:1">
+                  <option value="auto" selected>Auto</option>
+                  <option value="0">0 (entiers)</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </div>
+              <div class="style-row" style="margin-top:4px">
+                <label></label>
+                <button class="btn btn-secondary btn-sm" id="btn-choro-color-reset" title="Revenir aux couleurs de la palette">↺ Couleurs par défaut</button>
               </div>
             </div>
             </div>

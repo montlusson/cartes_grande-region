@@ -1,12 +1,25 @@
 //  LÉGENDE
 // ══════════════════════════════════════════════════════════════════
 
+// Arrondi des nombres affichés dans les légendes (choroplèthe + échelle des
+// flux) — 'auto' garde le formatage malin existant (entier si rond, sinon 1
+// décimale) ; sinon un nombre de décimales fixe choisi par l'utilisateur
+// (onglet Style) pour toutes les légendes numériques de la carte.
+var _legendDecimals = 'auto';
+function _legendFmtNum(v) {
+  if (_legendDecimals === 'auto') return _fmtChoroNum(v);
+  return parseFloat(v).toFixed(parseInt(_legendDecimals, 10)).toString().replace('.', ',');
+}
+
 function _updateLegend() {
   var el = document.getElementById('map-legend');
+  el.className = 'pos-' + _legendPos;
   el.innerHTML = '';
 
-  // Légende catégorielle (parti vainqueur, etc.)
-  if (Object.keys(_dataMap).length && _valueCol && _catMode) {
+  // Légende catégorielle (parti vainqueur, etc.) — _choroIsRendered() évite
+  // de décrire un remplissage qui n'est plus réellement affiché (fond
+  // "Aucune", jointure par région désactivée, jointure invalidée entretemps…).
+  if (_choroIsRendered() && _catMode) {
     Object.keys(_catColors).forEach(function(cat) {
       var item = document.createElement('span');
       item.className = 'leg-item';
@@ -23,19 +36,31 @@ function _updateLegend() {
     return;
   }
 
-  // Légende choroplèthe (prioritaire si données chargées)
-  if (Object.keys(_dataMap).length && _valueCol && _choroColors.length) {
-    _choroColors.forEach(function(color, i) {
+  // Légende choroplèthe (prioritaire si données chargées) — pastilles
+  // éditables au clic (couleur personnalisée par classe), comme la légende
+  // des couches Bibliothèque (_renderChoroLegend, js/19-library-focus.js).
+  if (_choroIsRendered() && _choroColors.length) {
+    _choroColors.forEach(function(_unused, i) {
+      var color = _choroColorAt(i);
       var lo  = _choroBreaks[i - 1];
       var hi  = _choroBreaks[i];
-      var lbl = (lo !== undefined ? '≥' + parseFloat(lo).toFixed(1) : '')
+      var lbl = (lo !== undefined ? '≥' + _legendFmtNum(lo) : '')
               + (lo !== undefined && hi !== undefined ? ' — ' : '')
-              + (hi !== undefined ? '<' + parseFloat(hi).toFixed(1) : (lo !== undefined ? '+' : ''));
+              + (hi !== undefined ? '<' + _legendFmtNum(hi) : (lo !== undefined ? '+' : ''));
       if (!lbl) lbl = '—';
       var item = document.createElement('span');
       item.className = 'leg-item';
-      item.innerHTML = '<span class="leg-swatch" style="background:'+color+'"></span>'
-                     + '<span style="font-size:10px">'+lbl+'</span>';
+      item.innerHTML =
+        '<span class="leg-swatch" style="background:'+color+';cursor:pointer" title="Changer la couleur de cette classe"></span>'
+        + '<input type="color" value="'+color+'" style="position:absolute;opacity:0;width:0;height:0">'
+        + '<span style="font-size:10px">'+lbl+'</span>';
+      var sw = item.querySelector('.leg-swatch'), pk = item.querySelector('input[type=color]');
+      sw.addEventListener('click', function() { pk.click(); });
+      pk.addEventListener('input', function() {
+        _choroColorOverrides[i] = pk.value;
+        sw.style.background = pk.value;
+        _repaintChoro(true); // true = ne pas reconstruire la légende (fermerait le picker natif en pleine sélection)
+      });
       el.appendChild(item);
     });
     _appendFlowLegend(el);

@@ -144,6 +144,15 @@ function _buildCatScale(rawVals) {
   _choroBreaks = []; _choroColors = [];
 }
 
+// Couleur personnalisée par classe (index → hex), éditable depuis la légende
+// (clic sur une pastille) — survit à un rechargement de données, mais est
+// remise à zéro si la palette ou le nombre de classes change (le sens des
+// index n'est alors plus le même).
+var _choroColorOverrides = {};
+function _choroColorAt(i) {
+  return _choroColorOverrides[i] !== undefined ? _choroColorOverrides[i] : _choroColors[i];
+}
+
 // Retourne la couleur choroplèthe pour une valeur brute
 function _choroColor(val) {
   if (_catMode) {
@@ -154,19 +163,38 @@ function _choroColor(val) {
   if (isNaN(v) || !_choroColors.length) return '#ccc';
   var cls = 0;
   while (cls < _choroBreaks.length && v >= _choroBreaks[cls]) cls++;
-  return _choroColors[cls] || '#ccc';
+  return _choroColorAt(cls) || '#ccc';
+}
+
+// La donnée jointe ne colore RÉELLEMENT les entités que dans deux cas — sert
+// de garde à la légende (js/08-legend-presets.js) pour ne jamais décrire un
+// dégradé qui ne correspond à rien sur la carte (fond "Aucune", couche non
+// jointe par valeur, jointure par région désactivée…), même si _dataMap/
+// _valueCol restent techniquement peuplés en mémoire.
+function _choroIsRendered() {
+  if (!Object.keys(_dataMap).length || !_valueCol) return false;
+  if (_fillLayer === 'none') return false;
+  if (_fillLayer === 'blocs') {
+    var jt = (document.getElementById('join-type') || {}).value || 'name';
+    return jt === 'region';
+  }
+  return true;
 }
 
 // Repeint la choroplèthe (carte + légende) sans toucher au panneau de couleurs
 // — utilisé pendant la sélection au color picker pour ne pas casser l'input.
-function _repaintChoro() {
+// skipLegend=true : la carte est repeinte mais PAS la légende — utilisé par
+// le picker de couleur de classe (js/08-legend-presets.js), qui touche déjà
+// le DOM du swatch lui-même ; reconstruire toute la légende là fermerait le
+// sélecteur de couleur natif du navigateur en pleine sélection.
+function _repaintChoro(skipLegend) {
   if (_fillLayer === 'blocs' && _mapReady && _map.getLayer(BLOCS_FILL_ID)) {
     _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
     _applyStrokeColors();
   } else {
     _redrawFill();
   }
-  _updateLegend();
+  if (!skipLegend) _updateLegend();
   _refreshAllOverlays();
 }
 

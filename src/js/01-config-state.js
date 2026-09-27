@@ -185,6 +185,7 @@ var _labelMarkers = {};           // id → { mk, name, el, placement }
 var _ttLastEvt = null, _ttLastFeat = null;   // pour rafraîchir l'infobulle épinglée
 var _blocTestGeoms = {};   // region → géométrie décimée du bloc (test de confinement des étiquettes)
 
+var _legendPos = 'bl';            // bl | br | tl | tr — position de #map-legend (onglet Style)
 var _ttImageMode = 'none';        // none | pays | region | custom
 var _ttImageUrl = '';
 var _ttHtmlMode = false;

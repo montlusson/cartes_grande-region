@@ -56,12 +56,15 @@ function applyData() {
     });
     if (nTot && nNum > nTot * 0.8) {
       setStatus('⚠ Aucune ligne jointe : « ' + _joinCol + ' » contient des nombres. La colonne de jointure doit identifier la commune (ex. « Communes ») ; mettez la donnée à colorier (ex. « Parti vainqueur ») dans « Valeur à cartographier ».');
-      _catMode = false; _catColors = {};
+      // _choroColors/_choroBreaks pas remis à zéro → la légende continuait
+      // d'afficher les seuils/couleurs de la DERNIÈRE jointure réussie alors
+      // que la carte, elle, repasse en gris faute de correspondance.
+      _catMode = false; _catColors = {}; _choroColors = []; _choroBreaks = [];
       _repaintChoro(); _updateLegend();
       return;
     }
     setStatus('⚠ Aucune ligne jointe : vérifiez la colonne de jointure (contient-elle les noms de communes ?) et le type d\'identifiant.');
-    _catMode = false; _catColors = {};
+    _catMode = false; _catColors = {}; _choroColors = []; _choroBreaks = [];
     _repaintChoro(); _updateLegend();
     return;
   }
@@ -210,6 +213,7 @@ function _buildChoroUI() {
                  + '<div class="pal-label">'+_escHtml(p.label || p.id)+'</div>';
     sw.addEventListener('click', function() {
       _choroPalette = p.id;
+      _choroColorOverrides = {}; // la palette change de sens : les couleurs personnalisées par classe ne s'appliquent plus
       document.querySelectorAll('.pal-sw').forEach(function(s){s.classList.remove('active');});
       sw.classList.add('active');
       if (_csvData && _valueCol) { _buildChoroScale(); applyData(); }

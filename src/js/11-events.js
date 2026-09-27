@@ -21,6 +21,9 @@ function wireEvents() {
     if (el) el.addEventListener('input', _updateMapMeta);
   });
 
+  var legendPosSel = document.getElementById('legend-pos');
+  if (legendPosSel) legendPosSel.addEventListener('change', function() { _legendPos = this.value; _updateLegend(); });
+
   // Tableau de données accessible
   var btnTable = document.getElementById('btn-table');
   if (btnTable) btnTable.addEventListener('click', _openTableModal);
@@ -192,7 +195,7 @@ function wireEvents() {
 
   var btnClear = document.getElementById('btn-clear-csv');
   if (btnClear) btnClear.addEventListener('click', function() {
-    _csvData = null; _dataMap = {}; _rowMap = {}; _choroBreaks = []; _choroColors = []; _catMode = false; _catColors = {}; _catOverrides = {};
+    _csvData = null; _dataMap = {}; _rowMap = {}; _choroBreaks = []; _choroColors = []; _catMode = false; _catColors = {}; _catOverrides = {}; _choroColorOverrides = {};
     _valueCol = ''; _valueColLabel = '';
     var lblInp1 = document.getElementById('value-col-label');
     if (lblInp1) lblInp1.value = '';
@@ -258,11 +261,17 @@ function wireEvents() {
   document.querySelectorAll('[data-steps]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       _choroSteps = parseInt(btn.dataset.steps, 10);
+      _choroColorOverrides = {}; // le nombre de classes change de sens : les couleurs personnalisées par index ne s'appliquent plus
       document.querySelectorAll('[data-steps]').forEach(function(b){b.classList.remove('active');});
       btn.classList.add('active');
       if (_csvData && _valueCol) { _buildChoroScale(); applyData(); }
     });
   });
+
+  var legendDecimalsSel = document.getElementById('legend-decimals');
+  if (legendDecimalsSel) legendDecimalsSel.addEventListener('change', function() { _legendDecimals = this.value; _updateLegend(); });
+  var btnChoroColorReset = document.getElementById('btn-choro-color-reset');
+  if (btnChoroColorReset) btnChoroColorReset.addEventListener('click', function() { _choroColorOverrides = {}; _repaintChoro(); });
 
   // Export
   var exportBtn = document.getElementById('btn-export');

@@ -37,6 +37,46 @@ function _wireFlowDrawClick() {
       if (hint) hint.textContent = 'Cliquez le point de départ… (« ' + arrow.name + ' » créé)';
     }
   });
+  _wireFlowLabelDrag();
+}
+
+// ── Étiquette déplaçable à la souris (placement manuel) ─────────────
+var _flowLabelDragId = null;
+
+function _wireFlowLabelDrag() {
+  _map.on('mouseenter', 'flow-label', function() {
+    if (!_flowLabelDragId) _map.getCanvas().style.cursor = 'grab';
+  });
+  _map.on('mouseleave', 'flow-label', function() {
+    if (!_flowLabelDragId) _map.getCanvas().style.cursor = _flowDrawMode ? 'crosshair' : '';
+  });
+  _map.on('mousedown', 'flow-label', function(e) {
+    if (!e.features || !e.features.length) return;
+    e.preventDefault();
+    _flowLabelDragId = e.features[0].properties.id;
+    _map.dragPan.disable();
+    _map.getCanvas().style.cursor = 'grabbing';
+  });
+  _map.on('mousemove', function(e) {
+    if (!_flowLabelDragId) return;
+    var arrow = _flowArrows.find(function(a) { return a.id === _flowLabelDragId; });
+    if (!arrow) { _flowLabelDragId = null; return; }
+    arrow.labelManual = [e.lngLat.lng, e.lngLat.lat];
+    _renderFlows();
+  });
+  _map.on('mouseup', function() {
+    if (!_flowLabelDragId) return;
+    var resetBtn = document.getElementById('flow-labelreset-' + _flowLabelDragId);
+    if (resetBtn) resetBtn.style.visibility = 'visible';
+    _flowLabelDragId = null;
+    _map.dragPan.enable();
+    _map.getCanvas().style.cursor = _flowDrawMode ? 'crosshair' : '';
+  });
+}
+
+function _resetFlowLabelPos(arrow) {
+  arrow.labelManual = null;
+  _renderFlows();
 }
 
 // ── Import CSV : noms de territoires connus, ou coordonnées explicites ──
@@ -70,7 +110,26 @@ function _loadFlowCSV() {
     return;
   }
 
+  // Détection de la colonne "valeur" : d'abord par mots-clés courants, sinon
+  // repli sur toute colonne numérique restante (hors origine/destination) —
+  // la proportionnalité doit s'appliquer PAR DÉFAUT dès qu'une donnée
+  // chiffrée est fournie, même sous un intitulé non prévu (ex. « Frontaliers »,
+  // « Effectif »…), pas seulement les noms déjà couverts par le mot-clé.
+  var originDestCols = useCoords
+    ? ['lon_origine','lat_origine','lon_destination','lat_destination']
+    : [parsed.cols[0], parsed.cols[1]];
   var valCol = parsed.cols.find(function(c) { return /valeur|value|volume|nb|nombre|total/i.test(c); });
+  if (!valCol) {
+    valCol = parsed.cols.find(function(c) {
+      if (originDestCols.indexOf(c) !== -1) return false;
+      var nNum = 0, nTot = 0;
+      parsed.rows.forEach(function(r) {
+        if (r[c] === undefined || String(r[c]).trim() === '') return;
+        nTot++; if (!isNaN(parseFloat(String(r[c]).replace(',', '.')))) nNum++;
+      });
+      return nTot > 0 && nNum === nTot;
+    });
+  }
 
   var created = 0, skipped = 0;
   parsed.rows.forEach(function(row) {

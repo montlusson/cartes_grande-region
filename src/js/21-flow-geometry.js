@@ -20,7 +20,7 @@ function _newFlowArrow(from, to) {
     curve: 25, style: 'linear', color: color, width: 3, headStyle: 'triangle',
     value: '', // proportionnalité : si renseignée, prime sur "width" via une échelle PARTAGÉE (cf. _flowEffWidth)
     dashed: false, arrowStart: false, arrowEnd: true,
-    label: '', labelPos: 'above', visible: true
+    label: '', labelPos: 'above', labelManual: null, visible: true
   };
 }
 
@@ -218,10 +218,17 @@ var FLOW_LABEL_POS = {
 
 function _flowLabelFeature(arrow) {
   if (!arrow.label) return null;
+  // Placée manuellement (glisser-déposer sur la carte) : coordonnée exacte,
+  // centrée sur le point déposé — sinon position relative à la flèche
+  // (préréglage au-dessus/en dessous/gauche/droite).
+  if (arrow.labelManual) {
+    return { type:'Feature', properties:{id:arrow.id, label:arrow.label, loffset:[0,0], lanchor:'center'},
+      geometry:{type:'Point', coordinates:arrow.labelManual} };
+  }
   var pc = _flowControlPoint(arrow);
   var mid = _bezierPoint(arrow.from, pc, arrow.to, 0.5);
   var pos = FLOW_LABEL_POS[arrow.labelPos] || FLOW_LABEL_POS.above;
-  return { type:'Feature', properties:{label:arrow.label, loffset:pos.offset, lanchor:pos.anchor},
+  return { type:'Feature', properties:{id:arrow.id, label:arrow.label, loffset:pos.offset, lanchor:pos.anchor},
     geometry:{type:'Point', coordinates:mid} };
 }
 
@@ -320,7 +327,7 @@ function _appendFlowLegend(container) {
       '<svg width="28" height="14" style="flex:none;overflow:visible">' +
         '<line x1="2" y1="7" x2="26" y2="7" stroke="#555" stroke-width="' + w.toFixed(1) + '" stroke-linecap="round"/>' +
       '</svg>' +
-      '<span style="font-size:10px">' + _escHtml(_fmtChoroNum(v)) + '</span>';
+      '<span style="font-size:10px">' + _escHtml(_legendFmtNum(v)) + '</span>';
     container.appendChild(item);
   });
 }
