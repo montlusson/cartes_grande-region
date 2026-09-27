@@ -190,6 +190,8 @@ var _ttImageMode = 'none';        // none | pays | region | custom
 var _ttImageUrl = '';
 var _ttHtmlMode = false;
 var _ttHtmlTemplate = '';
+var _ttBoxBg = '';    // couleur de fond de l'infobulle — '' = défaut CSS (#fff)
+var _ttBoxColor = ''; // couleur du texte — '' = défaut CSS (hérité)
 
 // ══════════════════════════════════════════════════════════════════
 //  ÉTAT GLOBAL

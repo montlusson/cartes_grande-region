@@ -257,6 +257,24 @@ function wireEvents() {
   });
   if (stA) stA.addEventListener('click', function() { _setStrokeOverride(''); });
 
+  // Couleurs de fond/texte de l'infobulle — même pattern couleur+hex+"auto"
+  // que la couleur des délimitations ci-dessus, factorisé (2 paires ici).
+  function _wireColorHexPair(colorId, hexId, apply) {
+    var c = document.getElementById(colorId), h = document.getElementById(hexId);
+    function set(v) { apply(v); if (c && v) c.value = v; if (h) h.value = v || 'auto'; _refreshTooltip(); }
+    if (c) c.addEventListener('input', function() { set(this.value); });
+    if (h) h.addEventListener('change', function() {
+      var v = String(this.value).trim().toLowerCase();
+      if (v === '' || v === 'auto') { set(''); return; }
+      v = v.replace(/^#/, '');
+      if (/^[0-9a-f]{3}$/.test(v)) v = v[0] + v[0] + v[1] + v[1] + v[2] + v[2];
+      if (/^[0-9a-f]{6}$/.test(v)) set('#' + v);
+      else this.value = 'auto';
+    });
+  }
+  _wireColorHexPair('tt-box-bg', 'tt-box-bg-hex', function(v) { _ttBoxBg = v; });
+  _wireColorHexPair('tt-box-color', 'tt-box-color-hex', function(v) { _ttBoxColor = v; });
+
   // Classes quantiles
   document.querySelectorAll('[data-steps]').forEach(function(btn) {
     btn.addEventListener('click', function() {

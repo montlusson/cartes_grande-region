@@ -195,10 +195,14 @@ function _redrawFill() {
   if (_fillLayer === 'none') {
     _removeActiveFillLayer();
     _setBlocsAsBackground(false);
-    // "Fond vide" = aucune couleur, y compris sur les blocs eux-mêmes — pas
-    // seulement la couche de subdivision au premier plan (_removeActiveFillLayer
-    // ne touche que celle-ci). _drawBlocs() la remet visible dès qu'un autre
-    // fond est sélectionné (elle s'y termine toujours par _setVisible(...,true)).
+    // _drawBlocs() reconstruit la géométrie des blocs (donc aussi ses
+    // CONTOURS, BLOCS_LINE_ID) à partir de _activeBlocs — sans cet appel, un
+    // changement de blocs actifs pendant que le fond est "Aucune" laissait
+    // les frontières des blocs désactivés visibles (géométrie de la toute
+    // dernière fois que _drawBlocs() avait tourné, jamais rafraîchie tant
+    // que le fond restait "Aucune"). "Fond vide" = aucune couleur, pas
+    // aucune géométrie : les contours doivent rester exacts.
+    _drawBlocs();
     if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
     setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
     return;

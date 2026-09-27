@@ -81,6 +81,7 @@ function _serializeEmbedPayload() {
     blocPays:   BLOC_PAYS,
     tt: { imageMode: _ttImageMode, imageUrl: _ttImageUrl,
           htmlMode: _ttHtmlMode, htmlTpl: _ttHtmlTemplate,
+          boxBg: _ttBoxBg || '', boxColor: _ttBoxColor || '',
           valueCol: _valueCol || '', flagsPays: FLAG_PAYS, flagsRegion: FLAG_REGION },
     center:     [center.lng, center.lat],
     zoom:       _map.getZoom(),

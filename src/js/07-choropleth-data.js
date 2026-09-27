@@ -319,14 +319,28 @@ function _showTooltip(e, feat) {
 
   tt.innerHTML = html;
   tt.classList.add('vis');
+  tt.style.background = _ttBoxBg || '';
+  tt.style.color = _ttBoxColor || '';
 
   var frame = document.getElementById('map-frame');
   var fr = frame.getBoundingClientRect();
-  var mx = e.point.x;
-  var my = e.point.y;
+  _positionTooltip(tt, fr, e.point.x, e.point.y);
+}
+
+// Sous ~480px de large (mobile), une bulle flottante près du doigt est
+// difficile à lire/atteindre — bascule en fiche ancrée en bas de la carte,
+// pleine largeur (mêmes proportions que le pied de page de l'embed publié).
+// Au-dessus, comportement flottant habituel, positionné près du point touché.
+function _positionTooltip(tt, fr, px, py) {
+  if (fr.width <= 480) {
+    tt.classList.add('tt-sheet');
+    tt.style.left = ''; tt.style.top = '';
+    return;
+  }
+  tt.classList.remove('tt-sheet');
   var ttW = tt.offsetWidth || 220, ttH = tt.offsetHeight || 160;
-  var left = Math.max(4, Math.min(mx + 14, fr.width - ttW - 4));
-  var top  = my - ttH - 12 < 4 ? my + 14 : my - ttH - 12;
+  var left = Math.max(4, Math.min(px + 14, fr.width - ttW - 4));
+  var top  = py - ttH - 12 < 4 ? py + 14 : py - ttH - 12;
   tt.style.left = left + 'px';
   tt.style.top  = Math.max(4, top) + 'px';
 }

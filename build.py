@@ -52,6 +52,8 @@ JS_MODULES = [
     "js/23-flow-ui.js",
     "js/24-catalog-search.js",
     "js/25-catalog-search-ui.js",
+    "js/26-embed-style-css.js",
+    "js/27-embed-tooltip-mobile.js",
 ]
 
 

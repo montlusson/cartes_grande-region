@@ -111,6 +111,11 @@ select.full{font-family:var(--font)}
 /* Tooltip */
 #map-tt{position:absolute;z-index:1000;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:11px 14px;max-width:240px;font-size:12.5px;pointer-events:none;display:none;line-height:1.5}
 #map-tt.vis{display:block}
+/* Sous ~480px (mobile) : fiche ancrée en bas, pleine largeur, plus lisible
+   au doigt qu'une bulle flottante près du point touché. */
+#map-tt.tt-sheet{left:0 !important;right:0;top:auto !important;bottom:0;width:auto;max-width:100%;
+  border-radius:14px 14px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+  font-size:13.5px;box-shadow:0 -4px 20px rgba(0,0,0,.18)}
 
 /* Cartouche titre/source (onglet Style) */
 #map-meta{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;background:rgba(255,255,255,.93);border-radius:8px;padding:10px 16px;max-width:min(86%,560px);box-shadow:0 1px 6px rgba(0,0,0,.12);display:none;pointer-events:none;text-align:center}
@@ -945,6 +950,22 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
           <div class="section">
             <div class="section-title collapsible collapsed" id="toggle-st-tooltip">Infobulle</div>
             <div class="collapsible-body collapsed" id="body-st-tooltip">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+                <div class="field" style="margin:0">
+                  <label>Couleur de fond</label>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input type="color" id="tt-box-bg" value="#ffffff" style="width:28px;height:24px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:none">
+                    <input type="text" id="tt-box-bg-hex" value="auto" spellcheck="false" style="width:62px;font-family:monospace;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">
+                  </div>
+                </div>
+                <div class="field" style="margin:0">
+                  <label>Couleur du texte</label>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input type="color" id="tt-box-color" value="#1a1a1a" style="width:28px;height:24px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:none">
+                    <input type="text" id="tt-box-color-hex" value="auto" spellcheck="false" style="width:62px;font-family:monospace;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">
+                  </div>
+                </div>
+              </div>
               <div class="field" style="margin-top:6px">
                 <label>Image dans l'infobulle</label>
                 <select class="full" id="tt-img-mode" style="font-family:var(--font)">
@@ -1429,6 +1450,8 @@ var _ttImageMode = 'none';        // none | pays | region | custom
 var _ttImageUrl = '';
 var _ttHtmlMode = false;
 var _ttHtmlTemplate = '';
+var _ttBoxBg = '';    // couleur de fond de l'infobulle — '' = défaut CSS (#fff)
+var _ttBoxColor = ''; // couleur du texte — '' = défaut CSS (hérité)
 
 // ══════════════════════════════════════════════════════════════════
 //  ÉTAT GLOBAL
@@ -2365,10 +2388,14 @@ function _redrawFill() {
   if (_fillLayer === 'none') {
     _removeActiveFillLayer();
     _setBlocsAsBackground(false);
-    // "Fond vide" = aucune couleur, y compris sur les blocs eux-mêmes — pas
-    // seulement la couche de subdivision au premier plan (_removeActiveFillLayer
-    // ne touche que celle-ci). _drawBlocs() la remet visible dès qu'un autre
-    // fond est sélectionné (elle s'y termine toujours par _setVisible(...,true)).
+    // _drawBlocs() reconstruit la géométrie des blocs (donc aussi ses
+    // CONTOURS, BLOCS_LINE_ID) à partir de _activeBlocs — sans cet appel, un
+    // changement de blocs actifs pendant que le fond est "Aucune" laissait
+    // les frontières des blocs désactivés visibles (géométrie de la toute
+    // dernière fois que _drawBlocs() avait tourné, jamais rafraîchie tant
+    // que le fond restait "Aucune"). "Fond vide" = aucune couleur, pas
+    // aucune géométrie : les contours doivent rester exacts.
+    _drawBlocs();
     if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
     setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
     return;
@@ -3017,14 +3044,28 @@ function _showTooltip(e, feat) {
 
   tt.innerHTML = html;
   tt.classList.add('vis');
+  tt.style.background = _ttBoxBg || '';
+  tt.style.color = _ttBoxColor || '';
 
   var frame = document.getElementById('map-frame');
   var fr = frame.getBoundingClientRect();
-  var mx = e.point.x;
-  var my = e.point.y;
+  _positionTooltip(tt, fr, e.point.x, e.point.y);
+}
+
+// Sous ~480px de large (mobile), une bulle flottante près du doigt est
+// difficile à lire/atteindre — bascule en fiche ancrée en bas de la carte,
+// pleine largeur (mêmes proportions que le pied de page de l'embed publié).
+// Au-dessus, comportement flottant habituel, positionné près du point touché.
+function _positionTooltip(tt, fr, px, py) {
+  if (fr.width <= 480) {
+    tt.classList.add('tt-sheet');
+    tt.style.left = ''; tt.style.top = '';
+    return;
+  }
+  tt.classList.remove('tt-sheet');
   var ttW = tt.offsetWidth || 220, ttH = tt.offsetHeight || 160;
-  var left = Math.max(4, Math.min(mx + 14, fr.width - ttW - 4));
-  var top  = my - ttH - 12 < 4 ? my + 14 : my - ttH - 12;
+  var left = Math.max(4, Math.min(px + 14, fr.width - ttW - 4));
+  var top  = py - ttH - 12 < 4 ? py + 14 : py - ttH - 12;
   tt.style.left = left + 'px';
   tt.style.top  = Math.max(4, top) + 'px';
 }
@@ -4385,6 +4426,24 @@ function wireEvents() {
   });
   if (stA) stA.addEventListener('click', function() { _setStrokeOverride(''); });
 
+  // Couleurs de fond/texte de l'infobulle — même pattern couleur+hex+"auto"
+  // que la couleur des délimitations ci-dessus, factorisé (2 paires ici).
+  function _wireColorHexPair(colorId, hexId, apply) {
+    var c = document.getElementById(colorId), h = document.getElementById(hexId);
+    function set(v) { apply(v); if (c && v) c.value = v; if (h) h.value = v || 'auto'; _refreshTooltip(); }
+    if (c) c.addEventListener('input', function() { set(this.value); });
+    if (h) h.addEventListener('change', function() {
+      var v = String(this.value).trim().toLowerCase();
+      if (v === '' || v === 'auto') { set(''); return; }
+      v = v.replace(/^#/, '');
+      if (/^[0-9a-f]{3}$/.test(v)) v = v[0] + v[0] + v[1] + v[1] + v[2] + v[2];
+      if (/^[0-9a-f]{6}$/.test(v)) set('#' + v);
+      else this.value = 'auto';
+    });
+  }
+  _wireColorHexPair('tt-box-bg', 'tt-box-bg-hex', function(v) { _ttBoxBg = v; });
+  _wireColorHexPair('tt-box-color', 'tt-box-color-hex', function(v) { _ttBoxColor = v; });
+
   // Classes quantiles
   document.querySelectorAll('[data-steps]').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -4737,6 +4796,7 @@ function _serializeEmbedPayload() {
     blocPays:   BLOC_PAYS,
     tt: { imageMode: _ttImageMode, imageUrl: _ttImageUrl,
           htmlMode: _ttHtmlMode, htmlTpl: _ttHtmlTemplate,
+          boxBg: _ttBoxBg || '', boxColor: _ttBoxColor || '',
           valueCol: _valueCol || '', flagsPays: FLAG_PAYS, flagsRegion: FLAG_REGION },
     center:     [center.lng, center.lat],
     zoom:       _map.getZoom(),
@@ -5003,6 +5063,7 @@ function _generateEmbedHTML(payload) {
 '      if (c.code)   html += "<div class=\\"tt-row\\"><span style=\\"font-family:monospace\\">"+esc(c.code)+"</span></div>";',
 '    }',
 '    tt.innerHTML = html;',
+'    tt.style.background = TT.boxBg || ""; tt.style.color = TT.boxColor || "";',
 '    tt.querySelectorAll("img").forEach(function(im){ im.addEventListener("error", function(){ im.style.display = "none"; }); });',
 '    tt.style.display = "block";',
 '    var tw = tt.offsetWidth||180, th = tt.offsetHeight||80;',
@@ -5011,14 +5072,24 @@ function _generateEmbedHTML(payload) {
 '    tt.style.top  = (my-th-12 < 4 ? my+14 : my-th-12)+"px";',
 '  }',
 '  map.on("mousemove", function(e){',
+'    if (window.__tt && window.__tt.pinned) return;',
 '    var feats = map.queryRenderedFeatures(e.point, {layers:layers});',
 '    if (!feats.length) { tt.style.display="none"; hovered=null; return; }',
 '    var f = feats[0];',
 '    hovered = f;',
 '    renderTT(f.properties||{}, e.point.x, e.point.y);',
 '  });',
-'  map.getContainer().addEventListener("mouseleave", function(){ tt.style.display="none"; hovered=null; });',
+'  map.getContainer().addEventListener("mouseleave", function(){',
+'    if (window.__tt && window.__tt.pinned) return;',
+'    tt.style.display="none"; hovered=null;',
+'  });',
 '  map.getCanvas().style.cursor = "crosshair";',
+  // Tactile : pas de survol persistant sur mobile, donc "mousemove" seul ne
+  // suffit jamais à consulter l'infobulle — un tap doit l'épingler comme
+  // dans l'éditeur (_wireTooltipEvents). js/26-embed-tooltip-mobile.js
+  // complète ce comportement depuis l'extérieur de cette IIFE (a besoin de
+  // "map"/"tt"/"renderTT"/"layers", non accessibles depuis un <script> séparé).
+'  window.__tt = {map:map, tt:tt, renderTT:renderTT, layers:layers, pinned:false};',
 '',
 '  // Recherche (autonome, données déjà embarquées)',
 '  var srInput = document.getElementById("map-search-input");',
@@ -5128,95 +5199,7 @@ function _generateEmbedHTML(payload) {
 '<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet"/>',
 '<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"><\/script>',
 '<style>',
-'*{box-sizing:border-box;margin:0;padding:0}',
-'html,body{width:100%;height:100%;overflow:hidden;font-family:Inter,system-ui,sans-serif;font-size:13px}',
-'#map{position:absolute;inset:0}',
-'#hdr{position:absolute;top:0;left:0;right:0;background:rgba(255,255,255,.95);border-bottom:1px solid #e4e4e4;padding:9px 14px;z-index:6;display:none;text-align:center}',
-'.hdr-t{font-weight:700;font-size:14px;color:#1a1a1a}',
-'.hdr-c{font-size:11.5px;color:#666;margin-top:2px;line-height:1.4}',
-'#mfoot{display:contents}',
-'#legend{position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(255,255,255,.93);',
-'  border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:4px;',
-'  font-size:11px;max-width:46%;box-shadow:0 1px 6px rgba(0,0,0,.12)}',
-'#legend.pos-bl{left:8px;right:auto;top:auto;bottom:8px}',
-'#legend.pos-br{right:8px;left:auto;top:auto;bottom:80px}',
-'#legend.pos-tl{left:8px;right:auto;bottom:auto;top:8px}',
-'#legend.pos-tr{right:8px;left:auto;bottom:auto;top:8px}',
-'.leg-item{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}',
-'.leg-sw{display:inline-block;width:18px;height:10px;border-radius:2px;',
-'  border:1px solid rgba(0,0,0,.08);flex-shrink:0}',
-'#tt{position:absolute;background:#fff;border:1px solid #e4e4e4;border-radius:6px;',
-'  box-shadow:0 2px 10px rgba(0,0,0,.14);padding:8px 11px;font-size:12px;',
-'  pointer-events:none;display:none;max-width:210px;z-index:10;line-height:1.4}',
-'.tt-name{font-weight:700;font-size:13px;margin-bottom:2px;text-align:center}',
-'.tt-row{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#555;margin-top:2px}',
-'.tt-img{width:96px;height:60px;object-fit:contain;border-radius:4px;display:block;margin:0 auto 8px}',
-'.tt-chip-row{text-align:center;margin-bottom:5px}',
-'.tt-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#1a1a1a}',
-'.lbl-marker{position:relative;width:0;height:0;pointer-events:none}',
-'.lbl-dot{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#0D0E12;border:1.5px solid #fff;box-shadow:0 0 3px rgba(0,0,0,.35)}',
-'.lbl-text{position:absolute;font-family:Inter,system-ui,sans-serif;font-weight:600;color:#1a1a1a;white-space:nowrap;',
-'  text-shadow:-1px -1px 0 rgba(255,255,255,.92),1px -1px 0 rgba(255,255,255,.92),-1px 1px 0 rgba(255,255,255,.92),1px 1px 0 rgba(255,255,255,.92),0 0 4px rgba(255,255,255,.92)}',
-'.lbl-marker.p-right .lbl-text{left:8px;top:50%;transform:translateY(-50%)}',
-'.lbl-marker.p-left .lbl-text{right:8px;top:50%;transform:translateY(-50%)}',
-'.lbl-marker.p-top .lbl-text{bottom:8px;left:50%;transform:translateX(-50%)}',
-'.lbl-marker.p-bottom .lbl-text{top:8px;left:50%;transform:translateX(-50%)}',
-'.lbl-marker.lbl-hidden .lbl-text{display:none}',
-'#map-search{position:absolute;top:10px;left:10px;z-index:20;width:200px;pointer-events:auto}',
-'#map-search-icon{position:absolute;left:9px;top:9px;width:14px;height:14px;color:#888;pointer-events:none}',
-'#map-search-input{width:100%;height:32px;padding:0 28px 0 30px;border:1px solid #d8d8d8;border-radius:16px;',
-'  font-size:12.5px;background:rgba(255,255,255,.96);backdrop-filter:blur(2px);box-shadow:0 1px 6px rgba(0,0,0,.12);',
-'  outline:none}',
-'#map-search-input::placeholder{color:#999}',
-'#map-search-input:focus{border-color:#5E71A1;box-shadow:0 0 0 3px rgba(94,113,161,.15)}',
-'#map-search-clear{position:absolute;right:6px;top:5px;width:22px;height:22px;border:none;background:transparent;',
-'  color:#999;font-size:15px;cursor:pointer;display:none;align-items:center;justify-content:center;border-radius:50%}',
-'#map-search-clear.vis{display:flex}',
-'#map-search-clear:hover{background:#eee}',
-'#map-search-list{position:absolute;top:36px;left:0;width:100%;max-height:240px;overflow-y:auto;',
-'  background:#fff;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);display:none}',
-'#map-search-list.vis{display:block}',
-'.msl-item{padding:7px 11px;font-size:12px;cursor:pointer;border-bottom:1px solid #f0f0f0}',
-'.msl-item:last-child{border-bottom:none}',
-'.msl-item:hover,.msl-item.msl-active{background:#f2f8ff}',
-'.msl-item .msl-sub{display:block;font-size:10.5px;color:#888;margin-top:1px}',
-'.msl-hint{padding:9px 11px;font-size:11.5px;color:#999;text-align:center}',
-'#zoom-ctrl{position:absolute;bottom:44px;right:10px;display:flex;flex-direction:column;gap:2px;z-index:5}',
-'.zoom-btn{width:30px;height:30px;background:#fff;border:1px solid #ccc;border-radius:4px;touch-action:manipulation;',
-'  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;',
-'  box-shadow:0 1px 3px rgba(0,0,0,.12)}',
-'.zoom-btn:hover{background:#f4f4f4}',
-'#attr{position:absolute;bottom:6px;right:6px;max-width:62%;font-size:10.5px;color:#555;',
-'  background:rgba(255,255,255,.78);padding:2px 7px;border-radius:4px;pointer-events:none;',
-'  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-'@media (max-width:480px){',
-'  .hdr-t{font-size:15px}',
-'  .hdr-c{font-size:12px}',
-'  #tt{max-width:72vw}',
-'  /* Légende + source/auteur regroupées en pied de page, en restant compactes */',
-'  #mfoot{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;',
-'    background:rgba(255,255,255,.97);box-shadow:0 -1px 6px rgba(0,0,0,.10)}',
-'  #legend,#legend.pos-bl,#legend.pos-br,#legend.pos-tl,#legend.pos-tr{position:static;left:auto;right:auto;top:auto;bottom:auto;width:100%;max-width:100%;border-radius:0;',
-'    box-shadow:none;background:transparent;font-size:10px;padding:5px 8px 3px;',
-'    flex-direction:row;flex-wrap:wrap;justify-content:center;gap:3px 9px}',
-'  .leg-sw{width:13px;height:8px}',
-'  #attr{position:static;right:auto;bottom:auto;left:auto;max-width:100%;width:100%;',
-'    text-align:center;white-space:normal;overflow:visible;text-overflow:unset;',
-'    font-size:10px;border-top:1px solid #e9e9e9;border-radius:0;background:transparent;padding:4px 10px}',
-'  /* Recherche compacte, alignée comme sur desktop plutôt qu\'étirée pleine largeur */',
-'  #map-search{left:10px;width:230px}',
-'  #map-search-list{top:44px}',
-  // Cibles tactiles ≥40px (recommandation WCAG/Apple HIG ~44px) — la
-  // taille desktop (30px pour les boutons de zoom, ex.) est pensée pour une
-  // souris précise, pas pour un pouce sur écran tactile.
-'  .zoom-btn{width:40px;height:40px;font-size:19px}',
-'  #map-search-input{height:40px;padding:0 34px 0 34px}',
-'  #map-search-icon{top:13px;left:12px;width:15px;height:15px}',
-'  #map-search-clear{width:30px;height:30px;top:5px;right:5px}',
-'}',
-'@media (prefers-reduced-motion: reduce){',
-'  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}',
-'}',
+EMBED_STYLE_CSS, // js/26-embed-style-css.js (extrait pour respecter le plafond de 500 lignes/module)
 '</style>',
 '</head>',
 '<body>',
@@ -5242,6 +5225,7 @@ function _generateEmbedHTML(payload) {
 '<script>',
 'window.__EMBED_PAYLOAD__ = ' + payload + ';',
 PLAYER_SCRIPT,
+EMBED_TT_MOBILE_JS, // js/27-embed-tooltip-mobile.js
 '// Boutons zoom',
 'document.getElementById("z-in").addEventListener("click",function(){',
 '  if(window._embedMap) window._embedMap.zoomIn(); });',
@@ -7618,6 +7602,138 @@ function _renameStaleLuCommunes(layer, stale) {
   });
   if (_map && _map.getSource('usrc-' + layer.id)) _map.getSource('usrc-' + layer.id).setData(layer.geojson);
 }
+//  EMBED — FEUILLE DE STYLE DU LECTEUR PUBLIÉ
+//  Extrait de js/14-export-embed-template.js (plafond 500 lignes/module) —
+//  chaîne CSS unique insérée entre <style>/</style> dans le HTML généré.
+// ══════════════════════════════════════════════════════════════════
+
+var EMBED_STYLE_CSS = [
+'*{box-sizing:border-box;margin:0;padding:0}',
+'html,body{width:100%;height:100%;overflow:hidden;font-family:Inter,system-ui,sans-serif;font-size:13px}',
+'#map{position:absolute;inset:0}',
+'#hdr{position:absolute;top:0;left:0;right:0;background:rgba(255,255,255,.95);border-bottom:1px solid #e4e4e4;padding:9px 14px;z-index:6;display:none;text-align:center}',
+'.hdr-t{font-weight:700;font-size:14px;color:#1a1a1a}',
+'.hdr-c{font-size:11.5px;color:#666;margin-top:2px;line-height:1.4}',
+'#mfoot{display:contents}',
+'#legend{position:absolute;left:8px;bottom:8px;z-index:5;background:rgba(255,255,255,.93);',
+'  border-radius:8px;padding:7px 10px;display:flex;flex-direction:column;gap:4px;',
+'  font-size:11px;max-width:46%;box-shadow:0 1px 6px rgba(0,0,0,.12)}',
+'#legend.pos-bl{left:8px;right:auto;top:auto;bottom:8px}',
+'#legend.pos-br{right:8px;left:auto;top:auto;bottom:80px}',
+'#legend.pos-tl{left:8px;right:auto;bottom:auto;top:8px}',
+'#legend.pos-tr{right:8px;left:auto;bottom:auto;top:8px}',
+'.leg-item{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}',
+'.leg-sw{display:inline-block;width:18px;height:10px;border-radius:2px;',
+'  border:1px solid rgba(0,0,0,.08);flex-shrink:0}',
+'#tt{position:absolute;background:#fff;border:1px solid #e4e4e4;border-radius:6px;',
+'  box-shadow:0 2px 10px rgba(0,0,0,.14);padding:8px 11px;font-size:12px;',
+'  pointer-events:none;display:none;max-width:210px;z-index:10;line-height:1.4}',
+'.tt-name{font-weight:700;font-size:13px;margin-bottom:2px;text-align:center}',
+'.tt-row{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#555;margin-top:2px}',
+'.tt-img{width:96px;height:60px;object-fit:contain;border-radius:4px;display:block;margin:0 auto 8px}',
+'.tt-chip-row{text-align:center;margin-bottom:5px}',
+'.tt-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#1a1a1a}',
+// Sous ~480px (mobile) : fiche ancrée en bas, pleine largeur — un tap
+// épingle l'infobulle (js/26-embed-tooltip-mobile.js), plus lisible/
+// atteignable qu'une bulle flottante près du doigt.
+'#tt.tt-sheet{left:0 !important;right:0;top:auto !important;bottom:0;width:auto;max-width:100%;',
+'  border-radius:14px 14px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));',
+'  font-size:13.5px;pointer-events:auto;box-shadow:0 -4px 20px rgba(0,0,0,.18)}',
+'.lbl-marker{position:relative;width:0;height:0;pointer-events:none}',
+'.lbl-dot{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#0D0E12;border:1.5px solid #fff;box-shadow:0 0 3px rgba(0,0,0,.35)}',
+'.lbl-text{position:absolute;font-family:Inter,system-ui,sans-serif;font-weight:600;color:#1a1a1a;white-space:nowrap;',
+'  text-shadow:-1px -1px 0 rgba(255,255,255,.92),1px -1px 0 rgba(255,255,255,.92),-1px 1px 0 rgba(255,255,255,.92),1px 1px 0 rgba(255,255,255,.92),0 0 4px rgba(255,255,255,.92)}',
+'.lbl-marker.p-right .lbl-text{left:8px;top:50%;transform:translateY(-50%)}',
+'.lbl-marker.p-left .lbl-text{right:8px;top:50%;transform:translateY(-50%)}',
+'.lbl-marker.p-top .lbl-text{bottom:8px;left:50%;transform:translateX(-50%)}',
+'.lbl-marker.p-bottom .lbl-text{top:8px;left:50%;transform:translateX(-50%)}',
+'.lbl-marker.lbl-hidden .lbl-text{display:none}',
+'#map-search{position:absolute;top:10px;left:10px;z-index:20;width:200px;pointer-events:auto}',
+'#map-search-icon{position:absolute;left:9px;top:9px;width:14px;height:14px;color:#888;pointer-events:none}',
+'#map-search-input{width:100%;height:32px;padding:0 28px 0 30px;border:1px solid #d8d8d8;border-radius:16px;',
+'  font-size:12.5px;background:rgba(255,255,255,.96);backdrop-filter:blur(2px);box-shadow:0 1px 6px rgba(0,0,0,.12);',
+'  outline:none}',
+'#map-search-input::placeholder{color:#999}',
+'#map-search-input:focus{border-color:#5E71A1;box-shadow:0 0 0 3px rgba(94,113,161,.15)}',
+'#map-search-clear{position:absolute;right:6px;top:5px;width:22px;height:22px;border:none;background:transparent;',
+'  color:#999;font-size:15px;cursor:pointer;display:none;align-items:center;justify-content:center;border-radius:50%}',
+'#map-search-clear.vis{display:flex}',
+'#map-search-clear:hover{background:#eee}',
+'#map-search-list{position:absolute;top:36px;left:0;width:100%;max-height:240px;overflow-y:auto;',
+'  background:#fff;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);display:none}',
+'#map-search-list.vis{display:block}',
+'.msl-item{padding:7px 11px;font-size:12px;cursor:pointer;border-bottom:1px solid #f0f0f0}',
+'.msl-item:last-child{border-bottom:none}',
+'.msl-item:hover,.msl-item.msl-active{background:#f2f8ff}',
+'.msl-item .msl-sub{display:block;font-size:10.5px;color:#888;margin-top:1px}',
+'.msl-hint{padding:9px 11px;font-size:11.5px;color:#999;text-align:center}',
+'#zoom-ctrl{position:absolute;bottom:44px;right:10px;display:flex;flex-direction:column;gap:2px;z-index:5}',
+'.zoom-btn{width:30px;height:30px;background:#fff;border:1px solid #ccc;border-radius:4px;touch-action:manipulation;',
+'  font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;',
+'  box-shadow:0 1px 3px rgba(0,0,0,.12)}',
+'.zoom-btn:hover{background:#f4f4f4}',
+'#attr{position:absolute;bottom:6px;right:6px;max-width:62%;font-size:10.5px;color:#555;',
+'  background:rgba(255,255,255,.78);padding:2px 7px;border-radius:4px;pointer-events:none;',
+'  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+'@media (max-width:480px){',
+'  .hdr-t{font-size:15px}',
+'  .hdr-c{font-size:12px}',
+'  #tt{max-width:72vw}',
+'  /* Légende + source/auteur regroupées en pied de page, en restant compactes */',
+'  #mfoot{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;flex-direction:column;',
+'    background:rgba(255,255,255,.97);box-shadow:0 -1px 6px rgba(0,0,0,.10)}',
+'  #legend,#legend.pos-bl,#legend.pos-br,#legend.pos-tl,#legend.pos-tr{position:static;left:auto;right:auto;top:auto;bottom:auto;width:100%;max-width:100%;border-radius:0;',
+'    box-shadow:none;background:transparent;font-size:10px;padding:5px 8px 3px;',
+'    flex-direction:row;flex-wrap:wrap;justify-content:center;gap:3px 9px}',
+'  .leg-sw{width:13px;height:8px}',
+'  #attr{position:static;right:auto;bottom:auto;left:auto;max-width:100%;width:100%;',
+'    text-align:center;white-space:normal;overflow:visible;text-overflow:unset;',
+'    font-size:10px;border-top:1px solid #e9e9e9;border-radius:0;background:transparent;padding:4px 10px}',
+'  /* Recherche compacte, alignée comme sur desktop plutôt qu\'étirée pleine largeur */',
+'  #map-search{left:10px;width:230px}',
+'  #map-search-list{top:44px}',
+  // Cibles tactiles ≥40px (recommandation WCAG/Apple HIG ~44px) — la
+  // taille desktop (30px pour les boutons de zoom, ex.) est pensée pour une
+  // souris précise, pas pour un pouce sur écran tactile.
+'  .zoom-btn{width:40px;height:40px;font-size:19px}',
+'  #map-search-input{height:40px;padding:0 34px 0 34px}',
+'  #map-search-icon{top:13px;left:12px;width:15px;height:15px}',
+'  #map-search-clear{width:30px;height:30px;top:5px;right:5px}',
+'}',
+'@media (prefers-reduced-motion: reduce){',
+'  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}',
+'}'
+].join('\n');
+//  EMBED — INFOBULLE TACTILE (tap = épingler) + FICHE PLEIN ÉCRAN MOBILE
+//  Complète PLAYER_SCRIPT (js/14-export-embed-template.js) depuis
+//  l'EXTÉRIEUR de son IIFE, via window.__tt qu'elle expose — un survol
+//  ("mousemove") seul ne donne jamais accès à l'infobulle sur tactile (pas
+//  de hover persistant au doigt) ; il faut un tap qui l'épingle, comme
+//  l'éditeur (_wireTooltipEvents, js/06-choropleth-scale.js).
+// ══════════════════════════════════════════════════════════════════
+
+var EMBED_TT_MOBILE_JS = [
+'(function(){',
+'  function ready(){',
+'    var T = window.__tt;',
+'    if (!T) { setTimeout(ready, 50); return; }', // PLAYER_SCRIPT expose __tt en fin d\'IIFE ; ce script peut s\'exécuter avant
+'    function isMobile(){ return (window.innerWidth||document.documentElement.clientWidth||1024) <= 480; }',
+'    function layout(){',
+'      if (isMobile()) { T.tt.classList.add("tt-sheet"); T.tt.style.left=""; T.tt.style.top=""; }',
+'      else T.tt.classList.remove("tt-sheet");',
+'    }',
+'    T.map.on("click", function(e){',
+'      var feats = T.map.queryRenderedFeatures(e.point, {layers:T.layers});',
+'      if (!feats.length) { T.pinned = false; T.tt.style.display = "none"; return; }',
+'      T.pinned = !T.pinned;',
+'      if (T.pinned) { T.renderTT(feats[0].properties||{}, e.point.x, e.point.y); layout(); }',
+'      else T.tt.style.display = "none";',
+'    });',
+'    window.addEventListener("resize", layout);',
+'  }',
+'  ready();',
+'})();'
+].join('\n');
 </script>
 </body>
 </html>

@@ -182,6 +182,22 @@
           <div class="section">
             <div class="section-title collapsible collapsed" id="toggle-st-tooltip">Infobulle</div>
             <div class="collapsible-body collapsed" id="body-st-tooltip">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+                <div class="field" style="margin:0">
+                  <label>Couleur de fond</label>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input type="color" id="tt-box-bg" value="#ffffff" style="width:28px;height:24px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:none">
+                    <input type="text" id="tt-box-bg-hex" value="auto" spellcheck="false" style="width:62px;font-family:monospace;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">
+                  </div>
+                </div>
+                <div class="field" style="margin:0">
+                  <label>Couleur du texte</label>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <input type="color" id="tt-box-color" value="#1a1a1a" style="width:28px;height:24px;padding:0;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:none">
+                    <input type="text" id="tt-box-color-hex" value="auto" spellcheck="false" style="width:62px;font-family:monospace;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">
+                  </div>
+                </div>
+              </div>
               <div class="field" style="margin-top:6px">
                 <label>Image dans l'infobulle</label>
                 <select class="full" id="tt-img-mode" style="font-family:var(--font)">
