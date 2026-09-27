@@ -634,9 +634,9 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
                 <option value="arr_wal">Arrondissements Wallonie (BE)</option>
                 <option value="cantons_lux">Cantons Luxembourg</option>
                 <option value="communes">Communes GR 2026 (~18 MB)</option>
-                <option value="none">Aucune (fond vide)</option>
+                <option value="none" selected>Aucune (fond vide)</option>
               </select>
-              <div style="font-size:10px;color:var(--muted);margin-top:3px" id="fill-layer-hint">Chaque bloc régional en couleur distincte</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px" id="fill-layer-hint">Aucune couleur de remplissage — seuls les contours sont affichés</div>
             </div>
           </div>
 
@@ -1420,7 +1420,7 @@ var _cache = {};         // layerId → geojson
 var _lookups = {};       // layerId → {code: name}
 var _strokeWidths = { blocs:1, subdiv:1.2, cantons:0.7, communes:0.3 };
 var _activeLayers = {};  // layerId → true/false (overlays de contours)
-var _fillLayer = 'blocs';
+var _fillLayer = 'none'; // défaut : fond vide, aucune couleur dans les blocs (cf. #fill-layer-sel)
 var _map = null;
 var _mapReady = false;
 var _ttPinned = false;
@@ -2347,9 +2347,15 @@ function _redrawFill() {
   if (_fillLayer === 'none') {
     _removeActiveFillLayer();
     _setBlocsAsBackground(false);
+    // "Fond vide" = aucune couleur, y compris sur les blocs eux-mêmes — pas
+    // seulement la couche de subdivision au premier plan (_removeActiveFillLayer
+    // ne touche que celle-ci). _drawBlocs() la remet visible dès qu'un autre
+    // fond est sélectionné (elle s'y termine toujours par _setVisible(...,true)).
+    if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
     setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
     return;
   }
+  if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'visible');
 
   if (_fillLayer === 'blocs') {
     var toLoad = BLOCS_SOURCE_LAYERS.filter(function(s) { return !_cache[s]; });
@@ -5955,6 +5961,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function afterInitialLoad() {
     hideLoading();
+    // _drawBlocs() construit toujours la géométrie/les contours des blocs
+    // (nécessaires aux étiquettes, à la recherche…), mais le REMPLISSAGE ne
+    // doit apparaître que si le fond par défaut n'est pas "Aucune" (cf.
+    // _fillLayer initialisé à 'none', js/01-config-state.js).
+    function _applyDefaultFill() {
+      if (_fillLayer === 'none') {
+        if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
+        setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
+      } else {
+        setStatus('✓ Vue "Blocs" chargée.');
+      }
+    }
     function go() {
       _mapReady = true;
       _zoomBase = _map.getZoom();
@@ -5962,9 +5980,9 @@ document.addEventListener('DOMContentLoaded', function() {
       _wireTooltipEvents();
       _drawBlocs();
       _updateLegend();
-      setStatus('✓ Vue "Blocs" chargée.');
+      _applyDefaultFill();
     }
-    if (_mapReady) { _drawBlocs(); _updateLegend(); }
+    if (_mapReady) { _drawBlocs(); _updateLegend(); _applyDefaultFill(); }
     else _map.once('load', go);
     var btnExport = document.getElementById('btn-export');
     if (btnExport) btnExport.disabled = false;

@@ -353,6 +353,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function afterInitialLoad() {
     hideLoading();
+    // _drawBlocs() construit toujours la géométrie/les contours des blocs
+    // (nécessaires aux étiquettes, à la recherche…), mais le REMPLISSAGE ne
+    // doit apparaître que si le fond par défaut n'est pas "Aucune" (cf.
+    // _fillLayer initialisé à 'none', js/01-config-state.js).
+    function _applyDefaultFill() {
+      if (_fillLayer === 'none') {
+        if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
+        setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
+      } else {
+        setStatus('✓ Vue "Blocs" chargée.');
+      }
+    }
     function go() {
       _mapReady = true;
       _zoomBase = _map.getZoom();
@@ -360,9 +372,9 @@ document.addEventListener('DOMContentLoaded', function() {
       _wireTooltipEvents();
       _drawBlocs();
       _updateLegend();
-      setStatus('✓ Vue "Blocs" chargée.');
+      _applyDefaultFill();
     }
-    if (_mapReady) { _drawBlocs(); _updateLegend(); }
+    if (_mapReady) { _drawBlocs(); _updateLegend(); _applyDefaultFill(); }
     else _map.once('load', go);
     var btnExport = document.getElementById('btn-export');
     if (btnExport) btnExport.disabled = false;

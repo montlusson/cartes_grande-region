@@ -195,9 +195,15 @@ function _redrawFill() {
   if (_fillLayer === 'none') {
     _removeActiveFillLayer();
     _setBlocsAsBackground(false);
+    // "Fond vide" = aucune couleur, y compris sur les blocs eux-mêmes — pas
+    // seulement la couche de subdivision au premier plan (_removeActiveFillLayer
+    // ne touche que celle-ci). _drawBlocs() la remet visible dès qu'un autre
+    // fond est sélectionné (elle s'y termine toujours par _setVisible(...,true)).
+    if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
     setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
     return;
   }
+  if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'visible');
 
   if (_fillLayer === 'blocs') {
     var toLoad = BLOCS_SOURCE_LAYERS.filter(function(s) { return !_cache[s]; });
