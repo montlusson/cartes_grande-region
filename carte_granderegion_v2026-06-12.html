@@ -3099,19 +3099,21 @@ function _updateLegend() {
     return;
   }
 
-  // Légende par bloc régional : inutile si une seule région est affichée
-  // (rien à comparer — cf. _fillColorExpression, même condition) — la
-  // légende des flux reste pertinente même dans ce cas, d'où l'appel avant le retour.
+  // Légende par bloc régional : n'a de sens que si les blocs sont
+  // RÉELLEMENT coloriés (fond = "Blocs" — cf. _fillColorExpression) et que
+  // plus d'une région est active (rien à comparer sinon). Avec le fond par
+  // défaut "Aucune (fond vide)", aucune des deux ne tient : pas de légende
+  // colorée pour une carte qui n'affiche aucune couleur.
   var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
-  if (activeCount === 1) { _appendFlowLegend(el); return; }
-
-  Object.keys(BLOC_COLORS).forEach(function(region) {
-    if (!_activeBlocs[region]) return;
-    var item = document.createElement('span');
-    item.className = 'leg-item';
-    item.innerHTML = '<span class="leg-swatch" style="background:' + BLOC_COLORS[region] + '"></span><span style="font-size:11px">' + BLOC_LABELS[region] + '</span>';
-    el.appendChild(item);
-  });
+  if (_fillLayer === 'blocs' && activeCount > 1) {
+    Object.keys(BLOC_COLORS).forEach(function(region) {
+      if (!_activeBlocs[region]) return;
+      var item = document.createElement('span');
+      item.className = 'leg-item';
+      item.innerHTML = '<span class="leg-swatch" style="background:' + BLOC_COLORS[region] + '"></span><span style="font-size:11px">' + BLOC_LABELS[region] + '</span>';
+      el.appendChild(item);
+    });
+  }
   _appendFlowLegend(el);
 }
 
