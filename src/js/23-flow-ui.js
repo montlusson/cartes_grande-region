@@ -36,7 +36,12 @@ function _appendFlowItem(arrow, list) {
       '<option value="flow"' + (arrow.style==='flow'?' selected':'') + '>Flux (épaisseur variable)</option>' +
     '</select>' +
     '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px">Épaisseur' +
-      '<input type="range" id="flow-width-' + arrow.id + '" min="1" max="10" step="1" value="' + arrow.width + '" style="width:52px;accent-color:var(--accent)"></label>' +
+      '<input type="range" id="flow-width-' + arrow.id + '" min="1" max="10" step="1" value="' + arrow.width + '"' +
+        (_flowNumValue(arrow) !== null ? ' disabled title="Pilotée par la valeur ci-dessous"' : '') +
+        ' style="width:52px;accent-color:var(--accent)"></label>' +
+    '<input type="number" id="flow-value-' + arrow.id + '" value="' + _escAttr(arrow.value) + '"' +
+      ' placeholder="Valeur (proportionnel)" title="Épaisseur proportionnelle à cette valeur, à l\'échelle de tous les flux"' +
+      ' style="width:110px;font-size:10.5px;padding:2px 5px;border:1px solid var(--border);border-radius:4px">' +
     '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px">Courbure' +
       '<input type="range" id="flow-curve-' + arrow.id + '" min="-100" max="100" step="5" value="' + arrow.curve + '" style="width:60px;accent-color:var(--accent)"></label>' +
     '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px"><input type="checkbox" id="flow-dashed-' + arrow.id + '"' + (arrow.dashed?' checked':'') + '> Pointillés</label>' +
@@ -49,7 +54,13 @@ function _appendFlowItem(arrow, list) {
       '<option value="circle"' + (arrow.headStyle==='circle'?' selected':'') + '>● Cercle</option>' +
     '</select>' +
     '<input type="text" id="flow-label-' + arrow.id + '" value="' + _escAttr(arrow.label) + '" placeholder="Étiquette (facultatif)"' +
-      ' style="flex-basis:100%;font-size:10.5px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">';
+      ' style="flex:1;min-width:120px;font-size:10.5px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">' +
+    '<select id="flow-labelpos-' + arrow.id + '" title="Position de l\'étiquette" style="flex:0 0 auto;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px">' +
+      '<option value="above"' + (arrow.labelPos==='above'?' selected':'') + '>Au-dessus</option>' +
+      '<option value="below"' + (arrow.labelPos==='below'?' selected':'') + '>En dessous</option>' +
+      '<option value="left"' + (arrow.labelPos==='left'?' selected':'') + '>À gauche</option>' +
+      '<option value="right"' + (arrow.labelPos==='right'?' selected':'') + '>À droite</option>' +
+    '</select>';
   list.appendChild(ctrl);
 
   _wireFlowItemEvents(arrow, div, ctrl);
@@ -71,6 +82,17 @@ function _wireFlowItemEvents(arrow, div, ctrl) {
   document.getElementById('flow-style-' + id).addEventListener('change', function() { arrow.style = this.value; _renderFlows(); });
   document.getElementById('flow-headstyle-' + id).addEventListener('change', function() { arrow.headStyle = this.value; _renderFlows(); });
   document.getElementById('flow-width-' + id).addEventListener('input', function() { arrow.width = parseInt(this.value, 10); _renderFlows(); });
+  // La valeur pilote une échelle PARTAGÉE entre tous les flux (cf.
+  // _flowValueScale) : la changer redessine donc aussi les AUTRES flux —
+  // mais surtout PAS _renderFlowList() ici (reconstruirait ce champ en plein
+  // saisie et ferait perdre le focus à chaque frappe) ; seul CE curseur
+  // "Épaisseur" (grisé/actif selon qu'une valeur est saisie) est mis à jour.
+  document.getElementById('flow-value-' + id).addEventListener('input', function() {
+    arrow.value = this.value.trim();
+    document.getElementById('flow-width-' + id).disabled = _flowNumValue(arrow) !== null;
+    _renderFlows(); _updateLegend();
+  });
+  document.getElementById('flow-labelpos-' + id).addEventListener('change', function() { arrow.labelPos = this.value; _renderFlows(); });
   document.getElementById('flow-curve-' + id).addEventListener('input', function() { arrow.curve = parseInt(this.value, 10); _renderFlows(); });
   document.getElementById('flow-dashed-' + id).addEventListener('change', function() { arrow.dashed = this.checked; _renderFlows(); });
   document.getElementById('flow-astart-' + id).addEventListener('change', function() { arrow.arrowStart = this.checked; _renderFlows(); });

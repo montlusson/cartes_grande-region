@@ -71,8 +71,6 @@ function _loadFlowCSV() {
   }
 
   var valCol = parsed.cols.find(function(c) { return /valeur|value|volume|nb|nombre|total/i.test(c); });
-  var vals = valCol ? parsed.rows.map(function(r) { return parseFloat(r[valCol]); }).filter(function(v) { return !isNaN(v); }) : [];
-  var vMin = vals.length ? Math.min.apply(null, vals) : 0, vMax = vals.length ? Math.max.apply(null, vals) : 0;
 
   var created = 0, skipped = 0;
   parsed.rows.forEach(function(row) {
@@ -85,15 +83,15 @@ function _loadFlowCSV() {
     arrow.name = (row[parsed.cols[0]] || 'Origine') + ' → ' + (row[parsed.cols[1]] || 'Destination');
     if (valCol) {
       var v = parseFloat(row[valCol]);
-      if (!isNaN(v)) {
-        arrow.style = 'flow'; arrow.label = String(row[valCol]);
-        arrow.width = vMax > vMin ? Math.round(2 + (v - vMin) / (vMax - vMin) * 7) : 5;
-      }
+      // La valeur brute alimente l'échelle PARTAGÉE (_flowValueScale) —
+      // pas une normalisation isolée à cet import : deux imports séparés
+      // (ou un import + un flux dessiné à la main) restent comparables.
+      if (!isNaN(v)) { arrow.style = 'flow'; arrow.value = String(v); arrow.label = String(row[valCol]); }
     }
     _flowArrows.push(arrow);
     created++;
   });
-  _renderFlows(); _renderFlowList(); _updateFlowEmptyHint();
+  _renderFlows(); _renderFlowList(); _updateFlowEmptyHint(); _updateLegend();
   setStatus('✓ ' + created + ' flux importé' + (created > 1 ? 's' : '') +
     (skipped ? ' — ' + skipped + ' ligne' + (skipped > 1 ? 's' : '') + ' ignorée' + (skipped > 1 ? 's' : '') + ' (origine/destination introuvable)' : '') + '.');
 }

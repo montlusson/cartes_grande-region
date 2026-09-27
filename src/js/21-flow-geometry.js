@@ -10,6 +10,7 @@ var FLOW_HEAD_SRC   = 'flow-head-src';
 var FLOW_LABEL_SRC  = 'flow-label-src';
 
 var FLOW_HEAD_STYLES = ['triangle', 'chevron', 'diamond', 'circle'];
+var FLOW_WIDTH_MIN = 1.5, FLOW_WIDTH_MAX = 10; // même unité que le curseur manuel "Épaisseur" (1-10)
 
 function _newFlowArrow(from, to) {
   var color = _nextLibColor(); _libPaletteIdx++;
@@ -17,9 +18,41 @@ function _newFlowArrow(from, to) {
     id: 'fl' + Date.now().toString(36) + Math.floor(Math.random() * 1000),
     name: 'Flux', from: from, to: to,
     curve: 25, style: 'linear', color: color, width: 3, headStyle: 'triangle',
+    value: '', // proportionnalité : si renseignée, prime sur "width" via une échelle PARTAGÉE (cf. _flowEffWidth)
     dashed: false, arrowStart: false, arrowEnd: true,
-    label: '', visible: true
+    label: '', labelPos: 'above', visible: true
   };
+}
+
+function _flowNumValue(arrow) {
+  if (arrow.value === '' || arrow.value === undefined || arrow.value === null) return null;
+  var v = parseFloat(arrow.value);
+  return isNaN(v) ? null : v;
+}
+
+// Échelle PARTAGÉE valeur→épaisseur sur tous les flux visibles porteurs
+// d'une valeur — pas une normalisation isolée par flux/import : deux flux de
+// même valeur (dessinés à la main ou issus d'imports CSV différents) ont
+// ainsi rigoureusement la même épaisseur, comme les flèches "flux" Datawrapper.
+function _flowValueScale() {
+  var vals = _flowArrows.filter(function(a) { return a.visible; })
+    .map(_flowNumValue).filter(function(v) { return v !== null; });
+  if (!vals.length) return null;
+  return { min: Math.min.apply(null, vals), max: Math.max.apply(null, vals) };
+}
+
+function _flowWidthFromValue(value) {
+  var s = _flowValueScale();
+  if (!s || s.max === s.min) return (FLOW_WIDTH_MIN + FLOW_WIDTH_MAX) / 2;
+  var t = (value - s.min) / (s.max - s.min);
+  return FLOW_WIDTH_MIN + t * (FLOW_WIDTH_MAX - FLOW_WIDTH_MIN);
+}
+
+// Épaisseur effective d'un flux : pilotée par la valeur si renseignée
+// (proportionnalité), sinon repli sur le curseur manuel "Épaisseur".
+function _flowEffWidth(arrow) {
+  var v = _flowNumValue(arrow);
+  return v !== null ? _flowWidthFromValue(v) : (arrow.width || 3);
 }
 
 // ── Géométrie : courbe de Bézier quadratique entre from/to ─────────
@@ -60,7 +93,7 @@ function _flowLineCoords(arrow, t0, t1) {
 // de flèche (_flowHeadFeatures) parte de la même largeur réelle du trait.
 function _flowRibbonHalfWidths(arrow) {
   var chord = _chordLen(arrow);
-  var maxHalf = chord * (0.012 + (arrow.width || 5) * 0.006);
+  var maxHalf = chord * (0.012 + _flowEffWidth(arrow) * 0.006);
   return { min: maxHalf * 0.15, max: maxHalf };
 }
 
@@ -106,7 +139,7 @@ function _flowEndHalfWidth(arrow, atEnd) {
   }
   var pc = _flowControlPoint(arrow);
   var pt = _bezierPoint(arrow.from, pc, arrow.to, atEnd ? 1 : 0);
-  return _pxToDeg(pt, arrow.width || 3) / 2;
+  return _pxToDeg(pt, _flowEffWidth(arrow)) / 2;
 }
 
 // Dimensions de la tête à une extrémité, dérivées de l'épaisseur réelle du
@@ -173,11 +206,23 @@ function _flowHeadFeatures(arrow) {
   return feats;
 }
 
+// Position de l'étiquette relative à la flèche — au-dessus (défaut), en
+// dessous, ou à côté (gauche/droite) : text-offset + text-anchor pilotés
+// par flux via des expressions ['get', ...] (propriétés data-driven MapLibre).
+var FLOW_LABEL_POS = {
+  above: { offset:[0,-0.9], anchor:'bottom' },
+  below: { offset:[0, 0.9], anchor:'top' },
+  left:  { offset:[-1.3,0], anchor:'right' },
+  right: { offset:[1.3, 0], anchor:'left' }
+};
+
 function _flowLabelFeature(arrow) {
   if (!arrow.label) return null;
   var pc = _flowControlPoint(arrow);
   var mid = _bezierPoint(arrow.from, pc, arrow.to, 0.5);
-  return { type:'Feature', properties:{label:arrow.label}, geometry:{type:'Point', coordinates:mid} };
+  var pos = FLOW_LABEL_POS[arrow.labelPos] || FLOW_LABEL_POS.above;
+  return { type:'Feature', properties:{label:arrow.label, loffset:pos.offset, lanchor:pos.anchor},
+    geometry:{type:'Point', coordinates:mid} };
 }
 
 // ── Rendu : une source/couche partagée par style (pas une par flèche) ──
@@ -202,7 +247,7 @@ function _initFlowLayers() {
     paint:{ 'fill-color':['get','color'], 'fill-opacity':0.9 } });
   _map.addLayer({ id:'flow-label', type:'symbol', source:FLOW_LABEL_SRC,
     layout:{ 'text-field':['get','label'], 'text-size':11, 'text-font':['Noto Sans Bold'],
-             'text-offset':[0,-0.6], 'text-allow-overlap':false },
+             'text-offset':['get','loffset'], 'text-anchor':['get','lanchor'], 'text-allow-overlap':false },
     paint:{ 'text-color':'#1a1a1a', 'text-halo-color':'#fff', 'text-halo-width':1.6 } });
 }
 
@@ -218,7 +263,7 @@ function _renderFlows() {
       var lt0 = arrow.arrowStart ? _flowHeadTrim(arrow, false) : 0;
       var lt1 = arrow.arrowEnd ? 1 - _flowHeadTrim(arrow, true) : 1;
       lines.push({ type:'Feature',
-        properties:{id:arrow.id, color:arrow.color, width:arrow.width, dashed:!!arrow.dashed},
+        properties:{id:arrow.id, color:arrow.color, width:_flowEffWidth(arrow), dashed:!!arrow.dashed},
         geometry:{type:'LineString', coordinates:_flowLineCoords(arrow, lt0, lt1)} });
     }
     heads = heads.concat(_flowHeadFeatures(arrow));
@@ -240,6 +285,7 @@ function _addFlowArrow(from, to) {
   _renderFlows();
   _renderFlowList();
   _updateFlowEmptyHint();
+  _updateLegend();
   setStatus('✓ Flux ajouté.');
   return arrow;
 }
@@ -249,4 +295,32 @@ function _removeFlowArrow(id) {
   _renderFlows();
   _renderFlowList();
   _updateFlowEmptyHint();
+  _updateLegend();
+}
+
+// Légende de l'échelle valeur→épaisseur (3 échantillons min/médiane/max),
+// appelée depuis _updateLegend() (js/08-legend-presets.js) : un simple trait
+// SVG à la largeur réelle par échantillon, comme la légende des flèches
+// "flux" de Datawrapper — appendue à la légende existante, pas une 2e boîte
+// séparée (bénéficie ainsi gratuitement de l'export PNG/embed déjà câblés
+// sur #map-legend).
+function _appendFlowLegend(container) {
+  var scale = _flowValueScale();
+  if (!scale) return;
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:9.5px;color:#888;margin-top:2px';
+  title.textContent = 'Épaisseur des flux';
+  container.appendChild(title);
+  var samples = scale.min === scale.max ? [scale.min] : [scale.min, (scale.min + scale.max) / 2, scale.max];
+  samples.forEach(function(v) {
+    var w = _flowWidthFromValue(v);
+    var item = document.createElement('span');
+    item.className = 'leg-item';
+    item.innerHTML =
+      '<svg width="28" height="14" style="flex:none;overflow:visible">' +
+        '<line x1="2" y1="7" x2="26" y2="7" stroke="#555" stroke-width="' + w.toFixed(1) + '" stroke-linecap="round"/>' +
+      '</svg>' +
+      '<span style="font-size:10px">' + _escHtml(_fmtChoroNum(v)) + '</span>';
+    container.appendChild(item);
+  });
 }

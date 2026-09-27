@@ -19,6 +19,7 @@ function _updateLegend() {
     nd.innerHTML = '<span class="leg-swatch" style="background:#ccc"></span>'
                  + '<span style="font-size:10px">Sans donnée</span>';
     el.appendChild(nd);
+    _appendFlowLegend(el);
     return;
   }
 
@@ -37,6 +38,7 @@ function _updateLegend() {
                      + '<span style="font-size:10px">'+lbl+'</span>';
       el.appendChild(item);
     });
+    _appendFlowLegend(el);
     return;
   }
 
@@ -51,13 +53,15 @@ function _updateLegend() {
       item.innerHTML = '<span class="leg-swatch" style="background:' + grad + '"></span><span style="font-size:11px">' + BLOC_LABELS[region] + '</span>';
       el.appendChild(item);
     });
+    _appendFlowLegend(el);
     return;
   }
 
   // Légende par bloc régional : inutile si une seule région est affichée
-  // (rien à comparer — cf. _fillColorExpression, même condition).
+  // (rien à comparer — cf. _fillColorExpression, même condition) — la
+  // légende des flux reste pertinente même dans ce cas, d'où l'appel avant le retour.
   var activeCount = Object.keys(_activeBlocs).filter(function(b) { return _activeBlocs[b]; }).length;
-  if (activeCount === 1) return;
+  if (activeCount === 1) { _appendFlowLegend(el); return; }
 
   Object.keys(BLOC_COLORS).forEach(function(region) {
     if (!_activeBlocs[region]) return;
@@ -66,6 +70,7 @@ function _updateLegend() {
     item.innerHTML = '<span class="leg-swatch" style="background:' + BLOC_COLORS[region] + '"></span><span style="font-size:11px">' + BLOC_LABELS[region] + '</span>';
     el.appendChild(item);
   });
+  _appendFlowLegend(el);
 }
 
 // ── Couleurs des blocs (onglet Style) : un sélecteur par territoire ──
