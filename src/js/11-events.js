@@ -2,6 +2,8 @@
 // ══════════════════════════════════════════════════════════════════
 
 function wireEvents() {
+  _wireFlowEvents();
+
   // Tabs
   document.querySelectorAll('.tab-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -191,6 +193,9 @@ function wireEvents() {
   var btnClear = document.getElementById('btn-clear-csv');
   if (btnClear) btnClear.addEventListener('click', function() {
     _csvData = null; _dataMap = {}; _rowMap = {}; _choroBreaks = []; _choroColors = []; _catMode = false; _catColors = {}; _catOverrides = {};
+    _valueCol = ''; _valueColLabel = '';
+    var lblInp1 = document.getElementById('value-col-label');
+    if (lblInp1) lblInp1.value = '';
     _renderCatColorUI();
     _updateTtVarChips();
     document.getElementById('csv-input').value = '';
@@ -203,7 +208,19 @@ function wireEvents() {
   var joinColSel  = document.getElementById('join-col');
   if (joinColSel)  joinColSel.addEventListener('change',  function() { _joinCol  = this.value; if (_csvData && _joinCol && _valueCol) applyData(); });
   var valueColSel = document.getElementById('value-col');
-  if (valueColSel) valueColSel.addEventListener('change', function() { _valueCol = this.value; if (_csvData && _joinCol && _valueCol) applyData(); });
+  if (valueColSel) valueColSel.addEventListener('change', function() {
+    _valueCol = this.value;
+    _valueColLabel = '';
+    var lblInp0 = document.getElementById('value-col-label');
+    if (lblInp0) lblInp0.value = '';
+    if (_csvData && _joinCol && _valueCol) applyData();
+  });
+  var valueColLabelInp = document.getElementById('value-col-label');
+  if (valueColLabelInp) valueColLabelInp.addEventListener('input', function() {
+    _valueColLabel = this.value.trim();
+    _refreshTooltip();
+    _updateLegend();
+  });
   var joinTypeSel = document.getElementById('join-type');
   if (joinTypeSel) joinTypeSel.addEventListener('change', function() { if (_csvData && _joinCol && _valueCol) applyData(); });
 

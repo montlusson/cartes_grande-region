@@ -592,6 +592,7 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
         <button class="tab-btn" data-tab="style">Style</button>
         <button class="tab-btn" data-tab="data">Données</button>
         <button class="tab-btn" data-tab="library">Bib.</button>
+        <button class="tab-btn" data-tab="flows">Flux</button>
         <button class="tab-btn" data-tab="publish">Publié</button>
       </div>
 
@@ -985,6 +986,10 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
               <label>Valeur à cartographier</label>
               <select class="full" id="value-col"><option>—</option></select>
             </div>
+            <div class="field">
+              <label>Libellé affiché (infobulle, tableau)</label>
+              <input type="text" class="full" id="value-col-label" placeholder="Par défaut : nom de la colonne">
+            </div>
             <button class="btn btn-primary" id="btn-apply-data" style="width:100%" disabled>&#9654; Appliquer les données</button>
             <div id="cat-colors-wrap" style="display:none;margin-top:10px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -1050,6 +1055,37 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
             </div>
           </div>
         </div><!-- /tab-library -->
+
+        <!-- TAB: FLUX -->
+        <div class="tab-pane" id="tab-flows">
+          <div class="section" style="padding-top:10px">
+            <div class="section-title">Flèches / flux</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Représentez un déplacement entre deux points (frontaliers, migrations, échanges…) —
+              cliquez deux points sur la carte, ou importez un tableau origine → destination.
+            </div>
+            <button class="btn btn-primary" id="btn-flow-draw" style="width:100%">&#9998; Dessiner sur la carte</button>
+            <div id="flow-draw-hint" style="font-size:10.5px;color:var(--accent);margin-top:6px;display:none"></div>
+
+            <hr class="divider">
+            <div class="field">
+              <label>Import CSV — origine, destination[, valeur]</label>
+              <textarea id="flow-csv-input" rows="5" placeholder="origine,destination,valeur&#10;Metz,Luxembourg,4200&#10;Thionville,Luxembourg,9100&#10;..."></textarea>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px">
+                Noms de communes/territoires connus de l'outil — ou colonnes
+                <code>lon_origine,lat_origine,lon_destination,lat_destination</code>.
+                La colonne « valeur » (facultative) règle automatiquement l'épaisseur.
+              </div>
+            </div>
+            <button class="btn btn-secondary" id="btn-flow-csv-load" style="width:100%">&#9654; Charger les flux</button>
+
+            <hr class="divider">
+            <div id="flow-list"></div>
+            <div id="flow-empty-hint" style="text-align:center;padding:10px 8px;font-size:10.5px;color:var(--muted);font-style:italic">
+              Aucun flux créé
+            </div>
+          </div>
+        </div><!-- /tab-flows -->
         <!-- TAB: PUBLICATION -->
         <div class="tab-pane" id="tab-publish">
 
@@ -1385,6 +1421,7 @@ var CHORO_PALS = [
 var _csvData      = null;  // {rows, cols}
 var _joinCol      = '';
 var _valueCol     = '';
+var _valueColLabel = ''; // libellé affiché en infobulle/tableau — vide = nom de colonne (_valueCol)
 var _choroPalette = 'Blues';
 var _choroSteps   = 5;
 var _dataMap      = {};    // normalizedKey → valeur brute
@@ -1699,6 +1736,10 @@ function _initMap() {
     style: {
       version: 8,
       sources: {},
+      // Nécessaire pour les couches "symbol" avec texte (ex. étiquettes des
+      // flux, js/21-flow-geometry.js) — MapLibre refuse sinon d'ajouter la
+      // couche ("requires a style glyphs property"), même avec un seul champ texte.
+      glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
       layers: [
         { id: 'bg', type: 'background', paint: { 'background-color': '#e8e6e0' } }
       ]
@@ -2567,6 +2608,14 @@ function _collectFeatureKeys() {
 }
 
 // Construit _dataMap à partir de _csvData puis redessine
+// Libellé affiché pour la valeur cartographiée : le nom de colonne par
+// défaut, ou le libellé personnalisé si l'utilisateur en a saisi un
+// (#value-col-label) — utile quand l'en-tête CSV brut est trop technique
+// pour l'infobulle/le tableau sans pour autant renommer la colonne elle-même.
+function _valueLabel() {
+  return _valueColLabel || _valueCol;
+}
+
 function applyData() {
   if (!_csvData || !_joinCol || !_valueCol) return;
   _dataMap = {}; _rowMap = {};
@@ -2734,6 +2783,9 @@ function _refreshColSelects() {
     } else {
       var vCol = cols.find(function(c) { return /val|value|valeur|nb|count|score|total|nombre/i.test(c); }) || (cols.length > 1 ? cols[1] : '');
       sel.value = vCol; _valueCol = vCol;
+      _valueColLabel = '';
+      var lblInp = document.getElementById('value-col-label');
+      if (lblInp) lblInp.value = '';
     }
   });
   _updateTtVarChips();
@@ -2795,7 +2847,7 @@ function _generateDefaultTpl() {
   fmap.forEach(function(f) {
     if (_ttFields[f.k]) lines.push('<div class="tt-row"><span class="tt-row-label">'+f.l+'</span><span class="tt-row-val">{{'+f.k+'}}</span></div>');
   });
-  if (_ttFields.dataval && _valueCol) {
+  if (_ttFields.dataval && _valueLabel()) {
     lines.push('<div class="tt-row"><span class="tt-row-label">{{colonne}}</span><span class="tt-data-val">{{valeur}}</span></div>');
   }
   return lines.join('\n');
@@ -2864,7 +2916,7 @@ function _showTooltip(e, feat) {
     var _ttKey = _getJoinKey(feat);
     var _ttVal = _ttKey !== undefined ? _dataMap[_ttKey] : undefined;
     if (_ttVal !== undefined) {
-      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueCol) + '</span><span class="tt-data-val">' + _escHtml(_ttVal) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueLabel()) + '</span><span class="tt-data-val">' + _escHtml(_ttVal) + '</span></div>';
     }
   }
 
@@ -3281,7 +3333,7 @@ function _ttContext(feat, h) {
     dept: h.dept || '', arrondissement: h.arrondissement || '', canton: h.canton || '',
     kreis: h.kreis || '', province: h.province || '', vg: h.vg || '',
     code: p.code || '',
-    valeur: val, colonne: _valueCol || '',
+    valeur: val, colonne: _valueLabel() || '',
     flag_pays: FLAG_PAYS[h.pays] || '',
     flag_region: FLAG_REGION[h.region] || '',
     chipLabel: _chipLabel(h),
@@ -3379,7 +3431,7 @@ function _openTableModal() {
   document.getElementById('table-modal-meta').innerHTML = bits.join(' · ');
 
   var cols = [{k:'nom', l:'Nom'}, {k:'region', l:'Région'}, {k:'pays', l:'Pays'}, {k:'code', l:'Code'}];
-  if (choro) cols.push({k:'valeur', l: _valueCol});
+  if (choro) cols.push({k:'valeur', l: _valueLabel()});
 
   var html = '<table style="border-collapse:collapse;width:100%;font-size:12px">'
            + '<caption style="text-align:left;padding:6px 9px;font-size:11px;color:#888">'
@@ -3535,41 +3587,7 @@ function _detectNumericFields(geojson) {
   return result;
 }
 
-// Libellé lisible pour un nom de champ technique (ex. "evo_pop_total_2025_2070_txt"
-// → "Evo pop total 2025 2070") — GIS-GR suffixe "_txt" ses champs texte
-// formatés (ex. "5,0%"), ce qui ressemblait à tort à une extension de
-// fichier .txt dans le sélecteur. Purement cosmétique : la valeur réelle
-// utilisée pour la couleur reste le nom de champ brut (option.value).
-function _prettyFieldLabel(key) {
-  return key.replace(/_txt$/i, '').replace(/_/g, ' ').trim()
-    .replace(/^./, function(c) { return c.toUpperCase(); });
-}
-
-// Seuils quantiles + palette pour un champ donné — indépendant du CSV/join
-// (cf. _buildChoroScale, js/06-choropleth-scale.js, qui lui reste dédié au
-// flux CSV). Écrit aussi la valeur numérique normalisée dans chaque feature
-// (_cv) : les expressions MapLibre ne savent pas parser "5,0%" elles-mêmes.
-function _computeLayerChoro(layer, field, paletteId, steps) {
-  var vals = [];
-  (layer.geojson.features || []).forEach(function(f) {
-    var n = _coerceNum((f.properties || {})[field]);
-    f.properties._cv = n;
-    if (n !== null) vals.push(n);
-  });
-  if (!vals.length) return null;
-  vals.sort(function(a, b) { return a - b; });
-  steps = Math.min(steps || 5, Math.max(2, vals.length));
-  var breaks = [];
-  for (var i = 1; i < steps; i++) breaks.push(vals[Math.floor(vals.length * i / steps)]);
-  var palObj = CHORO_PALS.find(function(p) { return p.id === paletteId; }) || CHORO_PALS[0];
-  return { field: field, breaks: breaks, colors: _interpolatePalette(palObj.c, steps),
-           min: vals[0], max: vals[vals.length - 1] };
-}
-
-// Format court pour les bornes de légende (entier si c'en est un, sinon 1 décimale)
-function _fmtChoroNum(v) {
-  return (Math.round(v) === v ? v : v.toFixed(1)).toString().replace('.', ',');
-}
+// _prettyFieldLabel / _computeLayerChoro / _fmtChoroNum → js/20-library-choro.js
 
 // Couleur (unie ou expression MapLibre pilotée par _cv) pour le style d'une couche
 function _layerColorExpr(layer) {
@@ -3773,32 +3791,46 @@ function _appendLibLayerItem(layer, opts) {
       if (n === 5) o.selected = true;
       choroStepsSel.appendChild(o);
     });
+    var choroLabelInp = document.createElement('input');
+    choroLabelInp.type = 'text';
+    choroLabelInp.placeholder = 'Libellé affiché (infobulle)';
+    choroLabelInp.style.cssText = 'flex-basis:100%;font-size:10.5px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;display:none';
     var choroLegend = document.createElement('div');
     choroLegend.style.cssText = 'flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px';
     choroDiv.appendChild(choroSel);
     choroDiv.appendChild(choroPalSel);
     choroDiv.appendChild(choroStepsSel);
+    choroDiv.appendChild(choroLabelInp);
     choroDiv.appendChild(choroLegend);
     list.appendChild(choroDiv);
 
-    function _applyChoro() {
+    // fieldChanged → nouveau champ choisi : repart du libellé auto ; sinon
+    // (palette/classes/libellé) le libellé déjà saisi par l'utilisateur reste.
+    function _applyChoro(fieldChanged) {
       var field = choroSel.value;
       if (!field) {
         layer.choro = null;
         choroPalSel.style.display = 'none';
         choroStepsSel.style.display = 'none';
+        choroLabelInp.style.display = 'none';
         choroLegend.innerHTML = '';
       } else {
+        if (fieldChanged) choroLabelInp.value = '';
         layer.choro = _computeLayerChoro(layer, field, choroPalSel.value, parseInt(choroStepsSel.value, 10));
+        layer.choro.label = choroLabelInp.value.trim() || _prettyFieldLabel(field);
         choroPalSel.style.display = '';
         choroStepsSel.style.display = '';
+        choroLabelInp.style.display = '';
         _renderChoroLegend(layer, choroLegend);
       }
       _setUserLayerColor(layer);
     }
-    choroSel.addEventListener('change', _applyChoro);
-    choroPalSel.addEventListener('change', _applyChoro);
-    choroStepsSel.addEventListener('change', _applyChoro);
+    choroSel.addEventListener('change', function() { _applyChoro(true); });
+    choroPalSel.addEventListener('change', function() { _applyChoro(false); });
+    choroStepsSel.addEventListener('change', function() { _applyChoro(false); });
+    choroLabelInp.addEventListener('input', function() {
+      if (layer.choro) layer.choro.label = choroLabelInp.value.trim() || _prettyFieldLabel(layer.choro.field);
+    });
   }
 
   // ── Events ───────────────────────────────────────────────────────
@@ -3974,6 +4006,8 @@ function _wireLibUpload() {
 // ══════════════════════════════════════════════════════════════════
 
 function wireEvents() {
+  _wireFlowEvents();
+
   // Tabs
   document.querySelectorAll('.tab-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -4163,6 +4197,9 @@ function wireEvents() {
   var btnClear = document.getElementById('btn-clear-csv');
   if (btnClear) btnClear.addEventListener('click', function() {
     _csvData = null; _dataMap = {}; _rowMap = {}; _choroBreaks = []; _choroColors = []; _catMode = false; _catColors = {}; _catOverrides = {};
+    _valueCol = ''; _valueColLabel = '';
+    var lblInp1 = document.getElementById('value-col-label');
+    if (lblInp1) lblInp1.value = '';
     _renderCatColorUI();
     _updateTtVarChips();
     document.getElementById('csv-input').value = '';
@@ -4175,7 +4212,19 @@ function wireEvents() {
   var joinColSel  = document.getElementById('join-col');
   if (joinColSel)  joinColSel.addEventListener('change',  function() { _joinCol  = this.value; if (_csvData && _joinCol && _valueCol) applyData(); });
   var valueColSel = document.getElementById('value-col');
-  if (valueColSel) valueColSel.addEventListener('change', function() { _valueCol = this.value; if (_csvData && _joinCol && _valueCol) applyData(); });
+  if (valueColSel) valueColSel.addEventListener('change', function() {
+    _valueCol = this.value;
+    _valueColLabel = '';
+    var lblInp0 = document.getElementById('value-col-label');
+    if (lblInp0) lblInp0.value = '';
+    if (_csvData && _joinCol && _valueCol) applyData();
+  });
+  var valueColLabelInp = document.getElementById('value-col-label');
+  if (valueColLabelInp) valueColLabelInp.addEventListener('input', function() {
+    _valueColLabel = this.value.trim();
+    _refreshTooltip();
+    _updateLegend();
+  });
   var joinTypeSel = document.getElementById('join-type');
   if (joinTypeSel) joinTypeSel.addEventListener('change', function() { if (_csvData && _joinCol && _valueCol) applyData(); });
 
@@ -6126,7 +6175,7 @@ function _showLibraryTooltip(e, feat, layer) {
   if (layer.choro) {
     var raw = p[layer.choro.field];
     if (raw !== undefined && raw !== null && raw !== '') {
-      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_prettyFieldLabel(layer.choro.field)) +
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(layer.choro.label || _prettyFieldLabel(layer.choro.field)) +
         '</span><span class="tt-data-val">' + _escHtml(raw) + '</span></div>';
     }
   }
@@ -6293,6 +6342,495 @@ function _openGenericLayerTable(layer) {
   _tableRowsCache = { rows: rows, cols: cols };
   var closeBtn = document.getElementById('table-modal-close');
   if (closeBtn) closeBtn.focus();
+}
+//  BIBLIOTHÈQUE — CHOROPLÈTHE PAR CHAMP (helpers extraits de 10-library.js
+//  pour respecter le plafond de 500 lignes par module)
+// ══════════════════════════════════════════════════════════════════
+
+// Libellé lisible pour un nom de champ technique (ex. "evo_pop_total_2025_2070_txt"
+// → "Evo pop total 2025 2070") — GIS-GR suffixe "_txt" ses champs texte
+// formatés (ex. "5,0%"), ce qui ressemblait à tort à une extension de
+// fichier .txt dans le sélecteur. Purement cosmétique : la valeur réelle
+// utilisée pour la couleur reste le nom de champ brut (option.value).
+function _prettyFieldLabel(key) {
+  return key.replace(/_txt$/i, '').replace(/_/g, ' ').trim()
+    .replace(/^./, function(c) { return c.toUpperCase(); });
+}
+
+// Seuils quantiles + palette pour un champ donné — indépendant du CSV/join
+// (cf. _buildChoroScale, js/06-choropleth-scale.js, qui lui reste dédié au
+// flux CSV). Écrit aussi la valeur numérique normalisée dans chaque feature
+// (_cv) : les expressions MapLibre ne savent pas parser "5,0%" elles-mêmes.
+function _computeLayerChoro(layer, field, paletteId, steps) {
+  var vals = [];
+  (layer.geojson.features || []).forEach(function(f) {
+    var n = _coerceNum((f.properties || {})[field]);
+    f.properties._cv = n;
+    if (n !== null) vals.push(n);
+  });
+  if (!vals.length) return null;
+  vals.sort(function(a, b) { return a - b; });
+  steps = Math.min(steps || 5, Math.max(2, vals.length));
+  var breaks = [];
+  for (var i = 1; i < steps; i++) breaks.push(vals[Math.floor(vals.length * i / steps)]);
+  var palObj = CHORO_PALS.find(function(p) { return p.id === paletteId; }) || CHORO_PALS[0];
+  return { field: field, breaks: breaks, colors: _interpolatePalette(palObj.c, steps),
+           min: vals[0], max: vals[vals.length - 1] };
+}
+
+// Format court pour les bornes de légende (entier si c'en est un, sinon 1 décimale)
+function _fmtChoroNum(v) {
+  return (Math.round(v) === v ? v : v.toFixed(1)).toString().replace('.', ',');
+}
+//  FLUX — MODÈLE DE DONNÉES + GÉOMÉTRIE (flèches/flux, cf. Datawrapper
+//  « Arrows in locator maps ») — rendu en GeoJSON statique (lon/lat), comme
+//  toutes les autres couches de l'outil : pas de recalcul au zoom/pan.
+// ══════════════════════════════════════════════════════════════════
+
+var _flowArrows = [];
+var FLOW_LINE_SRC   = 'flow-line-src';
+var FLOW_RIBBON_SRC = 'flow-ribbon-src';
+var FLOW_HEAD_SRC   = 'flow-head-src';
+var FLOW_LABEL_SRC  = 'flow-label-src';
+
+var FLOW_HEAD_STYLES = ['triangle', 'chevron', 'diamond', 'circle'];
+
+function _newFlowArrow(from, to) {
+  var color = _nextLibColor(); _libPaletteIdx++;
+  return {
+    id: 'fl' + Date.now().toString(36) + Math.floor(Math.random() * 1000),
+    name: 'Flux', from: from, to: to,
+    curve: 25, style: 'linear', color: color, width: 3, headStyle: 'triangle',
+    dashed: false, arrowStart: false, arrowEnd: true,
+    label: '', visible: true
+  };
+}
+
+// ── Géométrie : courbe de Bézier quadratique entre from/to ─────────
+function _bezierPoint(p0, pc, p1, t) {
+  var mt = 1 - t;
+  return [mt*mt*p0[0] + 2*mt*t*pc[0] + t*t*p1[0], mt*mt*p0[1] + 2*mt*t*pc[1] + t*t*p1[1]];
+}
+function _bezierTangent(p0, pc, p1, t) {
+  var mt = 1 - t;
+  return [2*mt*(pc[0]-p0[0]) + 2*t*(p1[0]-pc[0]), 2*mt*(pc[1]-p0[1]) + 2*t*(p1[1]-pc[1])];
+}
+// Point de contrôle : décalé perpendiculairement au segment from→to, d'une
+// fraction de sa longueur (curve : -100..100, glisseur du panneau).
+function _flowControlPoint(arrow) {
+  var p0 = arrow.from, p1 = arrow.to;
+  var mx = (p0[0]+p1[0])/2, my = (p0[1]+p1[1])/2;
+  var dx = p1[0]-p0[0], dy = p1[1]-p0[1];
+  var frac = (arrow.curve || 0) / 100 * 0.5;
+  return [mx - dy*frac, my + dx*frac];
+}
+function _chordLen(arrow) {
+  var dx = arrow.to[0]-arrow.from[0], dy = arrow.to[1]-arrow.from[1];
+  return Math.sqrt(dx*dx + dy*dy) || 0.0001;
+}
+
+var FLOW_SAMPLES = 40;
+
+function _flowLineCoords(arrow, t0, t1) {
+  var pc = _flowControlPoint(arrow), pts = [];
+  for (var i = 0; i <= FLOW_SAMPLES; i++) {
+    pts.push(_bezierPoint(arrow.from, pc, arrow.to, t0 + (t1 - t0) * (i / FLOW_SAMPLES)));
+  }
+  return pts;
+}
+
+// Demi-largeur du ruban "flux" (style effilé) : fraction de la longueur de
+// la flèche (géométrie statique, pas de pixels) — factorisé pour que la tête
+// de flèche (_flowHeadFeatures) parte de la même largeur réelle du trait.
+function _flowRibbonHalfWidths(arrow) {
+  var chord = _chordLen(arrow);
+  var maxHalf = chord * (0.012 + (arrow.width || 5) * 0.006);
+  return { min: maxHalf * 0.15, max: maxHalf };
+}
+
+// Ruban effilé (style "flux") : fin au départ, épais à l'arrivée.
+function _flowRibbonFeature(arrow) {
+  var hw = _flowRibbonHalfWidths(arrow), minHalf = hw.min, maxHalf = hw.max;
+  var t0 = arrow.arrowStart ? _flowHeadTrim(arrow, false) : 0;
+  var t1 = arrow.arrowEnd ? 1 - _flowHeadTrim(arrow, true) : 1;
+  var pc = _flowControlPoint(arrow), left = [], right = [];
+  for (var i = 0; i <= FLOW_SAMPLES; i++) {
+    var t = t0 + (t1 - t0) * (i / FLOW_SAMPLES);
+    var p = _bezierPoint(arrow.from, pc, arrow.to, t);
+    var tan = _bezierTangent(arrow.from, pc, arrow.to, t);
+    var len = Math.sqrt(tan[0]*tan[0] + tan[1]*tan[1]) || 1;
+    var nx = -tan[1]/len, ny = tan[0]/len;
+    var half = minHalf + (maxHalf - minHalf) * t;
+    left.push([p[0] + nx*half, p[1] + ny*half]);
+    right.push([p[0] - nx*half, p[1] - ny*half]);
+  }
+  var ring = left.concat(right.reverse());
+  ring.push(ring[0]);
+  return { type:'Feature', properties:{id:arrow.id, color:arrow.color}, geometry:{type:'Polygon', coordinates:[ring]} };
+}
+
+// Conversion pixels → degrés (longitude locale) à un point donné, pour que
+// la tête d'une flèche "linéaire" (épaisseur en pixels, paint MapLibre)
+// s'aligne sur la largeur RÉELLE du trait affiché, pas sur une estimation
+// indépendante — seule fonction de ce module qui dépend du zoom courant.
+function _pxToDeg(lngLat, px) {
+  if (!_map) return 0.01;
+  var p = _map.project(lngLat);
+  var p2 = _map.unproject([p.x + px, p.y]);
+  return Math.abs(p2.lng - lngLat[0]) || 0.001;
+}
+
+// Demi-largeur réelle du trait à une extrémité (t=0 ou t=1) — base commune
+// pour dimensionner la tête sur l'épaisseur effective, pas sur la longueur
+// de la flèche : augmenter le curseur "Épaisseur" grossit aussi la pointe.
+function _flowEndHalfWidth(arrow, atEnd) {
+  if (arrow.style === 'flow') {
+    var hw = _flowRibbonHalfWidths(arrow);
+    return atEnd ? hw.max : hw.min;
+  }
+  var pc = _flowControlPoint(arrow);
+  var pt = _bezierPoint(arrow.from, pc, arrow.to, atEnd ? 1 : 0);
+  return _pxToDeg(pt, arrow.width || 3) / 2;
+}
+
+// Dimensions de la tête à une extrémité, dérivées de l'épaisseur réelle du
+// trait à cet endroit (pas de la longueur de la flèche) : augmenter le
+// curseur "Épaisseur" grossit aussi la pointe, comme demandé.
+function _flowHeadSize(arrow, atEnd, style) {
+  var halfW = _flowEndHalfWidth(arrow, atEnd);
+  var headW = halfW * 3.4;
+  var headLen = headW * (style === 'diamond' ? 0.9 : style === 'circle' ? 0.55 : 1.1);
+  return { headW: headW, headLen: headLen };
+}
+
+// Fraction de la courbe (en t) à retirer au tracé du corps (ligne/ruban)
+// pour laisser la place à la tête — dérivée de la taille RÉELLE de la tête
+// (pas d'une fraction fixe de la longueur) : sans ça, une tête proportionnée
+// à une épaisseur en pixels (petite à un faible zoom) laisserait un trou
+// visible avant le corps trimmé d'un pourcentage fixe de la longueur totale.
+function _flowHeadTrim(arrow, atEnd) {
+  var style = FLOW_HEAD_STYLES.indexOf(arrow.headStyle) !== -1 ? arrow.headStyle : 'triangle';
+  var size = _flowHeadSize(arrow, atEnd, style);
+  var frac = size.headLen / _chordLen(arrow);
+  return Math.max(0.01, Math.min(0.35, frac));
+}
+
+// Contour (ring) de la tête selon le style choisi — tip = pointe, (ux,uy) =
+// direction vers l'avant, headLen/headW = dimensions dérivées de l'épaisseur
+// réelle du trait à cette extrémité (cf. _flowEndHalfWidth).
+function _flowHeadRing(tip, ux, uy, headLen, headW, style) {
+  var nx = -uy, ny = ux;
+  function back(d, s) { return [tip[0] - ux*d + nx*s, tip[1] - uy*d + ny*s]; }
+  if (style === 'diamond') {
+    return [tip, back(headLen*0.85, headW/2), back(headLen*1.7, 0), back(headLen*0.85, -headW/2), tip];
+  }
+  if (style === 'chevron') {
+    return [tip, back(headLen, headW/2), back(headLen*0.5, 0), back(headLen, -headW/2), tip];
+  }
+  if (style === 'circle') {
+    var r = headW/2, cx = tip[0] - ux*r, cy = tip[1] - uy*r, pts = [];
+    for (var i = 0; i <= 20; i++) {
+      var a = i/20 * Math.PI*2;
+      pts.push([cx + ux*Math.cos(a)*r + nx*Math.sin(a)*r, cy + uy*Math.cos(a)*r + ny*Math.sin(a)*r]);
+    }
+    return pts;
+  }
+  return [tip, back(headLen, headW/2), back(headLen, -headW/2), tip]; // triangle (défaut)
+}
+
+function _flowHeadFeatures(arrow) {
+  var pc = _flowControlPoint(arrow);
+  var style = FLOW_HEAD_STYLES.indexOf(arrow.headStyle) !== -1 ? arrow.headStyle : 'triangle';
+  function headAt(t, forward, atEnd) {
+    var size = _flowHeadSize(arrow, atEnd, style);
+    var headW = size.headW, headLen = size.headLen;
+    var tip = _bezierPoint(arrow.from, pc, arrow.to, t);
+    var tan = _bezierTangent(arrow.from, pc, arrow.to, t);
+    var len = Math.sqrt(tan[0]*tan[0] + tan[1]*tan[1]) || 1;
+    var ux = tan[0]/len * (forward ? 1 : -1), uy = tan[1]/len * (forward ? 1 : -1);
+    var ring = _flowHeadRing(tip, ux, uy, headLen, headW, style);
+    return { type:'Feature', properties:{id:arrow.id, color:arrow.color}, geometry:{type:'Polygon', coordinates:[ring]} };
+  }
+  var feats = [];
+  if (arrow.arrowEnd)   feats.push(headAt(1, true, true));
+  if (arrow.arrowStart) feats.push(headAt(0, false, false));
+  return feats;
+}
+
+function _flowLabelFeature(arrow) {
+  if (!arrow.label) return null;
+  var pc = _flowControlPoint(arrow);
+  var mid = _bezierPoint(arrow.from, pc, arrow.to, 0.5);
+  return { type:'Feature', properties:{label:arrow.label}, geometry:{type:'Point', coordinates:mid} };
+}
+
+// ── Rendu : une source/couche partagée par style (pas une par flèche) ──
+function _flowSourcesReady() { return !!(_map && _map.getSource(FLOW_LINE_SRC)); }
+
+function _initFlowLayers() {
+  if (!_map || _flowSourcesReady()) return;
+  _map.addSource(FLOW_LINE_SRC,   {type:'geojson', data:{type:'FeatureCollection', features:[]}});
+  _map.addSource(FLOW_RIBBON_SRC, {type:'geojson', data:{type:'FeatureCollection', features:[]}});
+  _map.addSource(FLOW_HEAD_SRC,   {type:'geojson', data:{type:'FeatureCollection', features:[]}});
+  _map.addSource(FLOW_LABEL_SRC,  {type:'geojson', data:{type:'FeatureCollection', features:[]}});
+
+  _map.addLayer({ id:'flow-ribbon', type:'fill', source:FLOW_RIBBON_SRC,
+    paint:{ 'fill-color':['get','color'], 'fill-opacity':0.85 } });
+  _map.addLayer({ id:'flow-line-solid', type:'line', source:FLOW_LINE_SRC,
+    filter:['==', ['get','dashed'], false],
+    paint:{ 'line-color':['get','color'], 'line-width':['get','width'], 'line-opacity':0.9 } });
+  _map.addLayer({ id:'flow-line-dashed', type:'line', source:FLOW_LINE_SRC,
+    filter:['==', ['get','dashed'], true],
+    paint:{ 'line-color':['get','color'], 'line-width':['get','width'], 'line-opacity':0.9, 'line-dasharray':[2,1.6] } });
+  _map.addLayer({ id:'flow-head', type:'fill', source:FLOW_HEAD_SRC,
+    paint:{ 'fill-color':['get','color'], 'fill-opacity':0.9 } });
+  _map.addLayer({ id:'flow-label', type:'symbol', source:FLOW_LABEL_SRC,
+    layout:{ 'text-field':['get','label'], 'text-size':11, 'text-font':['Noto Sans Bold'],
+             'text-offset':[0,-0.6], 'text-allow-overlap':false },
+    paint:{ 'text-color':'#1a1a1a', 'text-halo-color':'#fff', 'text-halo-width':1.6 } });
+}
+
+function _renderFlows() {
+  if (!_map || !_mapReady) return;
+  _initFlowLayers();
+  var lines = [], ribbons = [], heads = [], labels = [];
+  _flowArrows.forEach(function(arrow) {
+    if (!arrow.visible) return;
+    if (arrow.style === 'flow') {
+      ribbons.push(_flowRibbonFeature(arrow));
+    } else {
+      var lt0 = arrow.arrowStart ? _flowHeadTrim(arrow, false) : 0;
+      var lt1 = arrow.arrowEnd ? 1 - _flowHeadTrim(arrow, true) : 1;
+      lines.push({ type:'Feature',
+        properties:{id:arrow.id, color:arrow.color, width:arrow.width, dashed:!!arrow.dashed},
+        geometry:{type:'LineString', coordinates:_flowLineCoords(arrow, lt0, lt1)} });
+    }
+    heads = heads.concat(_flowHeadFeatures(arrow));
+    var lbl = _flowLabelFeature(arrow);
+    if (lbl) labels.push(lbl);
+  });
+  _map.getSource(FLOW_LINE_SRC).setData({type:'FeatureCollection', features:lines});
+  _map.getSource(FLOW_RIBBON_SRC).setData({type:'FeatureCollection', features:ribbons});
+  _map.getSource(FLOW_HEAD_SRC).setData({type:'FeatureCollection', features:heads});
+  _map.getSource(FLOW_LABEL_SRC).setData({type:'FeatureCollection', features:labels});
+  ['flow-ribbon','flow-line-solid','flow-line-dashed','flow-head','flow-label'].forEach(function(id) {
+    if (_map.getLayer(id)) _map.moveLayer(id);
+  });
+}
+
+function _addFlowArrow(from, to) {
+  var arrow = _newFlowArrow(from, to);
+  _flowArrows.push(arrow);
+  _renderFlows();
+  _renderFlowList();
+  _updateFlowEmptyHint();
+  setStatus('✓ Flux ajouté.');
+  return arrow;
+}
+
+function _removeFlowArrow(id) {
+  _flowArrows = _flowArrows.filter(function(a) { return a.id !== id; });
+  _renderFlows();
+  _renderFlowList();
+  _updateFlowEmptyHint();
+}
+//  FLUX — DESSIN SUR LA CARTE + IMPORT CSV
+// ══════════════════════════════════════════════════════════════════
+
+var _flowDrawMode = false;
+var _flowDrawFrom = null; // [lng,lat] en attente du 2e clic, ou null
+
+function _setFlowDrawMode(on) {
+  _flowDrawMode = on; _flowDrawFrom = null;
+  var btn = document.getElementById('btn-flow-draw');
+  var hint = document.getElementById('flow-draw-hint');
+  if (btn) { btn.classList.toggle('btn-primary', !on); btn.classList.toggle('btn-secondary', on);
+    btn.textContent = on ? '✕ Arrêter le dessin' : '✎ Dessiner sur la carte'; }
+  if (hint) { hint.style.display = on ? 'block' : 'none'; hint.textContent = 'Cliquez le point de départ…'; }
+  if (_map) _map.getCanvas().style.cursor = on ? 'crosshair' : '';
+}
+
+function _wireFlowDrawClick() {
+  if (!_map || _map.__flowClickWired) return;
+  _map.__flowClickWired = true;
+  // Les têtes des flèches "linéaires" sont dimensionnées sur l'épaisseur en
+  // PIXELS du trait (cf. _flowEndHalfWidth) pour rester fidèles à ce qui est
+  // affiché — donc dépendantes du zoom, contrairement au reste de la
+  // géométrie (statique). Seul recalcul déclenché par un changement de vue.
+  _map.on('zoomend', function() {
+    if (_flowArrows.some(function(a) { return a.visible && a.style !== 'flow'; })) _renderFlows();
+  });
+  _map.on('click', function(e) {
+    if (!_flowDrawMode) return;
+    var pt = [e.lngLat.lng, e.lngLat.lat];
+    var hint = document.getElementById('flow-draw-hint');
+    if (!_flowDrawFrom) {
+      _flowDrawFrom = pt;
+      if (hint) hint.textContent = 'Cliquez le point d\'arrivée…';
+    } else {
+      var arrow = _addFlowArrow(_flowDrawFrom, pt);
+      _flowDrawFrom = null;
+      if (hint) hint.textContent = 'Cliquez le point de départ… (« ' + arrow.name + ' » créé)';
+    }
+  });
+}
+
+// ── Import CSV : noms de territoires connus, ou coordonnées explicites ──
+function _resolveFlowPoint(row, plainCol, lonCol, latCol) {
+  if (lonCol && latCol && row[lonCol] !== undefined && row[latCol] !== undefined) {
+    var lon = parseFloat(String(row[lonCol]).replace(',', '.'));
+    var lat = parseFloat(String(row[latCol]).replace(',', '.'));
+    if (!isNaN(lon) && !isNaN(lat)) return [lon, lat];
+    return null;
+  }
+  var name = (row[plainCol] || '').trim();
+  if (!name) return null;
+  var f = _findFeatureByName(name);
+  return f ? _featCenter(f) : null;
+}
+
+function _loadFlowCSV() {
+  var ta = document.getElementById('flow-csv-input');
+  var text = ta ? ta.value : '';
+  if (!text.trim()) return;
+  var parsed = parseCSV(text);
+  if (!parsed.rows.length) { setStatus('✗ Aucune ligne trouvée dans le tableau de flux.'); return; }
+
+  var useCoords = ['lon_origine','lat_origine','lon_destination','lat_destination'].every(function(c) {
+    return parsed.cols.indexOf(c) !== -1;
+  });
+  if (!useCoords && !_cache['communes']) {
+    setStatus('… Chargement de la couche communes pour résoudre les noms…');
+    _ensureLayer('communes').then(_loadFlowCSV)
+      .catch(function(e) { setStatus('✗ Chargement des communes impossible : ' + e); });
+    return;
+  }
+
+  var valCol = parsed.cols.find(function(c) { return /valeur|value|volume|nb|nombre|total/i.test(c); });
+  var vals = valCol ? parsed.rows.map(function(r) { return parseFloat(r[valCol]); }).filter(function(v) { return !isNaN(v); }) : [];
+  var vMin = vals.length ? Math.min.apply(null, vals) : 0, vMax = vals.length ? Math.max.apply(null, vals) : 0;
+
+  var created = 0, skipped = 0;
+  parsed.rows.forEach(function(row) {
+    var from = useCoords ? _resolveFlowPoint(row, null, 'lon_origine', 'lat_origine')
+                          : _resolveFlowPoint(row, parsed.cols[0]);
+    var to   = useCoords ? _resolveFlowPoint(row, null, 'lon_destination', 'lat_destination')
+                          : _resolveFlowPoint(row, parsed.cols[1]);
+    if (!from || !to) { skipped++; return; }
+    var arrow = _newFlowArrow(from, to);
+    arrow.name = (row[parsed.cols[0]] || 'Origine') + ' → ' + (row[parsed.cols[1]] || 'Destination');
+    if (valCol) {
+      var v = parseFloat(row[valCol]);
+      if (!isNaN(v)) {
+        arrow.style = 'flow'; arrow.label = String(row[valCol]);
+        arrow.width = vMax > vMin ? Math.round(2 + (v - vMin) / (vMax - vMin) * 7) : 5;
+      }
+    }
+    _flowArrows.push(arrow);
+    created++;
+  });
+  _renderFlows(); _renderFlowList(); _updateFlowEmptyHint();
+  setStatus('✓ ' + created + ' flux importé' + (created > 1 ? 's' : '') +
+    (skipped ? ' — ' + skipped + ' ligne' + (skipped > 1 ? 's' : '') + ' ignorée' + (skipped > 1 ? 's' : '') + ' (origine/destination introuvable)' : '') + '.');
+}
+//  FLUX — PANNEAU (liste, contrôles par flèche, câblage des événements)
+// ══════════════════════════════════════════════════════════════════
+
+function _updateFlowEmptyHint() {
+  var hint = document.getElementById('flow-empty-hint');
+  if (hint) hint.style.display = _flowArrows.length ? 'none' : 'block';
+}
+
+function _renderFlowList() {
+  var list = document.getElementById('flow-list');
+  if (!list) return;
+  list.innerHTML = '';
+  _flowArrows.forEach(function(arrow) { _appendFlowItem(arrow, list); });
+}
+
+function _appendFlowItem(arrow, list) {
+  var div = document.createElement('div');
+  div.className = 'lib-item';
+  div.innerHTML =
+    '<input type="checkbox" class="lib-item-check" id="flow-chk-' + arrow.id + '"' + (arrow.visible ? ' checked' : '') + '>' +
+    '<span class="lib-item-dot" id="flow-dot-' + arrow.id + '" style="background:' + arrow.color + ';cursor:pointer" title="Changer la couleur"></span>' +
+    '<input type="color" id="flow-color-' + arrow.id + '" value="' + arrow.color + '" style="position:absolute;opacity:0;width:0;height:0">' +
+    '<div style="flex:1;min-width:0">' +
+      '<input type="text" id="flow-name-' + arrow.id + '" value="' + _escAttr(arrow.name) + '"' +
+        ' style="width:100%;border:none;background:none;font-size:11px;font-weight:600;padding:0">' +
+    '</div>' +
+    '<button class="lib-del-btn" title="Supprimer" style="background:none;border:none;cursor:pointer;padding:1px 5px;color:#bbb;font-size:14px;line-height:1">✕</button>';
+  list.appendChild(div);
+
+  var ctrl = document.createElement('div');
+  ctrl.className = 'lib-opa-row';
+  ctrl.style.cssText = 'flex-wrap:wrap;gap:6px 8px;padding:2px 4px 10px 34px';
+  ctrl.innerHTML =
+    '<select id="flow-style-' + arrow.id + '" style="flex:0 0 auto;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px">' +
+      '<option value="linear"' + (arrow.style==='linear'?' selected':'') + '>Linéaire</option>' +
+      '<option value="flow"' + (arrow.style==='flow'?' selected':'') + '>Flux (épaisseur variable)</option>' +
+    '</select>' +
+    '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px">Épaisseur' +
+      '<input type="range" id="flow-width-' + arrow.id + '" min="1" max="10" step="1" value="' + arrow.width + '" style="width:52px;accent-color:var(--accent)"></label>' +
+    '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px">Courbure' +
+      '<input type="range" id="flow-curve-' + arrow.id + '" min="-100" max="100" step="5" value="' + arrow.curve + '" style="width:60px;accent-color:var(--accent)"></label>' +
+    '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px"><input type="checkbox" id="flow-dashed-' + arrow.id + '"' + (arrow.dashed?' checked':'') + '> Pointillés</label>' +
+    '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px"><input type="checkbox" id="flow-astart-' + arrow.id + '"' + (arrow.arrowStart?' checked':'') + '> Pointe départ</label>' +
+    '<label style="font-size:9.5px;color:var(--muted);display:flex;align-items:center;gap:3px"><input type="checkbox" id="flow-aend-' + arrow.id + '"' + (arrow.arrowEnd?' checked':'') + '> Pointe arrivée</label>' +
+    '<select id="flow-headstyle-' + arrow.id + '" title="Forme de la pointe" style="flex:0 0 auto;font-size:10.5px;padding:2px 4px;border:1px solid var(--border);border-radius:4px">' +
+      '<option value="triangle"' + (arrow.headStyle==='triangle'?' selected':'') + '>▲ Triangle</option>' +
+      '<option value="chevron"' + (arrow.headStyle==='chevron'?' selected':'') + '>&gt; Chevron</option>' +
+      '<option value="diamond"' + (arrow.headStyle==='diamond'?' selected':'') + '>◆ Losange</option>' +
+      '<option value="circle"' + (arrow.headStyle==='circle'?' selected':'') + '>● Cercle</option>' +
+    '</select>' +
+    '<input type="text" id="flow-label-' + arrow.id + '" value="' + _escAttr(arrow.label) + '" placeholder="Étiquette (facultatif)"' +
+      ' style="flex-basis:100%;font-size:10.5px;padding:3px 6px;border:1px solid var(--border);border-radius:4px">';
+  list.appendChild(ctrl);
+
+  _wireFlowItemEvents(arrow, div, ctrl);
+}
+
+function _wireFlowItemEvents(arrow, div, ctrl) {
+  var id = arrow.id;
+
+  div.querySelector('input[type=checkbox]').addEventListener('change', function() {
+    arrow.visible = this.checked; _renderFlows();
+  });
+  div.querySelector('.lib-del-btn').addEventListener('click', function() { _removeFlowArrow(id); });
+  document.getElementById('flow-name-' + id).addEventListener('input', function() { arrow.name = this.value; });
+
+  var dot = document.getElementById('flow-dot-' + id), colorInp = document.getElementById('flow-color-' + id);
+  dot.addEventListener('click', function() { colorInp.click(); });
+  colorInp.addEventListener('input', function() { arrow.color = this.value; dot.style.background = this.value; _renderFlows(); });
+
+  document.getElementById('flow-style-' + id).addEventListener('change', function() { arrow.style = this.value; _renderFlows(); });
+  document.getElementById('flow-headstyle-' + id).addEventListener('change', function() { arrow.headStyle = this.value; _renderFlows(); });
+  document.getElementById('flow-width-' + id).addEventListener('input', function() { arrow.width = parseInt(this.value, 10); _renderFlows(); });
+  document.getElementById('flow-curve-' + id).addEventListener('input', function() { arrow.curve = parseInt(this.value, 10); _renderFlows(); });
+  document.getElementById('flow-dashed-' + id).addEventListener('change', function() { arrow.dashed = this.checked; _renderFlows(); });
+  document.getElementById('flow-astart-' + id).addEventListener('change', function() { arrow.arrowStart = this.checked; _renderFlows(); });
+  document.getElementById('flow-aend-' + id).addEventListener('change', function() { arrow.arrowEnd = this.checked; _renderFlows(); });
+  document.getElementById('flow-label-' + id).addEventListener('input', function() { arrow.label = this.value; _renderFlows(); });
+}
+
+function _wireFlowEvents() {
+  var btnDraw = document.getElementById('btn-flow-draw');
+  if (btnDraw) btnDraw.addEventListener('click', function() { _setFlowDrawMode(!_flowDrawMode); });
+
+  var btnCsv = document.getElementById('btn-flow-csv-load');
+  if (btnCsv) btnCsv.addEventListener('click', _loadFlowCSV);
+
+  // Quitter l'onglet Flux pendant un dessin en cours annule le mode dessin —
+  // sinon un clic sur la carte depuis un autre onglet créerait un flux
+  // fantôme sans que l'utilisateur comprenne pourquoi.
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.dataset.tab !== 'flows' && _flowDrawMode) _setFlowDrawMode(false);
+    });
+  });
+
+  _wireFlowDrawClick();
+  _updateFlowEmptyHint();
 }
 </script>
 </body>

@@ -61,41 +61,7 @@ function _detectNumericFields(geojson) {
   return result;
 }
 
-// Libellé lisible pour un nom de champ technique (ex. "evo_pop_total_2025_2070_txt"
-// → "Evo pop total 2025 2070") — GIS-GR suffixe "_txt" ses champs texte
-// formatés (ex. "5,0%"), ce qui ressemblait à tort à une extension de
-// fichier .txt dans le sélecteur. Purement cosmétique : la valeur réelle
-// utilisée pour la couleur reste le nom de champ brut (option.value).
-function _prettyFieldLabel(key) {
-  return key.replace(/_txt$/i, '').replace(/_/g, ' ').trim()
-    .replace(/^./, function(c) { return c.toUpperCase(); });
-}
-
-// Seuils quantiles + palette pour un champ donné — indépendant du CSV/join
-// (cf. _buildChoroScale, js/06-choropleth-scale.js, qui lui reste dédié au
-// flux CSV). Écrit aussi la valeur numérique normalisée dans chaque feature
-// (_cv) : les expressions MapLibre ne savent pas parser "5,0%" elles-mêmes.
-function _computeLayerChoro(layer, field, paletteId, steps) {
-  var vals = [];
-  (layer.geojson.features || []).forEach(function(f) {
-    var n = _coerceNum((f.properties || {})[field]);
-    f.properties._cv = n;
-    if (n !== null) vals.push(n);
-  });
-  if (!vals.length) return null;
-  vals.sort(function(a, b) { return a - b; });
-  steps = Math.min(steps || 5, Math.max(2, vals.length));
-  var breaks = [];
-  for (var i = 1; i < steps; i++) breaks.push(vals[Math.floor(vals.length * i / steps)]);
-  var palObj = CHORO_PALS.find(function(p) { return p.id === paletteId; }) || CHORO_PALS[0];
-  return { field: field, breaks: breaks, colors: _interpolatePalette(palObj.c, steps),
-           min: vals[0], max: vals[vals.length - 1] };
-}
-
-// Format court pour les bornes de légende (entier si c'en est un, sinon 1 décimale)
-function _fmtChoroNum(v) {
-  return (Math.round(v) === v ? v : v.toFixed(1)).toString().replace('.', ',');
-}
+// _prettyFieldLabel / _computeLayerChoro / _fmtChoroNum → js/20-library-choro.js
 
 // Couleur (unie ou expression MapLibre pilotée par _cv) pour le style d'une couche
 function _layerColorExpr(layer) {
@@ -299,32 +265,46 @@ function _appendLibLayerItem(layer, opts) {
       if (n === 5) o.selected = true;
       choroStepsSel.appendChild(o);
     });
+    var choroLabelInp = document.createElement('input');
+    choroLabelInp.type = 'text';
+    choroLabelInp.placeholder = 'Libellé affiché (infobulle)';
+    choroLabelInp.style.cssText = 'flex-basis:100%;font-size:10.5px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;display:none';
     var choroLegend = document.createElement('div');
     choroLegend.style.cssText = 'flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px';
     choroDiv.appendChild(choroSel);
     choroDiv.appendChild(choroPalSel);
     choroDiv.appendChild(choroStepsSel);
+    choroDiv.appendChild(choroLabelInp);
     choroDiv.appendChild(choroLegend);
     list.appendChild(choroDiv);
 
-    function _applyChoro() {
+    // fieldChanged → nouveau champ choisi : repart du libellé auto ; sinon
+    // (palette/classes/libellé) le libellé déjà saisi par l'utilisateur reste.
+    function _applyChoro(fieldChanged) {
       var field = choroSel.value;
       if (!field) {
         layer.choro = null;
         choroPalSel.style.display = 'none';
         choroStepsSel.style.display = 'none';
+        choroLabelInp.style.display = 'none';
         choroLegend.innerHTML = '';
       } else {
+        if (fieldChanged) choroLabelInp.value = '';
         layer.choro = _computeLayerChoro(layer, field, choroPalSel.value, parseInt(choroStepsSel.value, 10));
+        layer.choro.label = choroLabelInp.value.trim() || _prettyFieldLabel(field);
         choroPalSel.style.display = '';
         choroStepsSel.style.display = '';
+        choroLabelInp.style.display = '';
         _renderChoroLegend(layer, choroLegend);
       }
       _setUserLayerColor(layer);
     }
-    choroSel.addEventListener('change', _applyChoro);
-    choroPalSel.addEventListener('change', _applyChoro);
-    choroStepsSel.addEventListener('change', _applyChoro);
+    choroSel.addEventListener('change', function() { _applyChoro(true); });
+    choroPalSel.addEventListener('change', function() { _applyChoro(false); });
+    choroStepsSel.addEventListener('change', function() { _applyChoro(false); });
+    choroLabelInp.addEventListener('input', function() {
+      if (layer.choro) layer.choro.label = choroLabelInp.value.trim() || _prettyFieldLabel(layer.choro.field);
+    });
   }
 
   // ── Events ───────────────────────────────────────────────────────

@@ -1,3 +1,11 @@
+// Libellé affiché pour la valeur cartographiée : le nom de colonne par
+// défaut, ou le libellé personnalisé si l'utilisateur en a saisi un
+// (#value-col-label) — utile quand l'en-tête CSV brut est trop technique
+// pour l'infobulle/le tableau sans pour autant renommer la colonne elle-même.
+function _valueLabel() {
+  return _valueColLabel || _valueCol;
+}
+
 function applyData() {
   if (!_csvData || !_joinCol || !_valueCol) return;
   _dataMap = {}; _rowMap = {};
@@ -165,6 +173,9 @@ function _refreshColSelects() {
     } else {
       var vCol = cols.find(function(c) { return /val|value|valeur|nb|count|score|total|nombre/i.test(c); }) || (cols.length > 1 ? cols[1] : '');
       sel.value = vCol; _valueCol = vCol;
+      _valueColLabel = '';
+      var lblInp = document.getElementById('value-col-label');
+      if (lblInp) lblInp.value = '';
     }
   });
   _updateTtVarChips();
@@ -226,7 +237,7 @@ function _generateDefaultTpl() {
   fmap.forEach(function(f) {
     if (_ttFields[f.k]) lines.push('<div class="tt-row"><span class="tt-row-label">'+f.l+'</span><span class="tt-row-val">{{'+f.k+'}}</span></div>');
   });
-  if (_ttFields.dataval && _valueCol) {
+  if (_ttFields.dataval && _valueLabel()) {
     lines.push('<div class="tt-row"><span class="tt-row-label">{{colonne}}</span><span class="tt-data-val">{{valeur}}</span></div>');
   }
   return lines.join('\n');
@@ -295,7 +306,7 @@ function _showTooltip(e, feat) {
     var _ttKey = _getJoinKey(feat);
     var _ttVal = _ttKey !== undefined ? _dataMap[_ttKey] : undefined;
     if (_ttVal !== undefined) {
-      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueCol) + '</span><span class="tt-data-val">' + _escHtml(_ttVal) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueLabel()) + '</span><span class="tt-data-val">' + _escHtml(_ttVal) + '</span></div>';
     }
   }
 

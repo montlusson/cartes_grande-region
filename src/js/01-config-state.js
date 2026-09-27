@@ -235,6 +235,7 @@ var CHORO_PALS = [
 var _csvData      = null;  // {rows, cols}
 var _joinCol      = '';
 var _valueCol     = '';
+var _valueColLabel = ''; // libellé affiché en infobulle/tableau — vide = nom de colonne (_valueCol)
 var _choroPalette = 'Blues';
 var _choroSteps   = 5;
 var _dataMap      = {};    // normalizedKey → valeur brute

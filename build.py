@@ -21,6 +21,7 @@ HTML_PARTIALS = [
     "html/tab-layers.html",
     "html/tab-style.html",
     "html/tab-data-library.html",
+    "html/tab-flows.html",
     "html/tab-publish.html",
     "html/shell-bottom.html",
 ]
@@ -45,6 +46,10 @@ JS_MODULES = [
     "js/17-init-search-preview.js",
     "js/18-library-catalog.js",
     "js/19-library-focus.js",
+    "js/20-library-choro.js",
+    "js/21-flow-geometry.js",
+    "js/22-flow-draw-csv.js",
+    "js/23-flow-ui.js",
 ]
 
 

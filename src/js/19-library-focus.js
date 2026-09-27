@@ -32,7 +32,7 @@ function _showLibraryTooltip(e, feat, layer) {
   if (layer.choro) {
     var raw = p[layer.choro.field];
     if (raw !== undefined && raw !== null && raw !== '') {
-      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_prettyFieldLabel(layer.choro.field)) +
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(layer.choro.label || _prettyFieldLabel(layer.choro.field)) +
         '</span><span class="tt-data-val">' + _escHtml(raw) + '</span></div>';
     }
   }

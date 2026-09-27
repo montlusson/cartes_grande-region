@@ -291,7 +291,7 @@ function _ttContext(feat, h) {
     dept: h.dept || '', arrondissement: h.arrondissement || '', canton: h.canton || '',
     kreis: h.kreis || '', province: h.province || '', vg: h.vg || '',
     code: p.code || '',
-    valeur: val, colonne: _valueCol || '',
+    valeur: val, colonne: _valueLabel() || '',
     flag_pays: FLAG_PAYS[h.pays] || '',
     flag_region: FLAG_REGION[h.region] || '',
     chipLabel: _chipLabel(h),
@@ -389,7 +389,7 @@ function _openTableModal() {
   document.getElementById('table-modal-meta').innerHTML = bits.join(' · ');
 
   var cols = [{k:'nom', l:'Nom'}, {k:'region', l:'Région'}, {k:'pays', l:'Pays'}, {k:'code', l:'Code'}];
-  if (choro) cols.push({k:'valeur', l: _valueCol});
+  if (choro) cols.push({k:'valeur', l: _valueLabel()});
 
   var html = '<table style="border-collapse:collapse;width:100%;font-size:12px">'
            + '<caption style="text-align:left;padding:6px 9px;font-size:11px;color:#888">'

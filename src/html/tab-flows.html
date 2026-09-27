@@ -1,0 +1,31 @@
+
+        <!-- TAB: FLUX -->
+        <div class="tab-pane" id="tab-flows">
+          <div class="section" style="padding-top:10px">
+            <div class="section-title">Flèches / flux</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Représentez un déplacement entre deux points (frontaliers, migrations, échanges…) —
+              cliquez deux points sur la carte, ou importez un tableau origine → destination.
+            </div>
+            <button class="btn btn-primary" id="btn-flow-draw" style="width:100%">&#9998; Dessiner sur la carte</button>
+            <div id="flow-draw-hint" style="font-size:10.5px;color:var(--accent);margin-top:6px;display:none"></div>
+
+            <hr class="divider">
+            <div class="field">
+              <label>Import CSV — origine, destination[, valeur]</label>
+              <textarea id="flow-csv-input" rows="5" placeholder="origine,destination,valeur&#10;Metz,Luxembourg,4200&#10;Thionville,Luxembourg,9100&#10;..."></textarea>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px">
+                Noms de communes/territoires connus de l'outil — ou colonnes
+                <code>lon_origine,lat_origine,lon_destination,lat_destination</code>.
+                La colonne « valeur » (facultative) règle automatiquement l'épaisseur.
+              </div>
+            </div>
+            <button class="btn btn-secondary" id="btn-flow-csv-load" style="width:100%">&#9654; Charger les flux</button>
+
+            <hr class="divider">
+            <div id="flow-list"></div>
+            <div id="flow-empty-hint" style="text-align:center;padding:10px 8px;font-size:10.5px;color:var(--muted);font-style:italic">
+              Aucun flux créé
+            </div>
+          </div>
+        </div><!-- /tab-flows -->

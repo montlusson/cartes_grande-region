@@ -38,6 +38,10 @@ function _initMap() {
     style: {
       version: 8,
       sources: {},
+      // Nécessaire pour les couches "symbol" avec texte (ex. étiquettes des
+      // flux, js/21-flow-geometry.js) — MapLibre refuse sinon d'ajouter la
+      // couche ("requires a style glyphs property"), même avec un seul champ texte.
+      glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
       layers: [
         { id: 'bg', type: 'background', paint: { 'background-color': '#e8e6e0' } }
       ]
