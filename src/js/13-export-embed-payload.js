@@ -82,7 +82,11 @@ function _serializeEmbedPayload() {
     tt: { imageMode: _ttImageMode, imageUrl: _ttImageUrl,
           htmlMode: _ttHtmlMode, htmlTpl: _ttHtmlTemplate,
           boxBg: _ttBoxBg || '', boxColor: _ttBoxColor || '',
-          valueCol: _valueCol || '', flagsPays: FLAG_PAYS, flagsRegion: FLAG_REGION },
+          valueCol: _valueCol || '', flagsPays: FLAG_PAYS, flagsRegion: FLAG_REGION,
+          // Format des nombres (js/32) — mêmes réglages que dans l'outil,
+          // pour que la carte publiée affiche les valeurs pareil qu'en aperçu.
+          numFmt: { preset: _numFormatPreset, custom: _numFormatCustom, locale: _numLocale,
+                    prefix: _numPrefix, suffix: _numSuffix } },
     center:     [center.lng, center.lat],
     zoom:       _map.getZoom(),
     bounds:     _getActiveBlocsBbox(),

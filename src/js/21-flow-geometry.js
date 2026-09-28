@@ -328,7 +328,7 @@ function _appendFlowLegend(container) {
       '<svg width="28" height="14" style="flex:none;overflow:visible">' +
         '<line x1="2" y1="7" x2="26" y2="7" stroke="#555" stroke-width="' + w.toFixed(1) + '" stroke-linecap="round"/>' +
       '</svg>' +
-      '<span style="font-size:10px">' + _escHtml(_legendFmtNum(v)) + '</span>';
+      '<span style="font-size:10px">' + _escHtml(_fmtChoroNum(v)) + '</span>';
     container.appendChild(item);
   });
 }

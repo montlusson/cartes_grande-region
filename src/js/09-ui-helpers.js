@@ -291,7 +291,7 @@ function _ttContext(feat, h) {
     dept: h.dept || '', arrondissement: h.arrondissement || '', canton: h.canton || '',
     kreis: h.kreis || '', province: h.province || '', vg: h.vg || '',
     code: p.code || '',
-    valeur: val, colonne: _valueLabel() || '',
+    valeur: _formatValue(val), colonne: _valueLabel() || '',
     flag_pays: FLAG_PAYS[h.pays] || '',
     flag_region: FLAG_REGION[h.region] || '',
     chipLabel: _chipLabel(h),
@@ -404,7 +404,7 @@ function _openTableModal() {
     html += '<tr>';
     cols.forEach(function(c) {
       html += '<td style="padding:4px 9px;border-bottom:1px solid #f3f3f3">'
-            + _escHtml(r[c.k] === undefined ? '' : r[c.k]) + '</td>';
+            + _escHtml(r[c.k] === undefined ? '' : (c.k === 'valeur' ? _formatValue(r[c.k]) : r[c.k])) + '</td>';
     });
     html += '</tr>';
   });

@@ -61,6 +61,69 @@
               <label>Libellé affiché (infobulle, tableau)</label>
               <input type="text" class="full" id="value-col-label" placeholder="Par défaut : nom de la colonne">
             </div>
+
+            <div class="section-title collapsible collapsed" id="toggle-num-format" style="margin-top:4px">Format des nombres</div>
+            <div class="collapsible-body collapsed" id="body-num-format">
+              <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+                S'applique partout où la valeur s'affiche : infobulle, légende, tableau.
+              </div>
+              <div class="field">
+                <label>Format</label>
+                <select class="full" id="num-format-preset">
+                  <option value="auto" selected>Auto (entier si rond, sinon 1 décimale)</option>
+                  <option value="int">Entier — 1235</option>
+                  <option value="dec1">1 décimale — 1234,6</option>
+                  <option value="dec2">2 décimales — 1234,57</option>
+                  <option value="grouped">Milliers groupés — 1 235</option>
+                  <option value="grouped2">Milliers groupés + 2 décimales — 1 234,57</option>
+                  <option value="percent">Pourcentage — 1234,57 %</option>
+                  <option value="custom">Personnalisé…</option>
+                </select>
+              </div>
+              <div class="field" id="num-format-custom-wrap" style="display:none">
+                <label>Jeton personnalisé</label>
+                <input type="text" class="full" id="num-format-custom" placeholder="Ex : 0.[00]" spellcheck="false">
+                <div style="font-size:9.5px;color:var(--muted);margin-top:3px;line-height:1.5">
+                  <code>0.0</code> décimales fixes · <code>0.[0]</code> décimales max · <code>0,0</code> grouper les milliers ·
+                  <code>0%</code> signe % · <code>(0)</code> négatifs entre parenthèses · <code>+0</code> signe + · <code>|0|</code> sans signe.
+                  Combinables, ex. <code>0,0.[00]</code>. Inspiré des formats
+                  <a href="https://www.datawrapper.de/academy/custom-number-formats-that-you-can-display-in-datawrapper" target="_blank" rel="noopener noreferrer">Datawrapper</a>.
+                </div>
+              </div>
+              <div class="field">
+                <label>Style régional (séparateurs)</label>
+                <select class="full" id="num-format-locale">
+                  <option value="fr" selected>Français — 1 234,5</option>
+                  <option value="de">Allemand — 1.234,5</option>
+                  <option value="en">Anglo-saxon — 1,234.5</option>
+                  <option value="ch">Suisse — 1'234.5</option>
+                  <option value="auto">Auto (langue du navigateur)</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div class="field" style="margin:0">
+                  <label>Préfixe</label>
+                  <input type="text" class="full" id="num-format-prefix" placeholder="$">
+                </div>
+                <div class="field" style="margin:0">
+                  <label>Suffixe</label>
+                  <input type="text" class="full" id="num-format-suffix" placeholder="€">
+                </div>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0">
+                <button class="btn btn-secondary btn-sm" data-currency=" €" data-target="suffix" type="button" title="Ajouter € au suffixe (ex. 1 234 €)">€</button>
+                <button class="btn btn-secondary btn-sm" data-currency="$" data-target="prefix" type="button" title="Ajouter $ au préfixe (ex. $1,234)">$</button>
+                <button class="btn btn-secondary btn-sm" data-currency="£" data-target="prefix" type="button" title="Ajouter £ au préfixe (ex. £1,234)">£</button>
+                <button class="btn btn-secondary btn-sm" data-currency="¥" data-target="prefix" type="button" title="Ajouter ¥ au préfixe (ex. ¥1,234)">¥</button>
+                <button class="btn btn-secondary btn-sm" data-currency=" CHF" data-target="suffix" type="button" title="Ajouter CHF au suffixe (ex. 1 234 CHF)">CHF</button>
+                <button class="btn btn-secondary btn-sm" id="btn-num-format-clear" type="button" title="Vider préfixe et suffixe">✕ Effacer</button>
+              </div>
+              <div class="tt-preview-box" style="margin-top:6px">
+                <span class="tt-preview-label">Aperçu</span>
+                <div id="num-format-preview" style="font-size:13px;font-weight:600"></div>
+              </div>
+            </div>
+
             <button class="btn btn-primary" id="btn-apply-data" style="width:100%" disabled>&#9654; Appliquer les données</button>
             <div id="cat-colors-wrap" style="display:none;margin-top:10px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">

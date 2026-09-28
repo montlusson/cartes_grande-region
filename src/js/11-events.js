@@ -167,7 +167,7 @@ function wireEvents() {
 
   // Repliables (toggle-X ↔ body-X)
   ['toggle-overlays', 'toggle-chefslieux', 'toggle-st-colors', 'toggle-st-strokes',
-   'toggle-st-choro', 'toggle-st-labels', 'toggle-st-tooltip'].forEach(function(id) {
+   'toggle-st-choro', 'toggle-st-labels', 'toggle-st-tooltip', 'toggle-num-format'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('click', function() {
@@ -299,8 +299,6 @@ function wireEvents() {
     });
   });
 
-  var legendDecimalsSel = document.getElementById('legend-decimals');
-  if (legendDecimalsSel) legendDecimalsSel.addEventListener('change', function() { _legendDecimals = this.value; _updateLegend(); });
   var btnChoroColorReset = document.getElementById('btn-choro-color-reset');
   if (btnChoroColorReset) btnChoroColorReset.addEventListener('click', function() { _choroColorOverrides = {}; _repaintChoro(); });
 
@@ -334,6 +332,9 @@ function wireEvents() {
   document.querySelectorAll('.bloc-chip').forEach(function(btn) {
     btn.addEventListener('click', function() { _toggleBloc(btn.dataset.bloc); });
   });
+
+  // ── Format des nombres (js/32) ───────────────────────────────────
+  _wireNumFormat();
 
   // ── Bibliothèque de couches GeoJSON ─────────────────────────────
   _wireLibUpload();

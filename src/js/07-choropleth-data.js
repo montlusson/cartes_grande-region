@@ -338,7 +338,7 @@ function _showTooltip(e, feat) {
     var _ttKey = _getJoinKey(feat);
     var _ttVal = _ttKey !== undefined ? _dataMap[_ttKey] : undefined;
     if (_ttVal !== undefined) {
-      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueLabel()) + '</span><span class="tt-data-val">' + _escHtml(_ttVal) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueLabel()) + '</span><span class="tt-data-val">' + _escHtml(_formatValue(_ttVal)) + '</span></div>';
     }
   }
 

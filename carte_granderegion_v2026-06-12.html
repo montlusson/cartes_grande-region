@@ -887,16 +887,8 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
                   <button class="btn btn-secondary btn-sm" data-steps="7">7</button>
                 </div>
               </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:8px">Décimales, séparateurs, préfixe/suffixe (€, $…) : onglet <strong>Données</strong> → Format des nombres.</div>
               <div class="style-row" style="margin-top:8px">
-                <label>Décimales</label>
-                <select id="legend-decimals" style="flex:1">
-                  <option value="auto" selected>Auto</option>
-                  <option value="0">0 (entiers)</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                </select>
-              </div>
-              <div class="style-row" style="margin-top:4px">
                 <label></label>
                 <button class="btn btn-secondary btn-sm" id="btn-choro-color-reset" title="Revenir aux couleurs de la palette">↺ Couleurs par défaut</button>
               </div>
@@ -1090,6 +1082,69 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
               <label>Libellé affiché (infobulle, tableau)</label>
               <input type="text" class="full" id="value-col-label" placeholder="Par défaut : nom de la colonne">
             </div>
+
+            <div class="section-title collapsible collapsed" id="toggle-num-format" style="margin-top:4px">Format des nombres</div>
+            <div class="collapsible-body collapsed" id="body-num-format">
+              <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+                S'applique partout où la valeur s'affiche : infobulle, légende, tableau.
+              </div>
+              <div class="field">
+                <label>Format</label>
+                <select class="full" id="num-format-preset">
+                  <option value="auto" selected>Auto (entier si rond, sinon 1 décimale)</option>
+                  <option value="int">Entier — 1235</option>
+                  <option value="dec1">1 décimale — 1234,6</option>
+                  <option value="dec2">2 décimales — 1234,57</option>
+                  <option value="grouped">Milliers groupés — 1 235</option>
+                  <option value="grouped2">Milliers groupés + 2 décimales — 1 234,57</option>
+                  <option value="percent">Pourcentage — 1234,57 %</option>
+                  <option value="custom">Personnalisé…</option>
+                </select>
+              </div>
+              <div class="field" id="num-format-custom-wrap" style="display:none">
+                <label>Jeton personnalisé</label>
+                <input type="text" class="full" id="num-format-custom" placeholder="Ex : 0.[00]" spellcheck="false">
+                <div style="font-size:9.5px;color:var(--muted);margin-top:3px;line-height:1.5">
+                  <code>0.0</code> décimales fixes · <code>0.[0]</code> décimales max · <code>0,0</code> grouper les milliers ·
+                  <code>0%</code> signe % · <code>(0)</code> négatifs entre parenthèses · <code>+0</code> signe + · <code>|0|</code> sans signe.
+                  Combinables, ex. <code>0,0.[00]</code>. Inspiré des formats
+                  <a href="https://www.datawrapper.de/academy/custom-number-formats-that-you-can-display-in-datawrapper" target="_blank" rel="noopener noreferrer">Datawrapper</a>.
+                </div>
+              </div>
+              <div class="field">
+                <label>Style régional (séparateurs)</label>
+                <select class="full" id="num-format-locale">
+                  <option value="fr" selected>Français — 1 234,5</option>
+                  <option value="de">Allemand — 1.234,5</option>
+                  <option value="en">Anglo-saxon — 1,234.5</option>
+                  <option value="ch">Suisse — 1'234.5</option>
+                  <option value="auto">Auto (langue du navigateur)</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div class="field" style="margin:0">
+                  <label>Préfixe</label>
+                  <input type="text" class="full" id="num-format-prefix" placeholder="$">
+                </div>
+                <div class="field" style="margin:0">
+                  <label>Suffixe</label>
+                  <input type="text" class="full" id="num-format-suffix" placeholder="€">
+                </div>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin:6px 0">
+                <button class="btn btn-secondary btn-sm" data-currency=" €" data-target="suffix" type="button" title="Ajouter € au suffixe (ex. 1 234 €)">€</button>
+                <button class="btn btn-secondary btn-sm" data-currency="$" data-target="prefix" type="button" title="Ajouter $ au préfixe (ex. $1,234)">$</button>
+                <button class="btn btn-secondary btn-sm" data-currency="£" data-target="prefix" type="button" title="Ajouter £ au préfixe (ex. £1,234)">£</button>
+                <button class="btn btn-secondary btn-sm" data-currency="¥" data-target="prefix" type="button" title="Ajouter ¥ au préfixe (ex. ¥1,234)">¥</button>
+                <button class="btn btn-secondary btn-sm" data-currency=" CHF" data-target="suffix" type="button" title="Ajouter CHF au suffixe (ex. 1 234 CHF)">CHF</button>
+                <button class="btn btn-secondary btn-sm" id="btn-num-format-clear" type="button" title="Vider préfixe et suffixe">✕ Effacer</button>
+              </div>
+              <div class="tt-preview-box" style="margin-top:6px">
+                <span class="tt-preview-label">Aperçu</span>
+                <div id="num-format-preview" style="font-size:13px;font-weight:600"></div>
+              </div>
+            </div>
+
             <button class="btn btn-primary" id="btn-apply-data" style="width:100%" disabled>&#9654; Appliquer les données</button>
             <div id="cat-colors-wrap" style="display:none;margin-top:10px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -1554,6 +1609,14 @@ var _csvData      = null;  // {rows, cols}
 var _joinCol      = '';
 var _valueCol     = '';
 var _valueColLabel = ''; // libellé affiché en infobulle/tableau — vide = nom de colonne (_valueCol)
+// Format des nombres (js/32) — s'applique partout où une valeur est
+// affichée : infobulle, légende, tableau. Détail des presets/jetons dans
+// js/32-number-format.js.
+var _numFormatPreset = 'auto'; // auto|int|dec1|dec2|grouped|grouped2|percent|custom
+var _numFormatCustom = '';     // jeton personnalisé (ex. "0.[00]"), actif si preset==='custom'
+var _numLocale        = 'fr';  // fr|de|en|ch|auto — séparateurs décimal/milliers
+var _numPrefix         = '';
+var _numSuffix         = '';
 var _choroPalette = 'Blues';
 var _choroSteps   = 5;
 var _dataMap      = {};    // normalizedKey → valeur brute
@@ -3183,7 +3246,7 @@ function _showTooltip(e, feat) {
     var _ttKey = _getJoinKey(feat);
     var _ttVal = _ttKey !== undefined ? _dataMap[_ttKey] : undefined;
     if (_ttVal !== undefined) {
-      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueLabel()) + '</span><span class="tt-data-val">' + _escHtml(_ttVal) + '</span></div>';
+      html += '<div class="tt-row"><span class="tt-row-label">' + _escHtml(_valueLabel()) + '</span><span class="tt-data-val">' + _escHtml(_formatValue(_ttVal)) + '</span></div>';
     }
   }
 
@@ -3237,15 +3300,6 @@ function _hideTooltip() {
 //  LÉGENDE
 // ══════════════════════════════════════════════════════════════════
 
-// Arrondi des nombres affichés dans les légendes (choroplèthe + échelle des
-// flux) — 'auto' garde le formatage malin existant (entier si rond, sinon 1
-// décimale) ; sinon un nombre de décimales fixe choisi par l'utilisateur
-// (onglet Style) pour toutes les légendes numériques de la carte.
-var _legendDecimals = 'auto';
-function _legendFmtNum(v) {
-  if (_legendDecimals === 'auto') return _fmtChoroNum(v);
-  return parseFloat(v).toFixed(parseInt(_legendDecimals, 10)).toString().replace('.', ',');
-}
 
 function _updateLegend() {
   var el = document.getElementById('map-legend');
@@ -3280,9 +3334,9 @@ function _updateLegend() {
       var color = _choroColorAt(i);
       var lo  = _choroBreaks[i - 1];
       var hi  = _choroBreaks[i];
-      var lbl = (lo !== undefined ? '≥' + _legendFmtNum(lo) : '')
+      var lbl = (lo !== undefined ? '≥' + _formatValue(lo) : '')
               + (lo !== undefined && hi !== undefined ? ' — ' : '')
-              + (hi !== undefined ? '<' + _legendFmtNum(hi) : (lo !== undefined ? '+' : ''));
+              + (hi !== undefined ? '<' + _formatValue(hi) : (lo !== undefined ? '+' : ''));
       if (!lbl) lbl = '—';
       var item = document.createElement('span');
       item.className = 'leg-item';
@@ -3658,7 +3712,7 @@ function _ttContext(feat, h) {
     dept: h.dept || '', arrondissement: h.arrondissement || '', canton: h.canton || '',
     kreis: h.kreis || '', province: h.province || '', vg: h.vg || '',
     code: p.code || '',
-    valeur: val, colonne: _valueLabel() || '',
+    valeur: _formatValue(val), colonne: _valueLabel() || '',
     flag_pays: FLAG_PAYS[h.pays] || '',
     flag_region: FLAG_REGION[h.region] || '',
     chipLabel: _chipLabel(h),
@@ -3771,7 +3825,7 @@ function _openTableModal() {
     html += '<tr>';
     cols.forEach(function(c) {
       html += '<td style="padding:4px 9px;border-bottom:1px solid #f3f3f3">'
-            + _escHtml(r[c.k] === undefined ? '' : r[c.k]) + '</td>';
+            + _escHtml(r[c.k] === undefined ? '' : (c.k === 'valeur' ? _formatValue(r[c.k]) : r[c.k])) + '</td>';
     });
     html += '</tr>';
   });
@@ -4533,7 +4587,7 @@ function wireEvents() {
 
   // Repliables (toggle-X ↔ body-X)
   ['toggle-overlays', 'toggle-chefslieux', 'toggle-st-colors', 'toggle-st-strokes',
-   'toggle-st-choro', 'toggle-st-labels', 'toggle-st-tooltip'].forEach(function(id) {
+   'toggle-st-choro', 'toggle-st-labels', 'toggle-st-tooltip', 'toggle-num-format'].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('click', function() {
@@ -4665,8 +4719,6 @@ function wireEvents() {
     });
   });
 
-  var legendDecimalsSel = document.getElementById('legend-decimals');
-  if (legendDecimalsSel) legendDecimalsSel.addEventListener('change', function() { _legendDecimals = this.value; _updateLegend(); });
   var btnChoroColorReset = document.getElementById('btn-choro-color-reset');
   if (btnChoroColorReset) btnChoroColorReset.addEventListener('click', function() { _choroColorOverrides = {}; _repaintChoro(); });
 
@@ -4700,6 +4752,9 @@ function wireEvents() {
   document.querySelectorAll('.bloc-chip').forEach(function(btn) {
     btn.addEventListener('click', function() { _toggleBloc(btn.dataset.bloc); });
   });
+
+  // ── Format des nombres (js/32) ───────────────────────────────────
+  _wireNumFormat();
 
   // ── Bibliothèque de couches GeoJSON ─────────────────────────────
   _wireLibUpload();
@@ -5009,7 +5064,11 @@ function _serializeEmbedPayload() {
     tt: { imageMode: _ttImageMode, imageUrl: _ttImageUrl,
           htmlMode: _ttHtmlMode, htmlTpl: _ttHtmlTemplate,
           boxBg: _ttBoxBg || '', boxColor: _ttBoxColor || '',
-          valueCol: _valueCol || '', flagsPays: FLAG_PAYS, flagsRegion: FLAG_REGION },
+          valueCol: _valueCol || '', flagsPays: FLAG_PAYS, flagsRegion: FLAG_REGION,
+          // Format des nombres (js/32) — mêmes réglages que dans l'outil,
+          // pour que la carte publiée affiche les valeurs pareil qu'en aperçu.
+          numFmt: { preset: _numFormatPreset, custom: _numFormatCustom, locale: _numLocale,
+                    prefix: _numPrefix, suffix: _numSuffix } },
     center:     [center.lng, center.lat],
     zoom:       _map.getZoom(),
     bounds:     _getActiveBlocsBbox(),
@@ -5249,11 +5308,66 @@ function _generateEmbedHTML(payload) {
 '  var tt = document.getElementById("tt");',
 '  var hovered = null;',
 '  var TT = STATE.tt || {};',
+'  // Format des nombres (js/32-number-format.js côté outil) — version',
+'  // compacte, mêmes presets/jetons, pour que la carte publiée affiche',
+'  // les valeurs pareil qu\'en aperçu dans l\'outil.',
+'  var NUM_LOCALE_TAGS = {fr:"fr-FR",de:"de-DE",en:"en-US",ch:"de-CH"};',
+'  function embParseCustomNum(tpl){',
+'    var s = String(tpl||"").trim();',
+'    var percent = /%$/.test(s); if (percent) s = s.slice(0,-1);',
+'    var parens = /^\\(.*\\)$/.test(s); if (parens) s = s.slice(1,-1);',
+'    var forcePlus = /^\\+/.test(s); if (forcePlus) s = s.slice(1);',
+'    var noSign = /^\\|.*\\|$/.test(s); if (noSign) s = s.slice(1,-1);',
+'    var grouped = /^0[,;]0/.test(s); s = s.replace(/^0[,;]0/, "0");',
+'    var decimalMode = "auto", decimals = 0;',
+'    var mMax = /^0\\.\\[(0+)\\]$/.exec(s), mFixed = /^0\\.(0+)$/.exec(s);',
+'    if (mMax) { decimalMode = "max"; decimals = mMax[1].length; }',
+'    else if (mFixed) { decimalMode = "fixed"; decimals = mFixed[1].length; }',
+'    else if (/^0$/.test(s)) { decimalMode = "fixed"; decimals = 0; }',
+'    return {percent:percent, parens:parens, forcePlus:forcePlus, noSign:noSign, grouped:grouped, decimalMode:decimalMode, decimals:decimals};',
+'  }',
+'  function embApplyCustomNum(n, parsed, tag){',
+'    var negative = n < 0, abs = Math.abs(n);',
+'    var opts = {useGrouping: !!parsed.grouped};',
+'    if (parsed.decimalMode === "fixed") { opts.minimumFractionDigits = parsed.decimals; opts.maximumFractionDigits = parsed.decimals; }',
+'    else if (parsed.decimalMode === "max") { opts.maximumFractionDigits = parsed.decimals; }',
+'    else { opts.maximumFractionDigits = 2; }',
+'    var out = new Intl.NumberFormat(tag, opts).format(abs);',
+'    if (parsed.percent) out += "%";',
+'    if (negative && !parsed.noSign) out = parsed.parens ? "(" + out + ")" : "\\u2212" + out;',
+'    else if (!negative && parsed.forcePlus) out = "+" + out;',
+'    return out;',
+'  }',
+'  function embFmtNum(raw){',
+'    if (raw === undefined || raw === null || raw === "") return "";',
+'    var n = parseFloat(String(raw).trim().replace(",", "."));',
+'    if (isNaN(n)) return String(raw);',
+'    var nf = TT.numFmt || {}, preset = nf.preset || "auto";',
+'    var tag = (nf.locale && nf.locale !== "auto") ? (NUM_LOCALE_TAGS[nf.locale] || "fr-FR") : undefined;',
+'    var out;',
+'    if (preset === "custom" && nf.custom && String(nf.custom).trim()) {',
+'      out = embApplyCustomNum(n, embParseCustomNum(nf.custom), tag);',
+'    } else {',
+'      var opts = {useGrouping:false};',
+'      if (preset === "int") opts = {useGrouping:false, maximumFractionDigits:0};',
+'      else if (preset === "dec1") opts = {useGrouping:false, minimumFractionDigits:1, maximumFractionDigits:1};',
+'      else if (preset === "dec2") opts = {useGrouping:false, minimumFractionDigits:2, maximumFractionDigits:2};',
+'      else if (preset === "grouped") opts = {useGrouping:true, maximumFractionDigits:0};',
+'      else if (preset === "grouped2") opts = {useGrouping:true, minimumFractionDigits:2, maximumFractionDigits:2};',
+'      else if (preset === "percent") opts = {useGrouping:false, maximumFractionDigits:0};',
+'      else opts = {useGrouping:true, maximumFractionDigits:(Math.round(n) === n ? 0 : 1)};',
+'      out = new Intl.NumberFormat(tag, opts).format(n);',
+'      if (preset === "percent") out += "%";',
+'    }',
+'    if (nf.prefix) out = nf.prefix + out;',
+'    if (nf.suffix) out = out + nf.suffix;',
+'    return out;',
+'  }',
 '  function ttCtx(p){',
 '    var pays = (STATE.blocPays||{})[p.region] || p.pays || "";',
 '    return { name:p.name||p.NAME||"", region:STATE.blocLabels[p.region]||p.region||"",',
 '      pays:pays, code:p.code||"",',
-'      valeur:(p._dataVal===undefined||p._dataVal===null)?"":p._dataVal, colonne:TT.valueCol||"",',
+'      valeur:(p._dataVal===undefined||p._dataVal===null)?"":embFmtNum(p._dataVal), colonne:TT.valueCol||"",',
 '      flag_pays:(TT.flagsPays||{})[pays]||"", flag_region:(TT.flagsRegion||{})[p.region]||"" };',
 '  }',
 '  function rtpl(tpl, c, doEsc){',
@@ -7091,7 +7205,7 @@ function _appendFlowLegend(container) {
       '<svg width="28" height="14" style="flex:none;overflow:visible">' +
         '<line x1="2" y1="7" x2="26" y2="7" stroke="#555" stroke-width="' + w.toFixed(1) + '" stroke-linecap="round"/>' +
       '</svg>' +
-      '<span style="font-size:10px">' + _escHtml(_legendFmtNum(v)) + '</span>';
+      '<span style="font-size:10px">' + _escHtml(_fmtChoroNum(v)) + '</span>';
     container.appendChild(item);
   });
 }
@@ -8429,6 +8543,155 @@ function _loadDataSearchResult(r, btn) {
       btn.title = 'Échec du chargement — cliquer pour réessayer : ' + err.message;
       btn.disabled = false;
     });
+}
+//  FORMAT DES NOMBRES (onglet Données) — inspiré des options Datawrapper
+//  (arrondi/diviser/préfixer/ajouter, + jetons de format personnalisé) —
+//  un seul réglage, appliqué partout où une valeur CSV est affichée :
+//  infobulle ({{valeur}}, js/09 _ttContext), légende (js/08 _legendFmtNum)
+//  et tableau de données (js/09 _openTableModal). Ne concerne PAS les
+//  couches Bibliothèque, qui ont leur propre légende à l'échelle propre à
+//  chaque jeu de données importé (js/20 _fmtChoroNum, inchangé).
+// ══════════════════════════════════════════════════════════════════
+
+var NUM_LOCALE_TAGS = { fr: 'fr-FR', de: 'de-DE', en: 'en-US', ch: 'de-CH' };
+
+function _numLocaleTag() {
+  if (_numLocale === 'auto') return undefined; // langue du navigateur
+  return NUM_LOCALE_TAGS[_numLocale] || 'fr-FR';
+}
+
+// Jetons de format personnalisé (sous-ensemble de la syntaxe Datawrapper —
+// https://www.datawrapper.de/academy/custom-number-formats-that-you-can-display-in-datawrapper) :
+//   0.0 / 0.00…    décimales fixes         0.[0] / 0.[00]…  décimales max (zéros
+//   0,0             grouper les milliers     non significatifs retirés)
+//   0%              signe pourcentage        (0)   valeurs négatives entre parenthèses
+//   +0              signe + devant le positif  |0|  retire le signe moins
+function _parseCustomNumFormat(tpl) {
+  var s = String(tpl || '').trim();
+  var percent = /%$/.test(s); if (percent) s = s.slice(0, -1);
+  var parens = /^\(.*\)$/.test(s); if (parens) s = s.slice(1, -1);
+  var forcePlus = /^\+/.test(s); if (forcePlus) s = s.slice(1);
+  var noSign = /^\|.*\|$/.test(s); if (noSign) s = s.slice(1, -1);
+  var grouped = /^0[,;]0/.test(s);
+  s = s.replace(/^0[,;]0/, '0');
+  var decimalMode = 'auto', decimals = 0;
+  var mMax = /^0\.\[(0+)\]$/.exec(s);
+  var mFixed = /^0\.(0+)$/.exec(s);
+  if (mMax) { decimalMode = 'max'; decimals = mMax[1].length; }
+  else if (mFixed) { decimalMode = 'fixed'; decimals = mFixed[1].length; }
+  else if (/^0$/.test(s)) { decimalMode = 'fixed'; decimals = 0; }
+  return { percent: percent, parens: parens, forcePlus: forcePlus, noSign: noSign,
+           grouped: grouped, decimalMode: decimalMode, decimals: decimals };
+}
+
+// Formate un nombre déjà résolu (diviseur/preset appliqués par _formatValue)
+// selon un jeton personnalisé et une locale de sortie.
+function _applyCustomNumFormat(n, parsed, localeTag) {
+  var negative = n < 0;
+  var abs = Math.abs(n);
+  var opts = { useGrouping: !!parsed.grouped };
+  if (parsed.decimalMode === 'fixed') { opts.minimumFractionDigits = parsed.decimals; opts.maximumFractionDigits = parsed.decimals; }
+  else if (parsed.decimalMode === 'max') { opts.maximumFractionDigits = parsed.decimals; }
+  else { opts.maximumFractionDigits = 2; }
+  var out = new Intl.NumberFormat(localeTag, opts).format(abs);
+  if (parsed.percent) out += '%';
+  if (negative && !parsed.noSign) out = parsed.parens ? '(' + out + ')' : '−' + out;
+  else if (!negative && parsed.forcePlus) out = '+' + out;
+  return out;
+}
+
+// Point d'entrée unique — à appeler partout où une valeur CSV est affichée.
+// Texte non numérique (ex. « Parti vainqueur » en mode catégoriel) : rendu
+// tel quel, sans préfixe/suffixe (qui n'auraient pas de sens dessus).
+function _formatValue(raw) {
+  if (raw === undefined || raw === null || raw === '') return '';
+  var n = parseFloat(String(raw).trim().replace(',', '.'));
+  if (isNaN(n)) return String(raw);
+
+  var localeTag = _numLocaleTag();
+  var out;
+  if (_numFormatPreset === 'custom' && _numFormatCustom.trim()) {
+    out = _applyCustomNumFormat(n, _parseCustomNumFormat(_numFormatCustom), localeTag);
+  } else {
+    var opts = { useGrouping: false };
+    switch (_numFormatPreset) {
+      case 'int':      opts = { useGrouping: false, maximumFractionDigits: 0 }; break;
+      case 'dec1':      opts = { useGrouping: false, minimumFractionDigits: 1, maximumFractionDigits: 1 }; break;
+      case 'dec2':      opts = { useGrouping: false, minimumFractionDigits: 2, maximumFractionDigits: 2 }; break;
+      case 'grouped':   opts = { useGrouping: true,  maximumFractionDigits: 0 }; break;
+      case 'grouped2':  opts = { useGrouping: true,  minimumFractionDigits: 2, maximumFractionDigits: 2 }; break;
+      case 'percent':   opts = { useGrouping: false, maximumFractionDigits: 0 }; break;
+      default:          // auto — même logique que l'ancien _fmtChoroNum (js/20) :
+                         // entier si le nombre l'est déjà, sinon 1 décimale.
+        opts = { useGrouping: true, maximumFractionDigits: (Math.round(n) === n ? 0 : 1) };
+    }
+    out = new Intl.NumberFormat(localeTag, opts).format(n);
+    if (_numFormatPreset === 'percent') out += '%';
+  }
+
+  // Pas d'espace deviné automatiquement — l'auteur le tape lui-même dans
+  // le champ s'il le veut (ex. " €"), comme chez Datawrapper. Les boutons
+  // de devise (ci-dessous) insèrent déjà l'espacement d'usage.
+  if (_numPrefix) out = _numPrefix + out;
+  if (_numSuffix) out = out + _numSuffix;
+  return out;
+}
+
+// Aperçu en direct (panneau Données) — un nombre à décimales et un nombre
+// négatif, pour que l'effet des jetons (0), +0, |0| reste visible.
+function _numFormatPreviewText() {
+  return _formatValue(1234567.891) + '   /   ' + _formatValue(-42.5);
+}
+
+function _updateNumFormatPreview() {
+  var el = document.getElementById('num-format-preview');
+  if (el) el.textContent = _numFormatPreviewText();
+}
+
+// Un seul point de rafraîchissement après tout changement de réglage —
+// touche les trois endroits où une valeur formatée s'affiche (infobulle,
+// légende) plus l'aperçu du panneau lui-même ; le tableau (js/09
+// _openTableModal) se recalcule de lui-même à la prochaine ouverture.
+function _refreshNumFormat() {
+  _updateNumFormatPreview();
+  _refreshTooltip();
+  _updateLegend();
+}
+
+function _wireNumFormat() {
+  var presetSel  = document.getElementById('num-format-preset');
+  var customWrap = document.getElementById('num-format-custom-wrap');
+  var customInp  = document.getElementById('num-format-custom');
+  var localeSel  = document.getElementById('num-format-locale');
+  var prefixInp  = document.getElementById('num-format-prefix');
+  var suffixInp  = document.getElementById('num-format-suffix');
+  if (!presetSel) return;
+
+  presetSel.addEventListener('change', function() {
+    _numFormatPreset = this.value;
+    customWrap.style.display = (this.value === 'custom') ? 'block' : 'none';
+    _refreshNumFormat();
+  });
+  customInp.addEventListener('input', function() { _numFormatCustom = this.value; _refreshNumFormat(); });
+  localeSel.addEventListener('change', function() { _numLocale = this.value; _refreshNumFormat(); });
+  prefixInp.addEventListener('input', function() { _numPrefix = this.value; _refreshNumFormat(); });
+  suffixInp.addEventListener('input', function() { _numSuffix = this.value; _refreshNumFormat(); });
+
+  document.querySelectorAll('[data-currency]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var field = (btn.dataset.target === 'prefix') ? prefixInp : suffixInp;
+      field.value = btn.dataset.currency;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  });
+  var clearBtn = document.getElementById('btn-num-format-clear');
+  if (clearBtn) clearBtn.addEventListener('click', function() {
+    prefixInp.value = ''; suffixInp.value = '';
+    _numPrefix = ''; _numSuffix = '';
+    _refreshNumFormat();
+  });
+
+  _updateNumFormatPreview();
 }
 </script>
 </body>

@@ -1,15 +1,6 @@
 //  LÉGENDE
 // ══════════════════════════════════════════════════════════════════
 
-// Arrondi des nombres affichés dans les légendes (choroplèthe + échelle des
-// flux) — 'auto' garde le formatage malin existant (entier si rond, sinon 1
-// décimale) ; sinon un nombre de décimales fixe choisi par l'utilisateur
-// (onglet Style) pour toutes les légendes numériques de la carte.
-var _legendDecimals = 'auto';
-function _legendFmtNum(v) {
-  if (_legendDecimals === 'auto') return _fmtChoroNum(v);
-  return parseFloat(v).toFixed(parseInt(_legendDecimals, 10)).toString().replace('.', ',');
-}
 
 function _updateLegend() {
   var el = document.getElementById('map-legend');
@@ -44,9 +35,9 @@ function _updateLegend() {
       var color = _choroColorAt(i);
       var lo  = _choroBreaks[i - 1];
       var hi  = _choroBreaks[i];
-      var lbl = (lo !== undefined ? '≥' + _legendFmtNum(lo) : '')
+      var lbl = (lo !== undefined ? '≥' + _formatValue(lo) : '')
               + (lo !== undefined && hi !== undefined ? ' — ' : '')
-              + (hi !== undefined ? '<' + _legendFmtNum(hi) : (lo !== undefined ? '+' : ''));
+              + (hi !== undefined ? '<' + _formatValue(hi) : (lo !== undefined ? '+' : ''));
       if (!lbl) lbl = '—';
       var item = document.createElement('span');
       item.className = 'leg-item';

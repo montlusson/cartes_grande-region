@@ -239,6 +239,14 @@ var _csvData      = null;  // {rows, cols}
 var _joinCol      = '';
 var _valueCol     = '';
 var _valueColLabel = ''; // libellé affiché en infobulle/tableau — vide = nom de colonne (_valueCol)
+// Format des nombres (js/32) — s'applique partout où une valeur est
+// affichée : infobulle, légende, tableau. Détail des presets/jetons dans
+// js/32-number-format.js.
+var _numFormatPreset = 'auto'; // auto|int|dec1|dec2|grouped|grouped2|percent|custom
+var _numFormatCustom = '';     // jeton personnalisé (ex. "0.[00]"), actif si preset==='custom'
+var _numLocale        = 'fr';  // fr|de|en|ch|auto — séparateurs décimal/milliers
+var _numPrefix         = '';
+var _numSuffix         = '';
 var _choroPalette = 'Blues';
 var _choroSteps   = 5;
 var _dataMap      = {};    // normalizedKey → valeur brute

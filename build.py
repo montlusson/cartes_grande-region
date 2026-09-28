@@ -58,6 +58,7 @@ JS_MODULES = [
     "js/29-tt-editor-widgets.js",
     "js/30-library-paste-geojson.js",
     "js/31-data-tab-search.js",
+    "js/32-number-format.js",
 ]
 
 
