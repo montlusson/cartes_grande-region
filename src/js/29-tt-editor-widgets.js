@@ -80,6 +80,9 @@ function _ttGlobalPreviewContext() {
     dept: 'Moselle', arrondissement: 'Metz', canton: '', kreis: '', province: '', vg: '',
     code: '57463', valeur: '42', colonne: _valueLabel() || 'Valeur',
     flag_pays: FLAG_PAYS['France'] || '', flag_region: FLAG_REGION[region] || '',
-    chipLabel: 'Lorraine', chipColor: BLOC_COLORS[region] || '#a6d49f'
+    chipLabel: 'Lorraine', chipColor: BLOC_COLORS[region] || '#a6d49f',
+    // Alias layerName/layerColor (vocabulaire Bibliothèque, js/28) : un
+    // modèle copié depuis l'onglet Bibliothèque se prévisualise ici aussi.
+    layerName: 'Lorraine', layerColor: BLOC_COLORS[region] || '#a6d49f'
   };
 }

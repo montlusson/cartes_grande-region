@@ -33,8 +33,11 @@ function _showLibraryTooltip(e, feat, layer) {
   if (layer.ttCustom && layer.ttTemplate && layer.ttTemplate.trim()) {
     // Modèle propre à CETTE couche (js/28-library-tooltip-custom.js) —
     // toutes les propriétés brutes de la feature sont exposées telles
-    // quelles comme variables, plus layerName/layerColor.
-    var ctx = Object.assign({}, p, { layerName: layer.name, layerColor: layer.color });
+    // quelles comme variables, plus layerName/layerColor/chipColor/
+    // chipLabel/name (_libraryTplContext, js/28) : les mêmes noms que le
+    // modèle global (js/09 _ttContext), pour qu'un modèle copié entre les
+    // deux onglets fonctionne sans adaptation.
+    var ctx = _libraryTplContext(layer, p);
     html = _renderTpl(layer.ttTemplate, ctx, true);
   } else {
     html = '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' +

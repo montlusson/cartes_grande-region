@@ -46,16 +46,30 @@ function _libraryDefaultTtTemplate(layer) {
   return lines.join('\n');
 }
 
+// Contexte d'un modèle Bibliothèque (réel ou aperçu) : les propriétés
+// brutes de la feature, plus layerName/layerColor — ET les mêmes alias
+// chipColor/chipLabel/name que le modèle GLOBAL (js/09 _ttContext), pour
+// qu'un modèle copié depuis l'onglet Style > Infobulle fonctionne tel quel
+// ici (et inversement) sans que l'auteur réapprenne un autre vocabulaire de
+// variables selon l'endroit où il colle son HTML.
+function _libraryTplContext(layer, props) {
+  var ctx = Object.assign({}, props, { layerName: layer.name, layerColor: layer.color });
+  ctx.chipLabel = layer.name;
+  ctx.chipColor = layer.color;
+  if (ctx.name === undefined) ctx.name = _guessFeatureTitle(props) || layer.name;
+  return ctx;
+}
+
 // Contexte d'aperçu (js/29) : la première entité réelle de la couche — un
 // exemple générique n'aurait aucun sens ici, le schéma de champs étant
 // propre à chaque jeu de données importé.
 function _libraryPreviewContext(layer) {
-  var props = ((layer.geojson.features || [])[0] || {}).properties || {};
-  var ctx = { layerName: layer.name, layerColor: layer.color };
-  Object.keys(props).forEach(function(k) {
-    ctx[k] = (props[k] !== null && props[k] !== undefined) ? String(props[k]) : '';
+  var rawProps = ((layer.geojson.features || [])[0] || {}).properties || {};
+  var props = {};
+  Object.keys(rawProps).forEach(function(k) {
+    props[k] = (rawProps[k] !== null && rawProps[k] !== undefined) ? String(rawProps[k]) : '';
   });
-  return ctx;
+  return _libraryTplContext(layer, props);
 }
 
 function _appendLibTooltipEditor(layer, list, px) {

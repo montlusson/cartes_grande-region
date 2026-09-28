@@ -297,6 +297,7 @@ function _ttContext(feat, h) {
     chipLabel: _chipLabel(h),
     chipColor: BLOC_COLORS[h.region] || '#888'
   };
+  ctx.layerName = ctx.chipLabel; ctx.layerColor = ctx.chipColor; // vocabulaire Bibliothèque (js/28) — modèle interchangeable entre les deux onglets
   // Exposer toutes les colonnes CSV de la ligne jointe (noms avec espaces inclus)
   if (k !== undefined && _rowMap[k]) {
     var _row = _rowMap[k];

@@ -3563,6 +3563,7 @@ function _ttContext(feat, h) {
     chipLabel: _chipLabel(h),
     chipColor: BLOC_COLORS[h.region] || '#888'
   };
+  ctx.layerName = ctx.chipLabel; ctx.layerColor = ctx.chipColor; // vocabulaire Bibliothèque (js/28) — modèle interchangeable entre les deux onglets
   // Exposer toutes les colonnes CSV de la ligne jointe (noms avec espaces inclus)
   if (k !== undefined && _rowMap[k]) {
     var _row = _rowMap[k];
@@ -6412,8 +6413,11 @@ function _showLibraryTooltip(e, feat, layer) {
   if (layer.ttCustom && layer.ttTemplate && layer.ttTemplate.trim()) {
     // Modèle propre à CETTE couche (js/28-library-tooltip-custom.js) —
     // toutes les propriétés brutes de la feature sont exposées telles
-    // quelles comme variables, plus layerName/layerColor.
-    var ctx = Object.assign({}, p, { layerName: layer.name, layerColor: layer.color });
+    // quelles comme variables, plus layerName/layerColor/chipColor/
+    // chipLabel/name (_libraryTplContext, js/28) : les mêmes noms que le
+    // modèle global (js/09 _ttContext), pour qu'un modèle copié entre les
+    // deux onglets fonctionne sans adaptation.
+    var ctx = _libraryTplContext(layer, p);
     html = _renderTpl(layer.ttTemplate, ctx, true);
   } else {
     html = '<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:' +
@@ -7912,16 +7916,30 @@ function _libraryDefaultTtTemplate(layer) {
   return lines.join('\n');
 }
 
+// Contexte d'un modèle Bibliothèque (réel ou aperçu) : les propriétés
+// brutes de la feature, plus layerName/layerColor — ET les mêmes alias
+// chipColor/chipLabel/name que le modèle GLOBAL (js/09 _ttContext), pour
+// qu'un modèle copié depuis l'onglet Style > Infobulle fonctionne tel quel
+// ici (et inversement) sans que l'auteur réapprenne un autre vocabulaire de
+// variables selon l'endroit où il colle son HTML.
+function _libraryTplContext(layer, props) {
+  var ctx = Object.assign({}, props, { layerName: layer.name, layerColor: layer.color });
+  ctx.chipLabel = layer.name;
+  ctx.chipColor = layer.color;
+  if (ctx.name === undefined) ctx.name = _guessFeatureTitle(props) || layer.name;
+  return ctx;
+}
+
 // Contexte d'aperçu (js/29) : la première entité réelle de la couche — un
 // exemple générique n'aurait aucun sens ici, le schéma de champs étant
 // propre à chaque jeu de données importé.
 function _libraryPreviewContext(layer) {
-  var props = ((layer.geojson.features || [])[0] || {}).properties || {};
-  var ctx = { layerName: layer.name, layerColor: layer.color };
-  Object.keys(props).forEach(function(k) {
-    ctx[k] = (props[k] !== null && props[k] !== undefined) ? String(props[k]) : '';
+  var rawProps = ((layer.geojson.features || [])[0] || {}).properties || {};
+  var props = {};
+  Object.keys(rawProps).forEach(function(k) {
+    props[k] = (rawProps[k] !== null && rawProps[k] !== undefined) ? String(rawProps[k]) : '';
   });
-  return ctx;
+  return _libraryTplContext(layer, props);
 }
 
 function _appendLibTooltipEditor(layer, list, px) {
@@ -8098,7 +8116,10 @@ function _ttGlobalPreviewContext() {
     dept: 'Moselle', arrondissement: 'Metz', canton: '', kreis: '', province: '', vg: '',
     code: '57463', valeur: '42', colonne: _valueLabel() || 'Valeur',
     flag_pays: FLAG_PAYS['France'] || '', flag_region: FLAG_REGION[region] || '',
-    chipLabel: 'Lorraine', chipColor: BLOC_COLORS[region] || '#a6d49f'
+    chipLabel: 'Lorraine', chipColor: BLOC_COLORS[region] || '#a6d49f',
+    // Alias layerName/layerColor (vocabulaire Bibliothèque, js/28) : un
+    // modèle copié depuis l'onglet Bibliothèque se prévisualise ici aussi.
+    layerName: 'Lorraine', layerColor: BLOC_COLORS[region] || '#a6d49f'
   };
 }
 </script>
