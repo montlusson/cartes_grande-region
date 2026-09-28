@@ -2853,9 +2853,26 @@ function _valueLabel() {
 
 function applyData() {
   if (!_csvData || !_joinCol || !_valueCol) return;
-  _dataMap = {}; _rowMap = {};
   var el = document.getElementById('join-type');
   var jt = el ? el.value : 'name';
+  // "Type d'identifiant" n'offre QUE des identifiants de commune (nom, ou
+  // code par pays) ou "Région/Bloc" — jamais canton/arrondissement/Kreis,
+  // qui n'ont pas d'option dédiée. "communes" est donc la SEULE couche
+  // valide pour toute jointure jt !== 'region' ; la charger d'abord (avant
+  // même de compter les correspondances) évite de se rabattre par erreur
+  // sur une couche de granularité différente déjà en cache pour une autre
+  // raison (ex. cantons du Luxembourg, dont plusieurs portent le même nom
+  // que leur commune-centre — un « bon » nombre de correspondances
+  // trompeur, sans rapport avec la vraie jointure communale voulue).
+  if (jt !== 'region' && !_cache['communes'] && !_autoJoinBusy) {
+    _autoJoinBusy = true;
+    setStatus('… Chargement de la couche communes pour la jointure');
+    _ensureLayer('communes').then(function() { _autoJoinBusy = false; applyData(); })
+      .catch(function(e) { _autoJoinBusy = false; setStatus('Erreur de chargement : ' + e); });
+    return;
+  }
+  _autoJoinBusy = false;
+  _dataMap = {}; _rowMap = {};
   _csvData.rows.forEach(function(row) {
     var keyRaw = row[_joinCol] || '';
     var key = (jt === 'name' || jt === 'region') ? _normStr(keyRaw) : keyRaw;
@@ -2884,16 +2901,10 @@ function applyData() {
     }
   });
   // Rien ne se joint ? Diagnostiquer et assister plutôt que peindre en gris.
+  // ("communes" est déjà garantie chargée à ce stade pour jt !== 'region',
+  // cf. le chargement anticipé en tête de fonction.)
   if (total > 0 && matched === 0 && jt !== 'region') {
-    // a) Couche communes pas encore chargée → la charger puis réessayer.
-    if (!_cache['communes'] && !_autoJoinBusy) {
-      _autoJoinBusy = true;
-      setStatus('… Chargement de la couche communes pour la jointure');
-      _ensureLayer('communes').then(function() { applyData(); })
-        .catch(function(e) { _autoJoinBusy = false; setStatus('Erreur de chargement : ' + e); });
-      return;
-    }
-    // b) La colonne de jointure ressemble à des valeurs, pas à des identifiants.
+    // La colonne de jointure ressemble à des valeurs, pas à des identifiants.
     var nNum = 0, nTot = 0;
     _csvData.rows.forEach(function(r) {
       var kk = r[_joinCol];
@@ -2913,7 +2924,6 @@ function applyData() {
     _repaintChoro(); _updateLegend();
     return;
   }
-  _autoJoinBusy = false;
 
   // Détection : colonne majoritairement non numérique → mode catégoriel.
   // (Sur les lignes jointes si possible, sinon sur tout le fichier.)
@@ -2934,30 +2944,17 @@ function applyData() {
     _buildChoroScale(matchedVals.length ? matchedVals : null);
   }
 
-  // La couche affichée ne montre aucune donnée jointe ? Basculer
-  // automatiquement vers la couche où les lignes se joignent le mieux.
-  if (matched > 0 && jt !== 'region') {
-    var countIn = function(id) {
-      var n = 0;
-      (((_cache[id] || {}).features) || []).forEach(function(f) {
-        var k2 = _getJoinKey(f);
-        if (k2 && _dataMap[k2] !== undefined) n++;
-      });
-      return n;
-    };
-    var curN = (_fillLayer !== 'blocs' && _fillLayer !== 'none') ? countIn(_fillLayer) : 0;
-    if (!curN) {
-      var bestId = null, bestN = 0;
-      Object.keys(_cache).forEach(function(id) {
-        var n3 = countIn(id);
-        if (n3 > bestN) { bestN = n3; bestId = id; }
-      });
-      if (bestId && bestId !== _fillLayer) {
-        _fillLayer = bestId;
-        var fsel = document.getElementById('fill-layer-sel');
-        if (fsel) fsel.value = bestId;
-      }
-    }
+  // Bascule automatiquement sur "communes" pour afficher la jointure —
+  // c'est la SEULE couche valide pour jt !== 'region' (cf. plus haut) : pas
+  // de comparaison à faire entre plusieurs couches candidates, contrairement
+  // à l'ancienne logique qui pouvait se caler par erreur sur une couche
+  // d'une autre granularité (cantons, Kreise…) déjà en cache pour une
+  // raison sans rapport, simplement parce qu'elle matchait par coïncidence
+  // quelques noms.
+  if (matched > 0 && jt !== 'region' && _fillLayer !== 'communes') {
+    _fillLayer = 'communes';
+    var fsel = document.getElementById('fill-layer-sel');
+    if (fsel) fsel.value = 'communes';
   }
   _repaintChoro();
   _renderCatColorUI();
