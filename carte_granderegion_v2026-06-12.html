@@ -1029,6 +1029,24 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
         <!-- TAB: DONNÉES -->
         <div class="tab-pane" id="tab-data">
           <div class="section" style="padding-top:10px">
+            <div class="section-title">Recherche en direct</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Interroge en direct Open Data Luxembourg (data.public.lu) — pour trouver un
+              fichier à joindre sans avoir à le chercher/télécharger soi-même. Seuls les
+              résultats en CSV (directement exploitables ci-dessous) proposent « + Charger » ;
+              les autres formats (GeoJSON, KML, PDF…) sont à ajouter comme couche depuis
+              l'onglet Bib. à la place.
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <input type="text" id="data-search-input" class="full" placeholder="Ex : chômage, population, logement…" style="flex:1">
+              <button class="btn btn-secondary" id="btn-data-search">Rechercher</button>
+            </div>
+            <div id="data-search-results"></div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="section">
             <div class="field">
               <label>CSV — coller ou télécharger</label>
               <textarea id="csv-input" rows="7" placeholder="nom_commune,valeur&#10;Metz,42&#10;Trèves,35&#10;..."></textarea>
@@ -1090,8 +1108,9 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
               Interroge en direct les géocatalogues GIS-GR, Géoportail Luxembourg, Open Data
               Luxembourg (data.public.lu) et STATEC/LUSTAT — pour trouver un jeu de données
               absent du catalogue ci-dessous. Seuls les résultats en GeoJSON (directement
-              intégrables comme couche) proposent « + Ajouter » ; les autres formats
-              (CSV, KML, PDF…) ne sont pas affichés.
+              intégrables comme couche) proposent « + Ajouter » ; les CSV se cherchent
+              plutôt depuis l'onglet Données (jointure par nom/code), les autres formats
+              (KML, PDF…) ne sont pas affichés.
             </div>
             <div style="display:flex;gap:6px;margin-bottom:8px">
               <input type="text" id="catalog-search-input" class="full" placeholder="Ex : pistes cyclables, chômage, écoles…" style="flex:1">
@@ -4655,6 +4674,7 @@ function wireEvents() {
   // ── Bibliothèque de couches GeoJSON ─────────────────────────────
   _wireLibUpload();
   _wireLibPaste();
+  _wireDataTabSearch();
 
   // Copier le code
   var copyBtn = document.getElementById('btn-copy-embed');
@@ -7458,6 +7478,44 @@ function _searchGeoCatalogs(query) {
   return Promise.all(jobs).then(function(lists) { return [].concat.apply([], lists); });
 }
 
+// ── Open Data Luxembourg — ressources TABULAIRES (onglet Données) ───
+// Même portail que _searchOpenDataLu ci-dessus, mais on y cherche cette
+// fois des ressources CSV plutôt que GeoJSON — directement exploitables
+// comme un collage manuel dans #csv-input (jointure par nom/code + une
+// colonne de valeur), pas comme couche cartographique.
+function _searchOpenDataLuTabular(query) {
+  var url = OPENDATA_LU_SEARCH_URL + '?q=' + encodeURIComponent(query) + '&page_size=20';
+  return fetch(url, { headers: { 'Accept': 'application/json' } })
+    .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
+    .then(function(data) {
+      var out = [];
+      (data.data || []).forEach(function(ds) {
+        (ds.resources || []).forEach(function(res) {
+          if (res.format !== 'csv') return;
+          var link = res.latest || res.url;
+          if (!link) return;
+          var label = ds.title;
+          if (res.title && res.title !== ds.title) label += ' — ' + res.title;
+          var dateMs = Date.parse(res.last_modified || ds.last_modified || 0);
+          out.push({ source: 'opendata-lu', sourceLabel: 'Open Data Luxembourg', title: label, kind: 'csv', url: link, dateMs: isNaN(dateMs) ? 0 : dateMs });
+        });
+      });
+      return out.slice(0, 25);
+    })
+    .catch(function() { return []; });
+}
+
+// Recherche combinée pour l'onglet Données — CSV Open Data Luxembourg
+// uniquement pour l'instant : GIS-GR/Géoportail LU sont des catalogues
+// géographiques purs (pas d'export tabulaire indépendant de la géométrie),
+// et STATEC/LUSTAT (une ligne par période, pas par commune/entité) n'est
+// pas joignable comme choroplèthe — déjà correctement isolé côté
+// Bibliothèque (js/25 _appendStatecSearchResult, "voir/télécharger" sans
+// "+ Charger") ; pas de raison de dupliquer un résultat non exploitable ici.
+function _searchTabularCatalogs(query) {
+  return _searchOpenDataLuTabular(query);
+}
+
 // ── STATEC / LUSTAT (Open Data statistique) ─────────────────────────
 // Séries temporelles nationales (une ligne par période, pas par commune) —
 // PAS directement joignables sur les limites de l'outil comme une
@@ -8226,6 +8284,94 @@ function _wireLibPaste() {
     _libPaletteIdx++;
     input.value = '';
   });
+}
+//  DONNÉES — RECHERCHE EN DIRECT DE FICHIERS TABULAIRES
+//  Pendant, pour l'onglet Données, de la recherche en direct de l'onglet
+//  Bibliothèque (js/24 _searchTabularCatalogs, js/25 pour l'équivalent
+//  géographique) — ne montre que des formats que #csv-input sait avaler
+//  tel quel (CSV), pour que chaque résultat affiché soit réellement
+//  utilisable en un clic, comme pour la recherche géographique.
+// ══════════════════════════════════════════════════════════════════
+
+function _wireDataTabSearch() {
+  var btn = document.getElementById('btn-data-search');
+  var input = document.getElementById('data-search-input');
+  if (!btn || !input) return;
+  function run() {
+    var q = input.value.trim();
+    if (!q) return;
+    _runDataTabSearch(q);
+  }
+  btn.addEventListener('click', run);
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') run(); });
+}
+
+function _runDataTabSearch(query) {
+  var box = document.getElementById('data-search-results');
+  if (!box) return;
+  box.innerHTML = '<div style="font-size:10.5px;color:var(--muted);padding:6px 2px">Recherche dans Open Data Luxembourg…</div>';
+
+  _searchTabularCatalogs(query).then(function(results) {
+    box.innerHTML = '';
+    if (!results.length) {
+      box.innerHTML = '<div style="font-size:10.5px;color:var(--muted);padding:6px 2px">Aucun CSV trouvé pour « ' + _escHtml(query) + ' ».</div>';
+      return;
+    }
+    results.sort(function(a, b) { return (b.dateMs || 0) - (a.dateMs || 0); });
+    results.forEach(function(r) { _appendDataSearchResult(r, box); });
+  }).catch(function(e) {
+    box.innerHTML = '<div style="font-size:10.5px;color:var(--accent-red)">✗ Échec de la recherche : ' + _escHtml(e.message || e) + '</div>';
+  });
+}
+
+function _appendDataSearchResult(r, box) {
+  var row = document.createElement('div');
+  row.className = 'terr-layer-row';
+  row.style.alignItems = 'center';
+  var span = document.createElement('span');
+  span.style.cssText = 'flex:1;padding-right:8px;line-height:1.35';
+  var dateStr = _fmtResultDate(r.dateMs);
+  span.innerHTML = _escHtml(r.title) + ' <span class="lib-badge">' + _escHtml(r.sourceLabel) + '</span>'
+    + (dateStr ? ' <span class="lib-badge" title="Date de la ressource">' + _escHtml(dateStr) + '</span>' : '');
+
+  var dl = document.createElement('a');
+  dl.className = 'btn btn-secondary btn-sm';
+  dl.textContent = '⬇';
+  dl.title = 'Télécharger le CSV';
+  dl.href = r.url; dl.target = '_blank'; dl.rel = 'noopener noreferrer';
+
+  var btn = document.createElement('button');
+  btn.className = 'btn btn-secondary btn-sm';
+  btn.textContent = '+ Charger';
+  btn.title = 'Charger ce CSV dans le champ ci-dessus (colonne de jointure et valeur à choisir ensuite)';
+  btn.addEventListener('click', function() { _loadDataSearchResult(r, btn); });
+
+  row.appendChild(span);
+  row.appendChild(dl);
+  row.appendChild(btn);
+  box.appendChild(row);
+}
+
+function _loadDataSearchResult(r, btn) {
+  btn.disabled = true;
+  btn.textContent = '…';
+  setStatus('Récupération de « ' + r.title + ' »…');
+  fetch(r.url)
+    .then(function(resp) { return resp.ok ? resp.text() : Promise.reject(new Error('HTTP ' + resp.status)); })
+    .then(function(text) {
+      document.getElementById('csv-input').value = text;
+      loadCSV();
+      btn.textContent = '✓ Chargé';
+      setStatus('✓ « ' + r.title + ' » chargé — choisissez la colonne de jointure et la valeur à cartographier ci-dessus.');
+      document.getElementById('csv-input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(function() { btn.textContent = '+ Charger'; btn.disabled = false; }, 1800);
+    })
+    .catch(function(err) {
+      setStatus('✗ « ' + r.title + ' » : échec du chargement (' + err.message + ')');
+      btn.textContent = '✗ Échec';
+      btn.title = 'Échec du chargement — cliquer pour réessayer : ' + err.message;
+      btn.disabled = false;
+    });
 }
 </script>
 </body>

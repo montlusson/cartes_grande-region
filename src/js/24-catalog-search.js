@@ -115,6 +115,44 @@ function _searchGeoCatalogs(query) {
   return Promise.all(jobs).then(function(lists) { return [].concat.apply([], lists); });
 }
 
+// ── Open Data Luxembourg — ressources TABULAIRES (onglet Données) ───
+// Même portail que _searchOpenDataLu ci-dessus, mais on y cherche cette
+// fois des ressources CSV plutôt que GeoJSON — directement exploitables
+// comme un collage manuel dans #csv-input (jointure par nom/code + une
+// colonne de valeur), pas comme couche cartographique.
+function _searchOpenDataLuTabular(query) {
+  var url = OPENDATA_LU_SEARCH_URL + '?q=' + encodeURIComponent(query) + '&page_size=20';
+  return fetch(url, { headers: { 'Accept': 'application/json' } })
+    .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
+    .then(function(data) {
+      var out = [];
+      (data.data || []).forEach(function(ds) {
+        (ds.resources || []).forEach(function(res) {
+          if (res.format !== 'csv') return;
+          var link = res.latest || res.url;
+          if (!link) return;
+          var label = ds.title;
+          if (res.title && res.title !== ds.title) label += ' — ' + res.title;
+          var dateMs = Date.parse(res.last_modified || ds.last_modified || 0);
+          out.push({ source: 'opendata-lu', sourceLabel: 'Open Data Luxembourg', title: label, kind: 'csv', url: link, dateMs: isNaN(dateMs) ? 0 : dateMs });
+        });
+      });
+      return out.slice(0, 25);
+    })
+    .catch(function() { return []; });
+}
+
+// Recherche combinée pour l'onglet Données — CSV Open Data Luxembourg
+// uniquement pour l'instant : GIS-GR/Géoportail LU sont des catalogues
+// géographiques purs (pas d'export tabulaire indépendant de la géométrie),
+// et STATEC/LUSTAT (une ligne par période, pas par commune/entité) n'est
+// pas joignable comme choroplèthe — déjà correctement isolé côté
+// Bibliothèque (js/25 _appendStatecSearchResult, "voir/télécharger" sans
+// "+ Charger") ; pas de raison de dupliquer un résultat non exploitable ici.
+function _searchTabularCatalogs(query) {
+  return _searchOpenDataLuTabular(query);
+}
+
 // ── STATEC / LUSTAT (Open Data statistique) ─────────────────────────
 // Séries temporelles nationales (une ligne par période, pas par commune) —
 // PAS directement joignables sur les limites de l'outil comme une

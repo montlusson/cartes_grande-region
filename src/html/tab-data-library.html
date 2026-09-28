@@ -2,6 +2,24 @@
         <!-- TAB: DONNÉES -->
         <div class="tab-pane" id="tab-data">
           <div class="section" style="padding-top:10px">
+            <div class="section-title">Recherche en direct</div>
+            <div style="font-size:10px;color:var(--muted);margin:3px 0 10px;line-height:1.5">
+              Interroge en direct Open Data Luxembourg (data.public.lu) — pour trouver un
+              fichier à joindre sans avoir à le chercher/télécharger soi-même. Seuls les
+              résultats en CSV (directement exploitables ci-dessous) proposent « + Charger » ;
+              les autres formats (GeoJSON, KML, PDF…) sont à ajouter comme couche depuis
+              l'onglet Bib. à la place.
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <input type="text" id="data-search-input" class="full" placeholder="Ex : chômage, population, logement…" style="flex:1">
+              <button class="btn btn-secondary" id="btn-data-search">Rechercher</button>
+            </div>
+            <div id="data-search-results"></div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="section">
             <div class="field">
               <label>CSV — coller ou télécharger</label>
               <textarea id="csv-input" rows="7" placeholder="nom_commune,valeur&#10;Metz,42&#10;Trèves,35&#10;..."></textarea>
@@ -63,8 +81,9 @@
               Interroge en direct les géocatalogues GIS-GR, Géoportail Luxembourg, Open Data
               Luxembourg (data.public.lu) et STATEC/LUSTAT — pour trouver un jeu de données
               absent du catalogue ci-dessous. Seuls les résultats en GeoJSON (directement
-              intégrables comme couche) proposent « + Ajouter » ; les autres formats
-              (CSV, KML, PDF…) ne sont pas affichés.
+              intégrables comme couche) proposent « + Ajouter » ; les CSV se cherchent
+              plutôt depuis l'onglet Données (jointure par nom/code), les autres formats
+              (KML, PDF…) ne sont pas affichés.
             </div>
             <div style="display:flex;gap:6px;margin-bottom:8px">
               <input type="text" id="catalog-search-input" class="full" placeholder="Ex : pistes cyclables, chômage, écoles…" style="flex:1">
