@@ -8212,10 +8212,19 @@ function _detectAllFields(geojson) {
 }
 
 // Titre par défaut d'une feature sans modèle personnalisé : la clé "name"
-// n'existe pas toujours (ex. jeux de données GIS-GR/Géoportail en majuscules
-// ou dans une autre langue) — repli sur les variantes courantes, puis sur la
+// n'existe pas toujours (ex. jeux de données GIS-GR/Géoportail en majuscules,
+// ou trilingues avec fr_name/de_name/en_name au lieu d'une seule clé "name")
+// — repli sur les variantes courantes (le français d'abord), puis sur la
 // première propriété textuelle non vide plutôt que de n'afficher aucun titre.
-var _TITLE_KEY_GUESSES = ['name', 'NAME', 'Name', 'nom', 'NOM', 'Nom', 'title', 'TITLE', 'Title', 'label', 'LABEL', 'libelle', 'LIBELLE'];
+var _TITLE_KEY_GUESSES = [
+  'name', 'NAME', 'Name', 'nom', 'NOM', 'Nom',
+  'fr_name', 'fr_nom', 'name_fr', 'nom_fr', 'de_name', 'en_name',
+  'title', 'TITLE', 'Title', 'label', 'LABEL', 'libelle', 'LIBELLE'
+];
+// Jamais un bon titre pour UNE feature — un classificateur de territoire,
+// pas un nom propre (ex. "Region": "Saarland" sur un site touristique
+// devenait le titre affiché faute de mieux, avant cette exclusion).
+var _TITLE_FALLBACK_EXCLUDE_RE = /^(region|r.gion|pays|land|country|territoire|bloc)$/i;
 function _guessFeatureTitle(props) {
   for (var i = 0; i < _TITLE_KEY_GUESSES.length; i++) {
     var v = props[_TITLE_KEY_GUESSES[i]];
@@ -8224,9 +8233,31 @@ function _guessFeatureTitle(props) {
   var keys = Object.keys(props);
   for (var j = 0; j < keys.length; j++) {
     var v2 = props[keys[j]];
-    if (typeof v2 === 'string' && v2.trim() && !_LIB_FIELD_EXCLUDE_RE.test(keys[j])) return v2;
+    if (typeof v2 === 'string' && v2.trim() && !_LIB_FIELD_EXCLUDE_RE.test(keys[j]) && !_TITLE_FALLBACK_EXCLUDE_RE.test(keys[j])) return v2;
   }
   return '';
+}
+
+// Regroupe les variantes linguistiques d'un même champ (préfixe/suffixe
+// fr_/de_/en_, courant dans les exports GIS-GR/Géoportail trilingues) et ne
+// garde que la meilleure (français si présent, sinon anglais, sinon
+// allemand) — sans ça, les 6 premiers champs pris pour le modèle auto
+// (triés alphabétiquement) tombaient souvent tout en allemand ("de_" avant
+// "fr_"), la version française existant pourtant sur la même feature.
+var _LANG_PREFIX_RE = /^(fr|de|en)[_-](.+)$/i;
+var _LANG_SUFFIX_RE = /^(.+)[_-](fr|de|en)$/i;
+var _LANG_RANK = {fr:0, en:1, de:2};
+function _selectDisplayFields(fields) {
+  var groups = {}, order = [];
+  fields.forEach(function(f) {
+    if (_LIB_FIELD_EXCLUDE_RE.test(f) || _TITLE_FALLBACK_EXCLUDE_RE.test(f)) return;
+    var mp = _LANG_PREFIX_RE.exec(f), ms = !mp && _LANG_SUFFIX_RE.exec(f);
+    var base = mp ? mp[2].toLowerCase() : ms ? ms[1].toLowerCase() : f.toLowerCase();
+    var lang = mp ? mp[1].toLowerCase() : ms ? ms[2].toLowerCase() : null;
+    if (!groups[base]) { groups[base] = {field:f, rank: lang ? _LANG_RANK[lang] : -1}; order.push(base); }
+    else if (lang && _LANG_RANK[lang] < groups[base].rank) { groups[base].field = f; groups[base].rank = _LANG_RANK[lang]; }
+  });
+  return order.map(function(b) { return groups[b].field; });
 }
 
 function _libraryDefaultTtTemplate(layer) {
@@ -8234,9 +8265,16 @@ function _libraryDefaultTtTemplate(layer) {
   var lines = ['<div class="tt-chip-row"><span class="tt-bloc-chip" style="background:{{layerColor}};color:#1a1a1a">{{layerName}}</span></div>'];
   var titleField = _TITLE_KEY_GUESSES.find(function(k) { return fields.indexOf(k) !== -1; });
   if (titleField) lines.push('<div class="tt-name">{{' + titleField + '}}</div>');
-  fields.slice(0, 6).forEach(function(f) {
+  _selectDisplayFields(fields).slice(0, 6).forEach(function(f) {
     if (f === titleField) return;
-    lines.push('<div class="tt-row"><span class="tt-row-label">' + _escHtml(_prettyFieldLabel(f)) + '</span><span class="tt-row-val">{{' + f + '}}</span></div>');
+    // Le préfixe/suffixe de langue n'a plus lieu d'être DANS LE LIBELLÉ une
+    // fois qu'on a déjà choisi la variante française (_selectDisplayFields
+    // ci-dessus) — "Fr category" serait aussi peu naturel que ce qu'on
+    // corrige. Uniquement ici : le sélecteur de champ choroplèthe (js/10)
+    // doit lui garder le nom exact, deux champs distincts (fr_/de_) pouvant
+    // y coexister sans avoir été dédoublonnés.
+    var label = _prettyFieldLabel(f.replace(_LANG_PREFIX_RE, '$2').replace(_LANG_SUFFIX_RE, '$1'));
+    lines.push('<div class="tt-row"><span class="tt-row-label">' + _escHtml(label) + '</span><span class="tt-row-val">{{' + f + '}}</span></div>');
   });
   return lines.join('\n');
 }
