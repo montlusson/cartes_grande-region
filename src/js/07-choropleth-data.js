@@ -135,9 +135,19 @@ function applyData() {
   _repaintChoro();
   _renderCatColorUI();
   if (total) {
-    setStatus(matched < total
+    // Sous 50 % de correspondances avec un identifiant "code" (INSEE/AGS/
+    // NIS/Luxembourg), la cause la plus fréquente est un référentiel de
+    // codes différent de celui de la couche communes de l'outil (constaté
+    // en pratique : le code commune officiel Luxembourg du RNPP/STATEC ne
+    // correspond pas au code stocké ici, sans rapport avec une erreur de
+    // saisie) — le nom de commune, lui, reste fiable ; le suggérer plutôt
+    // que de laisser deviner pourquoi la carte reste presque vide.
+    var hint = (matched < total * 0.5 && jt !== 'name' && jt !== 'region')
+      ? ' Peu de correspondances par code : essayez « Nom de commune » — les codes de cette couche ne suivent pas forcément le même référentiel que votre fichier.'
+      : '';
+    setStatus((matched < total
       ? '⚠ ' + matched + '/' + total + ' lignes jointes — seuils calculés sur les lignes jointes uniquement.'
-      : '✓ ' + matched + '/' + total + ' lignes jointes.');
+      : '✓ ' + matched + '/' + total + ' lignes jointes.') + hint);
   }
 }
 
