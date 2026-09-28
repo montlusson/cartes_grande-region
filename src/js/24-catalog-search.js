@@ -10,6 +10,16 @@ var CATALOG_SEARCH_SOURCES = [
   { id: 'geoportail', label: 'Géoportail Luxembourg', searchUrl: 'https://geocatalogue.geoportail.lu/geonetwork/srv/api/search/records/_search' }
 ];
 
+// Rempart avant tout lien issu d'un catalogue EXTERNE (GIS-GR, Géoportail
+// LU, Open Data Luxembourg) : ces réponses alimentent ensuite un `<a href>`
+// cliqué par l'auteur (js/25, js/31) — sans ce filtre, une fiche publiée
+// avec une URL "javascript:" dans son champ lien exécuterait ce code au
+// clic sur le bouton téléchargement, dans l'origine de l'outil. Seuls
+// http/https sont légitimes pour un lien de téléchargement de données.
+function _isSafeResourceUrl(url) {
+  return typeof url === 'string' && /^https?:\/\//i.test(url);
+}
+
 // Un résultat n'est retenu que s'il expose un lien de téléchargement réel
 // (WFS pour GIS-GR, OGC API-Features pour le Géoportail LU) — sinon ce
 // n'est qu'une carte WMS visualisable, pas des données intégrables.
@@ -18,14 +28,16 @@ function _extractDownloadLink(sourceId, links) {
     var ogc = links.find(function(l) { return l.protocol === 'OGC API-Features' && l.function === 'download'; });
     if (!ogc) return null;
     var base = (ogc.urlObject.default || '').replace(/\/$/, '');
-    return { kind: 'ogcfeatures', url: base + '/items?f=json&limit=500' };
+    var ogcUrl = base + '/items?f=json&limit=500';
+    return _isSafeResourceUrl(ogcUrl) ? { kind: 'ogcfeatures', url: ogcUrl } : null;
   }
   var wfs = links.find(function(l) { return l.protocol === 'OGC:WFS'; });
   if (!wfs) return null;
   var typeName = (wfs.nameObject || {}).default || '';
   if (!typeName) return null;
   var svcUrl = (wfs.urlObject || {}).default || '';
-  return { kind: 'wfs', url: svcUrl + '?service=WFS&version=2.0.0&request=GetFeature&typeName=' + encodeURIComponent(typeName) + '&outputFormat=geojson' };
+  var wfsUrl = svcUrl + '?service=WFS&version=2.0.0&request=GetFeature&typeName=' + encodeURIComponent(typeName) + '&outputFormat=geojson';
+  return _isSafeResourceUrl(wfsUrl) ? { kind: 'wfs', url: wfsUrl } : null;
 }
 
 function _searchOneGeoCatalog(source, query) {
@@ -79,7 +91,7 @@ function _searchOpenDataLu(query) {
           // "latest" = lien stable data.public.lu (survit à un déplacement du
           // fichier source), à défaut l'URL directe de la ressource.
           var link = res.latest || res.url;
-          if (!link) return;
+          if (!link || !_isSafeResourceUrl(link)) return;
           // Certains exports ArcGIS proposent la même couche dans plusieurs
           // projections via ?outSR=... — seule 4326 (WGS84) est un GeoJSON
           // valide au sens strict ; toute autre valeur donnerait des
@@ -130,7 +142,7 @@ function _searchOpenDataLuTabular(query) {
         (ds.resources || []).forEach(function(res) {
           if (res.format !== 'csv') return;
           var link = res.latest || res.url;
-          if (!link) return;
+          if (!link || !_isSafeResourceUrl(link)) return;
           var label = ds.title;
           if (res.title && res.title !== ds.title) label += ' — ' + res.title;
           var dateMs = Date.parse(res.last_modified || ds.last_modified || 0);
