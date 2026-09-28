@@ -204,7 +204,7 @@ function _redrawFill() {
     // aucune géométrie : les contours doivent rester exacts.
     _drawBlocs();
     if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
-    setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
+    setStatus('Fond vide — aucune infobulle tant qu\'aucune couche de fond n\'est choisie ci-dessus.');
     return;
   }
   if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'visible');

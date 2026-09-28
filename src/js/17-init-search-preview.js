@@ -50,7 +50,8 @@ function _srRender() {
   _srItems.forEach(function(c, i) {
     var li = document.createElement('div');
     li.className = 'msl-item'; li.setAttribute('role', 'option'); li.id = 'msl-' + i;
-    li.innerHTML = _escHtml(c.name) + (c.sub ? '<span class="msl-sub">' + _escHtml(c.sub) + '</span>' : '');
+    var sub = (c.sub && c.sub !== c.name) ? c.sub : '';
+    li.innerHTML = _escHtml(c.name) + (sub ? '<span class="msl-sub">' + _escHtml(sub) + '</span>' : '');
     li.addEventListener('mousedown', function(ev) { ev.preventDefault(); _srSelect(i); });
     _srList.appendChild(li);
   });

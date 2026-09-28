@@ -631,7 +631,7 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
             </div>
             <div class="field" style="margin-bottom:8px">
               <select class="full" id="fill-layer-sel">
-                <option value="blocs">Blocs (5 grands territoires)</option>
+                <option value="blocs" selected>Blocs (5 grands territoires)</option>
                 <option value="depts_lor">Départements Lorraine (FR)</option>
                 <option value="kreise_rlp">Kreise Rhénanie-Palatinat (DE)</option>
                 <option value="landkreise_sar">Landkreise Sarre (DE)</option>
@@ -639,9 +639,9 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
                 <option value="arr_wal">Arrondissements Wallonie (BE)</option>
                 <option value="cantons_lux">Cantons Luxembourg</option>
                 <option value="communes">Communes GR 2026 (~18 MB)</option>
-                <option value="none" selected>Aucune (fond vide)</option>
+                <option value="none">Aucune (fond vide)</option>
               </select>
-              <div style="font-size:10px;color:var(--muted);margin-top:3px" id="fill-layer-hint">Aucune couleur de remplissage — seuls les contours sont affichés</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px" id="fill-layer-hint">Une couleur par grand territoire — survolez ou cliquez une région pour sa fiche</div>
             </div>
           </div>
 
@@ -1461,7 +1461,7 @@ var _cache = {};         // layerId → geojson
 var _lookups = {};       // layerId → {code: name}
 var _strokeWidths = { blocs:1, subdiv:1.2, cantons:0.7, communes:0.3 };
 var _activeLayers = {};  // layerId → true/false (overlays de contours)
-var _fillLayer = 'none'; // défaut : fond vide, aucune couleur dans les blocs (cf. #fill-layer-sel)
+var _fillLayer = 'blocs'; // défaut : vue "Blocs" — carte interactive dès le premier chargement (cf. #fill-layer-sel)
 var _map = null;
 var _mapReady = false;
 var _ttPinned = false;
@@ -2020,7 +2020,20 @@ function _blocRegionColor(region) {
       var val = _dataMap[_normStr(region)];
       return val !== undefined ? _choroColor(val) : '#ccc';
     }
+    // Jointure plus fine (commune, code...) : la couleur choroplèthe est
+    // portée par la couche de subdivision affichée par-dessus, pas par ce
+    // fond "Blocs" — sans ce cas, les blocs sans subdivision correspondante
+    // (donc jamais recouverts) restaient visibles dans leur couleur plate,
+    // à côté de la vraie donnée : incohérent dès qu'une donnée est en place.
+    return '#e4e1db';
   }
+
+  // Des flux (Flux → flèches) sont affichés : même raison — les couleurs
+  // plates des blocs concurrencent visuellement les flèches, dont c'est
+  // justement le rôle de mettre en évidence par-dessus un fond neutre.
+  // (Les couches Bibliothèque ont déjà leur propre bascule dans
+  // _updateLibraryBasemapFocus, js/19 — pas besoin de la dupliquer ici.)
+  if (_flowArrows.some(function(a) { return a.visible; })) return '#e4e1db';
 
   // Une seule région active : rien à comparer, la couleur d'identification
   // régionale n'a de sens qu'à côté des autres — fond neutre à la place.
@@ -2037,6 +2050,15 @@ function _fillColorExpression() {
   });
   expr.push('#e0ddd8');
   return expr;
+}
+
+// Réévalue uniquement la COULEUR du fond "Blocs" (pas sa géométrie) — pour
+// les événements qui changent la présence de données sans reconstruire les
+// blocs eux-mêmes (ex. ajout/suppression d'un flux, cf. js/21 _renderFlows).
+function _refreshBlocsFillColor() {
+  if (_fillLayer === 'blocs' && _mapReady && _map.getLayer(BLOCS_FILL_ID)) {
+    _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
+  }
 }
 
 function _drawBlocs() {
@@ -2397,7 +2419,7 @@ function _redrawFill() {
     // aucune géométrie : les contours doivent rester exacts.
     _drawBlocs();
     if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'none');
-    setStatus('Fond vide — sélectionnez une couche pour l\'afficher.');
+    setStatus('Fond vide — aucune infobulle tant qu\'aucune couche de fond n\'est choisie ci-dessus.');
     return;
   }
   if (_map.getLayer(BLOCS_FILL_ID)) _map.setLayoutProperty(BLOCS_FILL_ID, 'visibility', 'visible');
@@ -3688,6 +3710,21 @@ function _syncMapChrome() {
   }
 }
 
+// Texte d'aide sous le sélecteur "Couche de fond" (#fill-layer-sel) — sans
+// ceci il restait figé sur le message de "Aucune" quelle que soit la couche
+// réellement choisie, laissant croire qu'aucune couleur n'était affichée.
+var _FILL_LAYER_HINTS = {
+  none:     'Aucune couleur de remplissage — seuls les contours sont affichés',
+  blocs:    'Une couleur par grand territoire — survolez ou cliquez une région pour sa fiche',
+  communes: 'Une couleur par commune — survolez ou cliquez une commune pour sa fiche'
+};
+function _updateFillLayerHint(value) {
+  var hint = document.getElementById('fill-layer-hint');
+  if (!hint) return;
+  hint.textContent = _FILL_LAYER_HINTS[value] ||
+    'Une couleur par subdivision — appliquez une donnée (onglet Données) pour une choroplèthe';
+}
+
 // ══════════════════════════════════════════════════════════════════
 //  BIBLIOTHÈQUE — COUCHES GEOJSON UTILISATEUR
 // ══════════════════════════════════════════════════════════════════
@@ -4296,8 +4333,10 @@ function wireEvents() {
   // Sélecteur de couche de fond
   var fillSel = document.getElementById('fill-layer-sel');
   if (fillSel) {
+    _updateFillLayerHint(fillSel.value);
     fillSel.addEventListener('change', function() {
       _fillLayer = this.value;
+      _updateFillLayerHint(this.value);
       if (!_cache[_fillLayer] && _fillLayer !== 'blocs' && _fillLayer !== 'none') {
         showLoading('Chargement de ' + _fillLayer + '…', '');
         _ensureLayer(_fillLayer).then(function() {
@@ -5672,7 +5711,8 @@ function _srRender() {
   _srItems.forEach(function(c, i) {
     var li = document.createElement('div');
     li.className = 'msl-item'; li.setAttribute('role', 'option'); li.id = 'msl-' + i;
-    li.innerHTML = _escHtml(c.name) + (c.sub ? '<span class="msl-sub">' + _escHtml(c.sub) + '</span>' : '');
+    var sub = (c.sub && c.sub !== c.name) ? c.sub : '';
+    li.innerHTML = _escHtml(c.name) + (sub ? '<span class="msl-sub">' + _escHtml(sub) + '</span>' : '');
     li.addEventListener('mousedown', function(ev) { ev.preventDefault(); _srSelect(i); });
     _srList.appendChild(li);
   });
@@ -6815,6 +6855,7 @@ function _initFlowLayers() {
 function _renderFlows() {
   if (!_map || !_mapReady) return;
   _initFlowLayers();
+  _refreshBlocsFillColor();
   var lines = [], ribbons = [], heads = [], labels = [];
   _flowArrows.forEach(function(arrow) {
     if (!arrow.visible) return;

@@ -62,7 +62,20 @@ function _blocRegionColor(region) {
       var val = _dataMap[_normStr(region)];
       return val !== undefined ? _choroColor(val) : '#ccc';
     }
+    // Jointure plus fine (commune, code...) : la couleur choroplèthe est
+    // portée par la couche de subdivision affichée par-dessus, pas par ce
+    // fond "Blocs" — sans ce cas, les blocs sans subdivision correspondante
+    // (donc jamais recouverts) restaient visibles dans leur couleur plate,
+    // à côté de la vraie donnée : incohérent dès qu'une donnée est en place.
+    return '#e4e1db';
   }
+
+  // Des flux (Flux → flèches) sont affichés : même raison — les couleurs
+  // plates des blocs concurrencent visuellement les flèches, dont c'est
+  // justement le rôle de mettre en évidence par-dessus un fond neutre.
+  // (Les couches Bibliothèque ont déjà leur propre bascule dans
+  // _updateLibraryBasemapFocus, js/19 — pas besoin de la dupliquer ici.)
+  if (_flowArrows.some(function(a) { return a.visible; })) return '#e4e1db';
 
   // Une seule région active : rien à comparer, la couleur d'identification
   // régionale n'a de sens qu'à côté des autres — fond neutre à la place.
@@ -79,6 +92,15 @@ function _fillColorExpression() {
   });
   expr.push('#e0ddd8');
   return expr;
+}
+
+// Réévalue uniquement la COULEUR du fond "Blocs" (pas sa géométrie) — pour
+// les événements qui changent la présence de données sans reconstruire les
+// blocs eux-mêmes (ex. ajout/suppression d'un flux, cf. js/21 _renderFlows).
+function _refreshBlocsFillColor() {
+  if (_fillLayer === 'blocs' && _mapReady && _map.getLayer(BLOCS_FILL_ID)) {
+    _map.setPaintProperty(BLOCS_FILL_ID, 'fill-color', _fillColorExpression());
+  }
 }
 
 function _drawBlocs() {

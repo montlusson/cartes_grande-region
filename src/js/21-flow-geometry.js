@@ -261,6 +261,7 @@ function _initFlowLayers() {
 function _renderFlows() {
   if (!_map || !_mapReady) return;
   _initFlowLayers();
+  _refreshBlocsFillColor();
   var lines = [], ribbons = [], heads = [], labels = [];
   _flowArrows.forEach(function(arrow) {
     if (!arrow.visible) return;

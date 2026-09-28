@@ -481,4 +481,19 @@ function _syncMapChrome() {
   }
 }
 
+// Texte d'aide sous le sélecteur "Couche de fond" (#fill-layer-sel) — sans
+// ceci il restait figé sur le message de "Aucune" quelle que soit la couche
+// réellement choisie, laissant croire qu'aucune couleur n'était affichée.
+var _FILL_LAYER_HINTS = {
+  none:     'Aucune couleur de remplissage — seuls les contours sont affichés',
+  blocs:    'Une couleur par grand territoire — survolez ou cliquez une région pour sa fiche',
+  communes: 'Une couleur par commune — survolez ou cliquez une commune pour sa fiche'
+};
+function _updateFillLayerHint(value) {
+  var hint = document.getElementById('fill-layer-hint');
+  if (!hint) return;
+  hint.textContent = _FILL_LAYER_HINTS[value] ||
+    'Une couleur par subdivision — appliquez une donnée (onglet Données) pour une choroplèthe';
+}
+
 // ══════════════════════════════════════════════════════════════════

@@ -124,8 +124,10 @@ function wireEvents() {
   // Sélecteur de couche de fond
   var fillSel = document.getElementById('fill-layer-sel');
   if (fillSel) {
+    _updateFillLayerHint(fillSel.value);
     fillSel.addEventListener('change', function() {
       _fillLayer = this.value;
+      _updateFillLayerHint(this.value);
       if (!_cache[_fillLayer] && _fillLayer !== 'blocs' && _fillLayer !== 'none') {
         showLoading('Chargement de ' + _fillLayer + '…', '');
         _ensureLayer(_fillLayer).then(function() {
