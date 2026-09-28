@@ -163,10 +163,13 @@ function _addSearchResultAsLayer(r, row, btn) {
   btn.textContent = '…';
   setStatus('Récupération de « ' + r.title + ' »…');
   fetch(r.url)
-    .then(function(resp) { return resp.ok ? resp.json() : Promise.reject(new Error('HTTP ' + resp.status)); })
-    .then(function(geojson) {
+    .then(function(resp) { return resp.ok ? resp.text() : Promise.reject(new Error('HTTP ' + resp.status)); })
+    .then(function(text) {
+      var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
       if (!_looksLikeWgs84(geojson)) throw new Error('coordonnées hors WGS84 (projection non standard, ex. LUREF) — non intégrable directement');
+      _dropGeometrylessFeatures(geojson);
+      _assertHasUsableFeatures(geojson);
       var layer = _addUserLayer(r.title, geojson, _nextLibColor());
       _libPaletteIdx++;
       _setSearchResultAdded(row, layer.id);

@@ -196,9 +196,10 @@ function _addCatalogItemAsData(item, btn) {
   fetch(_catalogItemUrl(item))
     .then(function(resp) {
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
+      return resp.text();
     })
-    .then(function(geojson) {
+    .then(function(text) {
+      var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
       var nf = item.joinable.nameField, vf = item.joinable.valueField, vl = item.joinable.valueLabel || vf;
       var lines = ['nom,' + _csvCell(vl)];
@@ -255,10 +256,13 @@ function _addCatalogItem(item, btn) {
   fetch(_catalogItemUrl(item))
     .then(function(resp) {
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
+      return resp.text();
     })
-    .then(function(geojson) {
+    .then(function(text) {
+      var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
+      _dropGeometrylessFeatures(geojson);
+      _assertHasUsableFeatures(geojson);
       var layer = _addUserLayer(item.label, geojson, _nextLibColor());
       _libPaletteIdx++;
       item._addedLayerId = layer.id;

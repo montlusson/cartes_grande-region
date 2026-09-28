@@ -337,6 +337,7 @@ function wireEvents() {
 
   // ── Bibliothèque de couches GeoJSON ─────────────────────────────
   _wireLibUpload();
+  _wireLibPaste();
 
   // Copier le code
   var copyBtn = document.getElementById('btn-copy-embed');

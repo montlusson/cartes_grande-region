@@ -56,6 +56,7 @@ JS_MODULES = [
     "js/27-embed-tooltip-mobile.js",
     "js/28-library-tooltip-custom.js",
     "js/29-tt-editor-widgets.js",
+    "js/30-library-paste-geojson.js",
 ]
 
 

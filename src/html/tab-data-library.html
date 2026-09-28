@@ -101,6 +101,15 @@
             </div>
             <input type="file" id="lib-file-input" accept=".geojson,.json" multiple style="display:none">
 
+            <!-- Voie de secours : coller le GeoJSON directement (ex. un
+                 service GIS-GR en échec dont on a récupéré le contenu
+                 autrement) — pas besoin de l'enregistrer en fichier d'abord. -->
+            <div class="field" style="margin-top:8px">
+              <label>Ou collez le contenu GeoJSON</label>
+              <textarea id="lib-paste-input" rows="3" placeholder='{"type":"FeatureCollection","features":[...]}' style="font-family:monospace;font-size:10.5px"></textarea>
+              <button class="btn btn-secondary btn-sm" id="lib-paste-btn" type="button" style="margin-top:5px">+ Charger le GeoJSON collé</button>
+            </div>
+
             <!-- Formulaire de confirmation (1 fichier à la fois) -->
             <div class="lib-add-form" id="lib-add-form" style="display:none">
               <div style="font-size:10.5px;color:var(--muted);margin-bottom:7px" id="lib-add-filename"></div>

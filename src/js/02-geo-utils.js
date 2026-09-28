@@ -208,4 +208,47 @@ function _mergeFeaturesIntoOne(features, region) {
   }
 }
 
+// Nettoyage tolérant d'une réponse GeoJSON externe (WFS geoportail.lu,
+// fichier importé/collé manuellement...) — certains services renvoient une
+// géométrie tronquée pour une entité sans tracé calculé, ex.
+// {"type":"MultiPolygon",} (virgule traînante avant l'accolade,
+// "coordinates" absent), ce qui casse JSON.parse() pour TOUT le jeu de
+// données à cause d'une seule entité mal formée. On ne fait ICI que
+// réparer la syntaxe JSON — filtrer les géométries incomplètes est une
+// décision du consommateur (cf. _dropGeometrylessFeatures), pas de ce
+// parseur : un import pour extraire des VALEURS par nom (jointure CSV,
+// js/18 _addCatalogItemAsData) n'a pas besoin de géométrie du tout, y
+// filtrer perdrait des lignes de données par ailleurs valides.
+function _parseLenientGeojson(text) {
+  return JSON.parse(text.replace(/,(\s*[}\]])/g, '$1'));
+}
+
+// À utiliser quand la géométrie est réellement nécessaire (ajout comme
+// couche affichée — js/10, js/18 _addCatalogItem, js/25) : retire les
+// features sans géométrie exploitable plutôt que de laisser une couche se
+// planter au rendu, et note le nombre retiré (_droppedFeatures) pour que
+// l'appelant puisse le signaler.
+function _dropGeometrylessFeatures(geojson) {
+  if (geojson && Array.isArray(geojson.features)) {
+    var before = geojson.features.length;
+    geojson.features = geojson.features.filter(function(f) {
+      return f && f.geometry && f.geometry.coordinates;
+    });
+    geojson._droppedFeatures = before - geojson.features.length;
+  }
+  return geojson;
+}
+
+// À appeler juste après _dropGeometrylessFeatures : si TOUTES les entités
+// reçues manquaient de géométrie exploitable, mieux vaut un échec explicite
+// qu'une couche ajoutée en silence avec 0 objet visible — observé en
+// pratique sur certains services WFS GIS-GR dont la géométrie est
+// systématiquement absente pour un jeu de données donné (pas seulement
+// quelques entités isolées).
+function _assertHasUsableFeatures(geojson) {
+  if (!geojson.features.length && geojson._droppedFeatures) {
+    throw new Error(geojson._droppedFeatures + ' entité(s) reçue(s) sans aucune géométrie exploitable — bug du service source, jeu de données indisponible pour l\'instant.');
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════

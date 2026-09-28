@@ -1128,6 +1128,15 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
             </div>
             <input type="file" id="lib-file-input" accept=".geojson,.json" multiple style="display:none">
 
+            <!-- Voie de secours : coller le GeoJSON directement (ex. un
+                 service GIS-GR en échec dont on a récupéré le contenu
+                 autrement) — pas besoin de l'enregistrer en fichier d'abord. -->
+            <div class="field" style="margin-top:8px">
+              <label>Ou collez le contenu GeoJSON</label>
+              <textarea id="lib-paste-input" rows="3" placeholder='{"type":"FeatureCollection","features":[...]}' style="font-family:monospace;font-size:10.5px"></textarea>
+              <button class="btn btn-secondary btn-sm" id="lib-paste-btn" type="button" style="margin-top:5px">+ Charger le GeoJSON collé</button>
+            </div>
+
             <!-- Formulaire de confirmation (1 fichier à la fois) -->
             <div class="lib-add-form" id="lib-add-form" style="display:none">
               <div style="font-size:10.5px;color:var(--muted);margin-bottom:7px" id="lib-add-filename"></div>
@@ -1794,6 +1803,49 @@ function _mergeFeaturesIntoOne(features, region) {
     };
   } catch (e) {
     return null;
+  }
+}
+
+// Nettoyage tolérant d'une réponse GeoJSON externe (WFS geoportail.lu,
+// fichier importé/collé manuellement...) — certains services renvoient une
+// géométrie tronquée pour une entité sans tracé calculé, ex.
+// {"type":"MultiPolygon",} (virgule traînante avant l'accolade,
+// "coordinates" absent), ce qui casse JSON.parse() pour TOUT le jeu de
+// données à cause d'une seule entité mal formée. On ne fait ICI que
+// réparer la syntaxe JSON — filtrer les géométries incomplètes est une
+// décision du consommateur (cf. _dropGeometrylessFeatures), pas de ce
+// parseur : un import pour extraire des VALEURS par nom (jointure CSV,
+// js/18 _addCatalogItemAsData) n'a pas besoin de géométrie du tout, y
+// filtrer perdrait des lignes de données par ailleurs valides.
+function _parseLenientGeojson(text) {
+  return JSON.parse(text.replace(/,(\s*[}\]])/g, '$1'));
+}
+
+// À utiliser quand la géométrie est réellement nécessaire (ajout comme
+// couche affichée — js/10, js/18 _addCatalogItem, js/25) : retire les
+// features sans géométrie exploitable plutôt que de laisser une couche se
+// planter au rendu, et note le nombre retiré (_droppedFeatures) pour que
+// l'appelant puisse le signaler.
+function _dropGeometrylessFeatures(geojson) {
+  if (geojson && Array.isArray(geojson.features)) {
+    var before = geojson.features.length;
+    geojson.features = geojson.features.filter(function(f) {
+      return f && f.geometry && f.geometry.coordinates;
+    });
+    geojson._droppedFeatures = before - geojson.features.length;
+  }
+  return geojson;
+}
+
+// À appeler juste après _dropGeometrylessFeatures : si TOUTES les entités
+// reçues manquaient de géométrie exploitable, mieux vaut un échec explicite
+// qu'une couche ajoutée en silence avec 0 objet visible — observé en
+// pratique sur certains services WFS GIS-GR dont la géométrie est
+// systématiquement absente pour un jeu de données donné (pas seulement
+// quelques entités isolées).
+function _assertHasUsableFeatures(geojson) {
+  if (!geojson.features.length && geojson._droppedFeatures) {
+    throw new Error(geojson._droppedFeatures + ' entité(s) reçue(s) sans aucune géométrie exploitable — bug du service source, jeu de données indisponible pour l\'instant.');
   }
 }
 
@@ -3858,7 +3910,13 @@ function _addUserLayer(name, geojson, color) {
   if (_mapReady) _renderUserLayerOnMap(layer);
   _appendLibLayerItem(layer);
   _updateLibEmptyHint();
-  setStatus('✓ "' + name + '" — ' + n + ' objet' + (n > 1 ? 's' : '') + ' chargé' + (n > 1 ? 's' : '') + '.');
+  // _droppedFeatures : posé par _parseLenientGeojson (js/02) quand la
+  // source (WFS externe, fichier importé...) contenait des entités sans
+  // géométrie exploitable — le dire plutôt que de laisser croire que tout
+  // s'est chargé sans rien manquer.
+  var dropped = geojson._droppedFeatures;
+  setStatus('✓ "' + name + '" — ' + n + ' objet' + (n > 1 ? 's' : '') + ' chargé' + (n > 1 ? 's' : '') + '.' +
+    (dropped ? ' (' + dropped + ' entité' + (dropped > 1 ? 's' : '') + ' sans géométrie ignorée' + (dropped > 1 ? 's' : '') + ')' : ''));
   _updateDataBadge();
   _updateLibraryBasemapFocus();
   _renderLibraryDataTab();
@@ -4120,6 +4178,33 @@ function _appendLibLayerItem(layer, opts) {
   });
 }
 
+// Normalise n'importe quel texte GeoJSON (fichier déposé OU collé, cf.
+// _wireLibUpload et _wireLibPaste) en FeatureCollection, ou lève une
+// erreur explicite — seul point qui connaît les variantes GeoJSON
+// (FeatureCollection / Feature seule / géométrie nue / GeometryCollection)
+// et filtre les entités sans géométrie exploitable (cf. js/02).
+function _normalizeGeojsonText(text) {
+  var raw = _parseLenientGeojson(text);
+  if (!raw || !raw.type) throw new Error('JSON invalide (pas de "type")');
+  var fc;
+  if (raw.type === 'FeatureCollection') {
+    fc = raw;
+  } else if (raw.type === 'Feature') {
+    fc = { type:'FeatureCollection', features:[raw] };
+  } else if (raw.coordinates) {
+    fc = { type:'FeatureCollection', features:[{type:'Feature',geometry:raw,properties:{}}] };
+  } else if (raw.type === 'GeometryCollection') {
+    fc = { type:'FeatureCollection', features:(raw.geometries||[]).map(function(g){
+      return {type:'Feature',geometry:g,properties:{}};
+    })};
+  } else {
+    throw new Error('Type GeoJSON non reconnu : ' + raw.type);
+  }
+  _dropGeometrylessFeatures(fc);
+  _assertHasUsableFeatures(fc);
+  return fc;
+}
+
 // ── Upload / drag-drop wiring ─────────────────────────────────────
 function _wireLibUpload() {
   var dropZone   = document.getElementById('lib-drop-zone');
@@ -4159,22 +4244,7 @@ function _wireLibUpload() {
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
-        var raw = JSON.parse(e.target.result);
-        if (!raw || !raw.type) throw new Error('JSON invalide (pas de "type")');
-        // Normaliser en FeatureCollection
-        if (raw.type === 'FeatureCollection') {
-          _pendingParsed = raw;
-        } else if (raw.type === 'Feature') {
-          _pendingParsed = { type:'FeatureCollection', features:[raw] };
-        } else if (raw.coordinates) {
-          _pendingParsed = { type:'FeatureCollection', features:[{type:'Feature',geometry:raw,properties:{}}] };
-        } else if (raw.type === 'GeometryCollection') {
-          _pendingParsed = { type:'FeatureCollection', features:(raw.geometries||[]).map(function(g){
-            return {type:'Feature',geometry:g,properties:{}};
-          })};
-        } else {
-          throw new Error('Type GeoJSON non reconnu : ' + raw.type);
-        }
+        _pendingParsed = _normalizeGeojsonText(e.target.result);
         _showForm(file);
       } catch(err) {
         setStatus('✗ ' + file.name + ' : ' + err.message);
@@ -4584,6 +4654,7 @@ function wireEvents() {
 
   // ── Bibliothèque de couches GeoJSON ─────────────────────────────
   _wireLibUpload();
+  _wireLibPaste();
 
   // Copier le code
   var copyBtn = document.getElementById('btn-copy-embed');
@@ -6299,9 +6370,10 @@ function _addCatalogItemAsData(item, btn) {
   fetch(_catalogItemUrl(item))
     .then(function(resp) {
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
+      return resp.text();
     })
-    .then(function(geojson) {
+    .then(function(text) {
+      var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
       var nf = item.joinable.nameField, vf = item.joinable.valueField, vl = item.joinable.valueLabel || vf;
       var lines = ['nom,' + _csvCell(vl)];
@@ -6358,10 +6430,13 @@ function _addCatalogItem(item, btn) {
   fetch(_catalogItemUrl(item))
     .then(function(resp) {
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
+      return resp.text();
     })
-    .then(function(geojson) {
+    .then(function(text) {
+      var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
+      _dropGeometrylessFeatures(geojson);
+      _assertHasUsableFeatures(geojson);
       var layer = _addUserLayer(item.label, geojson, _nextLibColor());
       _libPaletteIdx++;
       item._addedLayerId = layer.id;
@@ -7658,10 +7733,13 @@ function _addSearchResultAsLayer(r, row, btn) {
   btn.textContent = '…';
   setStatus('Récupération de « ' + r.title + ' »…');
   fetch(r.url)
-    .then(function(resp) { return resp.ok ? resp.json() : Promise.reject(new Error('HTTP ' + resp.status)); })
-    .then(function(geojson) {
+    .then(function(resp) { return resp.ok ? resp.text() : Promise.reject(new Error('HTTP ' + resp.status)); })
+    .then(function(text) {
+      var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
       if (!_looksLikeWgs84(geojson)) throw new Error('coordonnées hors WGS84 (projection non standard, ex. LUREF) — non intégrable directement');
+      _dropGeometrylessFeatures(geojson);
+      _assertHasUsableFeatures(geojson);
       var layer = _addUserLayer(r.title, geojson, _nextLibColor());
       _libPaletteIdx++;
       _setSearchResultAdded(row, layer.id);
@@ -8121,6 +8199,33 @@ function _ttGlobalPreviewContext() {
     // modèle copié depuis l'onglet Bibliothèque se prévisualise ici aussi.
     layerName: 'Lorraine', layerColor: BLOC_COLORS[region] || '#a6d49f'
   };
+}
+//  BIBLIOTHÈQUE — COLLER DU GEOJSON DIRECTEMENT
+//  Voie de secours quand un service externe échoue (WFS en panne, réponse
+//  malformée...) : l'auteur récupère le GeoJSON autrement (onglet réseau du
+//  navigateur, export d'un autre outil...) et le colle ici, plutôt que de
+//  devoir d'abord l'enregistrer en fichier pour utiliser le dépôt/glisser
+//  (js/10 _wireLibUpload, qui fournit _normalizeGeojsonText).
+// ══════════════════════════════════════════════════════════════════
+
+function _wireLibPaste() {
+  var input = document.getElementById('lib-paste-input');
+  var btn = document.getElementById('lib-paste-btn');
+  if (!input || !btn) return;
+  btn.addEventListener('click', function() {
+    var text = input.value.trim();
+    if (!text) return;
+    var geojson;
+    try {
+      geojson = _normalizeGeojsonText(text);
+    } catch (err) {
+      setStatus('✗ GeoJSON collé : ' + err.message);
+      return;
+    }
+    _addUserLayer('Couche collée', geojson, _nextLibColor());
+    _libPaletteIdx++;
+    input.value = '';
+  });
 }
 </script>
 </body>

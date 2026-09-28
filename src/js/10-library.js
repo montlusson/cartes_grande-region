@@ -92,7 +92,13 @@ function _addUserLayer(name, geojson, color) {
   if (_mapReady) _renderUserLayerOnMap(layer);
   _appendLibLayerItem(layer);
   _updateLibEmptyHint();
-  setStatus('✓ "' + name + '" — ' + n + ' objet' + (n > 1 ? 's' : '') + ' chargé' + (n > 1 ? 's' : '') + '.');
+  // _droppedFeatures : posé par _parseLenientGeojson (js/02) quand la
+  // source (WFS externe, fichier importé...) contenait des entités sans
+  // géométrie exploitable — le dire plutôt que de laisser croire que tout
+  // s'est chargé sans rien manquer.
+  var dropped = geojson._droppedFeatures;
+  setStatus('✓ "' + name + '" — ' + n + ' objet' + (n > 1 ? 's' : '') + ' chargé' + (n > 1 ? 's' : '') + '.' +
+    (dropped ? ' (' + dropped + ' entité' + (dropped > 1 ? 's' : '') + ' sans géométrie ignorée' + (dropped > 1 ? 's' : '') + ')' : ''));
   _updateDataBadge();
   _updateLibraryBasemapFocus();
   _renderLibraryDataTab();
@@ -354,6 +360,33 @@ function _appendLibLayerItem(layer, opts) {
   });
 }
 
+// Normalise n'importe quel texte GeoJSON (fichier déposé OU collé, cf.
+// _wireLibUpload et _wireLibPaste) en FeatureCollection, ou lève une
+// erreur explicite — seul point qui connaît les variantes GeoJSON
+// (FeatureCollection / Feature seule / géométrie nue / GeometryCollection)
+// et filtre les entités sans géométrie exploitable (cf. js/02).
+function _normalizeGeojsonText(text) {
+  var raw = _parseLenientGeojson(text);
+  if (!raw || !raw.type) throw new Error('JSON invalide (pas de "type")');
+  var fc;
+  if (raw.type === 'FeatureCollection') {
+    fc = raw;
+  } else if (raw.type === 'Feature') {
+    fc = { type:'FeatureCollection', features:[raw] };
+  } else if (raw.coordinates) {
+    fc = { type:'FeatureCollection', features:[{type:'Feature',geometry:raw,properties:{}}] };
+  } else if (raw.type === 'GeometryCollection') {
+    fc = { type:'FeatureCollection', features:(raw.geometries||[]).map(function(g){
+      return {type:'Feature',geometry:g,properties:{}};
+    })};
+  } else {
+    throw new Error('Type GeoJSON non reconnu : ' + raw.type);
+  }
+  _dropGeometrylessFeatures(fc);
+  _assertHasUsableFeatures(fc);
+  return fc;
+}
+
 // ── Upload / drag-drop wiring ─────────────────────────────────────
 function _wireLibUpload() {
   var dropZone   = document.getElementById('lib-drop-zone');
@@ -393,22 +426,7 @@ function _wireLibUpload() {
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
-        var raw = JSON.parse(e.target.result);
-        if (!raw || !raw.type) throw new Error('JSON invalide (pas de "type")');
-        // Normaliser en FeatureCollection
-        if (raw.type === 'FeatureCollection') {
-          _pendingParsed = raw;
-        } else if (raw.type === 'Feature') {
-          _pendingParsed = { type:'FeatureCollection', features:[raw] };
-        } else if (raw.coordinates) {
-          _pendingParsed = { type:'FeatureCollection', features:[{type:'Feature',geometry:raw,properties:{}}] };
-        } else if (raw.type === 'GeometryCollection') {
-          _pendingParsed = { type:'FeatureCollection', features:(raw.geometries||[]).map(function(g){
-            return {type:'Feature',geometry:g,properties:{}};
-          })};
-        } else {
-          throw new Error('Type GeoJSON non reconnu : ' + raw.type);
-        }
+        _pendingParsed = _normalizeGeojsonText(e.target.result);
         _showForm(file);
       } catch(err) {
         setStatus('✗ ' + file.name + ' : ' + err.message);
