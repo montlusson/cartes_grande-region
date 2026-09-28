@@ -19,25 +19,46 @@ function applyData() {
   // raison (ex. cantons du Luxembourg, dont plusieurs portent le même nom
   // que leur commune-centre — un « bon » nombre de correspondances
   // trompeur, sans rapport avec la vraie jointure communale voulue).
-  if (jt !== 'region' && !_cache['communes'] && !_autoJoinBusy) {
-    _autoJoinBusy = true;
-    setStatus('… Chargement de la couche communes pour la jointure');
-    _ensureLayer('communes').then(function() { _autoJoinBusy = false; applyData(); })
-      .catch(function(e) { _autoJoinBusy = false; setStatus('Erreur de chargement : ' + e); });
-    return;
+  // Les fonds de blocs (BLOCS_SOURCE_LAYERS) sont chargés dans le même
+  // lot : sans ça, _redrawFill() (déclenché plus bas par _repaintChoro())
+  // les charge lui-même de façon asynchrone une fois la fonction déjà
+  // terminée, et son propre message de statut générique ("Vue Communes
+  // affichée") écrase alors le nombre de lignes jointes calculé ici.
+  if (jt !== 'region') {
+    // Un chargement est déjà en cours (ex. "Colonne de jointure" et "Valeur
+    // à cartographier" changés coup sur coup, chacun ré-appelant applyData) —
+    // se retirer plutôt que de calculer une jointure sur un cache encore
+    // incomplet : l'appel en cours rejouera de lui-même avec _joinCol/
+    // _valueCol/jt les plus récents une fois son chargement terminé.
+    if (_autoJoinBusy) return;
+    var _needLayers = BLOCS_SOURCE_LAYERS.filter(function(s) { return !_cache[s]; });
+    if (!_cache['communes']) _needLayers.push('communes');
+    if (_needLayers.length) {
+      _autoJoinBusy = true;
+      setStatus('… Chargement de la couche communes pour la jointure');
+      Promise.all(_needLayers.map(function(s) { return _ensureLayer(s); }))
+        .then(function() { _autoJoinBusy = false; applyData(); })
+        .catch(function(e) { _autoJoinBusy = false; setStatus('Erreur de chargement : ' + e); });
+      return;
+    }
   }
-  _autoJoinBusy = false;
   _dataMap = {}; _rowMap = {};
   _csvData.rows.forEach(function(row) {
     var keyRaw = row[_joinCol] || '';
     var key = (jt === 'name' || jt === 'region') ? _normStr(keyRaw) : keyRaw;
     var val = row[_valueCol];
     if (key) { _dataMap[key] = val; _rowMap[key] = row; }
-    // Jointure tolérante : « Nom - Précision » est aussi indexé sous « Nom »
-    // (sans écraser une entrée existante) pour les exports à suffixes maison.
-    if (jt === 'name' && String(keyRaw).indexOf(' - ') !== -1) {
-      var alias = _normStr(String(keyRaw).split(' - ')[0]);
-      if (alias && _dataMap[alias] === undefined) { _dataMap[alias] = val; _rowMap[alias] = row; }
+    // Jointure tolérante : « Nom - Précision » (exports à suffixes maison) et
+    // « Nom/Précision » (ex. noms officiels luxembourgeois du genre
+    // « Redange/Attert » quand la couche communes ne connaît que
+    // « Redange ») sont aussi indexés sous « Nom » seul, sans écraser une
+    // entrée existante.
+    if (jt === 'name') {
+      var sep = String(keyRaw).indexOf(' - ') !== -1 ? ' - ' : (String(keyRaw).indexOf('/') !== -1 ? '/' : null);
+      if (sep) {
+        var alias = _normStr(String(keyRaw).split(sep)[0]);
+        if (alias && _dataMap[alias] === undefined) { _dataMap[alias] = val; _rowMap[alias] = row; }
+      }
     }
   });
 

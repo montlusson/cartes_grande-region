@@ -20,6 +20,31 @@ function _isSafeResourceUrl(url) {
   return typeof url === 'string' && /^https?:\/\//i.test(url);
 }
 
+// Lit le corps d'une réponse fetch() en devinant l'encodage plutôt qu'en
+// supposant l'UTF-8 (comportement par défaut de resp.text()) — constaté en
+// pratique sur un export CSV Open Data Luxembourg réel : aucun charset dans
+// l'en-tête Content-Type, fichier en réalité en Windows-1252, si bien que
+// tout nom de commune accentué (Esch-sur-Sûre, Käerjeng, Pétange…) devenait
+// des "�" et ne joignait plus jamais avec la couche communes. Un décodage
+// UTF-8 strict (fatal:true) échoue sur la moindre séquence d'octets
+// invalide, contrairement au décodage par défaut qui la remplace en
+// silence — ce qui permet de détecter la mauvaise supposition et de
+// retenter en Windows-1252 (le repli le plus courant pour les exports
+// gouvernementaux européens plus anciens), plutôt que de propager des
+// caractères corrompus jusque dans la jointure.
+function _fetchTextSmart(url) {
+  return fetch(url).then(function(resp) {
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.arrayBuffer();
+  }).then(function(buf) {
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+    } catch (e) {
+      return new TextDecoder('windows-1252').decode(buf);
+    }
+  });
+}
+
 // Un résultat n'est retenu que s'il expose un lien de téléchargement réel
 // (WFS pour GIS-GR, OGC API-Features pour le Géoportail LU) — sinon ce
 // n'est qu'une carte WMS visualisable, pas des données intégrables.

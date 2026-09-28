@@ -69,8 +69,7 @@ function _loadDataSearchResult(r, btn) {
   btn.disabled = true;
   btn.textContent = '…';
   setStatus('Récupération de « ' + r.title + ' »…');
-  fetch(r.url)
-    .then(function(resp) { return resp.ok ? resp.text() : Promise.reject(new Error('HTTP ' + resp.status)); })
+  _fetchTextSmart(r.url)
     .then(function(text) {
       document.getElementById('csv-input').value = text;
       loadCSV();

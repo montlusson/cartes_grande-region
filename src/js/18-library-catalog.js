@@ -193,11 +193,7 @@ function _addCatalogItemAsData(item, btn) {
   btn.disabled = true;
   btn.textContent = '…';
   setStatus('Récupération de « ' + item.label + ' »…');
-  fetch(_catalogItemUrl(item))
-    .then(function(resp) {
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.text();
-    })
+  _fetchTextSmart(_catalogItemUrl(item))
     .then(function(text) {
       var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
@@ -253,11 +249,7 @@ function _addCatalogItem(item, btn) {
   btn.disabled = true;
   btn.textContent = '…';
   setStatus('Récupération de « ' + item.label + ' »…');
-  fetch(_catalogItemUrl(item))
-    .then(function(resp) {
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.text();
-    })
+  _fetchTextSmart(_catalogItemUrl(item))
     .then(function(text) {
       var geojson = _parseLenientGeojson(text);
       if (!geojson || !geojson.features) throw new Error('réponse inattendue du serveur');
