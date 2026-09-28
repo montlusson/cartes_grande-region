@@ -73,42 +73,53 @@ function wireEvents() {
   });
   var ttImgUrl = document.getElementById('tt-img-url');
   if (ttImgUrl) ttImgUrl.addEventListener('input', function() { _ttImageUrl = this.value; _refreshTooltip(); });
+
+  // Barre d'outils + aperçu en direct (js/29) — insérés une fois au chargement
+  // de part et d'autre du <textarea> ; _syncTtGlobalTpl() est le seul point
+  // qui relit sa valeur, met à jour l'état et rafraîchit à la fois la vraie
+  // infobulle (si affichée sur la carte) et l'aperçu du panneau.
+  var ttHtmlTplEl = document.getElementById('tt-html-tpl');
+  var ttToolbarSlot = document.getElementById('tt-toolbar-slot');
+  var ttPreviewSlot = document.getElementById('tt-preview-slot');
+  var ttPreview = null;
+  function _syncTtGlobalTpl() {
+    _ttHtmlTemplate = ttHtmlTplEl.value;
+    _refreshTooltip();
+    if (ttPreview) ttPreview.refresh();
+  }
+  if (ttHtmlTplEl && ttToolbarSlot && ttPreviewSlot) {
+    ttToolbarSlot.appendChild(_buildTtToolbar(ttHtmlTplEl, _syncTtGlobalTpl));
+    ttPreview = _buildTtPreview(function() { return ttHtmlTplEl.value; }, _ttGlobalPreviewContext);
+    ttPreviewSlot.appendChild(ttPreview);
+    ttPreview.refresh();
+  }
+
   var ttHtmlChk = document.getElementById('tt-html-mode');
   if (ttHtmlChk) ttHtmlChk.addEventListener('change', function() {
     _ttHtmlMode = this.checked;
     var w = document.getElementById('tt-html-wrap');
     if (w) w.style.display = this.checked ? 'block' : 'none';
-    if (this.checked) {
-      var tpl = document.getElementById('tt-html-tpl');
-      if (tpl && !tpl.value.trim()) {
-        tpl.value = _generateDefaultTpl();
-        _ttHtmlTemplate = tpl.value;
-      }
-    }
+    // Le modèle reste vide tant que l'auteur n'a pas cliqué "Partir de
+    // l'affichage actuel" ou utilisé la barre d'outils — plus de mur de
+    // HTML imposé au premier clic sur le toggle.
     _refreshTooltip();
   });
-  var ttHtmlTpl = document.getElementById('tt-html-tpl');
-  if (ttHtmlTpl) ttHtmlTpl.addEventListener('input', function() { _ttHtmlTemplate = this.value; _refreshTooltip(); });
+  if (ttHtmlTplEl) ttHtmlTplEl.addEventListener('input', _syncTtGlobalTpl);
   var btnTplAuto = document.getElementById('btn-tt-tpl-auto');
   if (btnTplAuto) btnTplAuto.addEventListener('click', function() {
-    var tpl = document.getElementById('tt-html-tpl');
-    if (!tpl) return;
-    tpl.value = _generateDefaultTpl();
-    _ttHtmlTemplate = tpl.value;
-    _refreshTooltip();
+    if (!ttHtmlTplEl) return;
+    ttHtmlTplEl.value = _generateDefaultTpl();
+    _syncTtGlobalTpl();
   });
   document.addEventListener('click', function(e) {
     var chip = e.target && e.target.closest ? e.target.closest('.tt-var-chip') : null;
-    if (!chip || !chip.dataset || !chip.dataset.var) return;
-    var tpl = document.getElementById('tt-html-tpl');
-    if (!tpl) return;
+    if (!chip || !chip.dataset || !chip.dataset.var || !ttHtmlTplEl) return;
     var insert = '{{' + chip.dataset.var + '}}';
-    var s = tpl.selectionStart, end = tpl.selectionEnd;
-    tpl.value = tpl.value.substring(0, s) + insert + tpl.value.substring(end);
-    tpl.selectionStart = tpl.selectionEnd = s + insert.length;
-    tpl.focus();
-    _ttHtmlTemplate = tpl.value;
-    _refreshTooltip();
+    var s = ttHtmlTplEl.selectionStart, end = ttHtmlTplEl.selectionEnd;
+    ttHtmlTplEl.value = ttHtmlTplEl.value.substring(0, s) + insert + ttHtmlTplEl.value.substring(end);
+    ttHtmlTplEl.selectionStart = ttHtmlTplEl.selectionEnd = s + insert.length;
+    ttHtmlTplEl.focus();
+    _syncTtGlobalTpl();
   });
 
   // Échap ferme les modals

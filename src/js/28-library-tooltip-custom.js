@@ -46,6 +46,18 @@ function _libraryDefaultTtTemplate(layer) {
   return lines.join('\n');
 }
 
+// Contexte d'aperçu (js/29) : la première entité réelle de la couche — un
+// exemple générique n'aurait aucun sens ici, le schéma de champs étant
+// propre à chaque jeu de données importé.
+function _libraryPreviewContext(layer) {
+  var props = ((layer.geojson.features || [])[0] || {}).properties || {};
+  var ctx = { layerName: layer.name, layerColor: layer.color };
+  Object.keys(props).forEach(function(k) {
+    ctx[k] = (props[k] !== null && props[k] !== undefined) ? String(props[k]) : '';
+  });
+  return ctx;
+}
+
 function _appendLibTooltipEditor(layer, list, px) {
   var wrap = document.createElement('div');
   wrap.className = 'lib-opa-row';
@@ -66,16 +78,28 @@ function _appendLibTooltipEditor(layer, list, px) {
   tplRow.innerHTML = '<span style="font-size:10px;color:var(--muted)">Modèle HTML</span>';
   var autoBtn = document.createElement('button');
   autoBtn.className = 'btn btn-secondary btn-sm'; autoBtn.type = 'button';
-  autoBtn.textContent = '↺ Modèle auto';
+  autoBtn.title = 'Repartir de l\'affichage actuel (nom de couche + premiers champs)';
+  autoBtn.textContent = '↺ Partir de l\'affichage actuel';
   tplRow.appendChild(autoBtn);
   detail.appendChild(tplRow);
 
+  // Barre d'outils + aperçu en direct (js/29) — l'aperçu utilise la première
+  // entité réelle de la couche importée, plus parlant qu'un exemple générique
+  // vu que le schéma de champs est propre à chaque jeu de données.
   var tpl = document.createElement('textarea');
   tpl.id = 'lib-tttpl-' + px + layer.id;
   tpl.rows = 5;
   tpl.style.cssText = 'width:100%;font-family:monospace;font-size:10.5px';
   tpl.value = layer.ttTemplate || '';
+  detail.appendChild(_buildTtToolbar(tpl, function() { _syncLibTpl(); }));
   detail.appendChild(tpl);
+  var preview = _buildTtPreview(function() { return tpl.value; }, function() { return _libraryPreviewContext(layer); });
+  detail.appendChild(preview);
+  function _syncLibTpl() {
+    layer.ttTemplate = tpl.value;
+    preview.refresh();
+    _refreshLibraryTooltipIfShown(layer);
+  }
 
   var colorsRow = document.createElement('div');
   colorsRow.style.cssText = 'display:flex;gap:10px;margin:6px 0';
@@ -98,13 +122,8 @@ function _appendLibTooltipEditor(layer, list, px) {
     chip.className = 'tt-var-chip csv-col';
     chip.textContent = f;
     chip.addEventListener('click', function() {
-      var insert = '{{' + f + '}}';
-      var s = tpl.selectionStart || 0, end = tpl.selectionEnd || 0;
-      tpl.value = tpl.value.substring(0, s) + insert + tpl.value.substring(end);
-      tpl.selectionStart = tpl.selectionEnd = s + insert.length;
-      tpl.focus();
-      layer.ttTemplate = tpl.value;
-      _refreshLibraryTooltipIfShown(layer);
+      _ttInsertAtCursor(tpl, '{{' + f + '}}', '', '');
+      _syncLibTpl();
     });
     chipsWrap.appendChild(chip);
   });
@@ -116,18 +135,18 @@ function _appendLibTooltipEditor(layer, list, px) {
   toggleLbl.querySelector('input').addEventListener('change', function() {
     layer.ttCustom = this.checked;
     detail.style.display = this.checked ? 'block' : 'none';
-    if (this.checked && !tpl.value.trim()) {
-      tpl.value = _libraryDefaultTtTemplate(layer);
-      layer.ttTemplate = tpl.value;
-    }
+    // Le modèle reste vide tant que l'auteur n'a pas cliqué "Partir de
+    // l'affichage actuel" ou utilisé la barre d'outils/les variables —
+    // plus de mur de HTML imposé au premier clic sur la case à cocher.
+    preview.refresh();
     _refreshLibraryTooltipIfShown(layer);
   });
   autoBtn.addEventListener('click', function() {
     tpl.value = _libraryDefaultTtTemplate(layer);
-    layer.ttTemplate = tpl.value;
-    _refreshLibraryTooltipIfShown(layer);
+    _syncLibTpl();
   });
-  tpl.addEventListener('input', function() { layer.ttTemplate = tpl.value; _refreshLibraryTooltipIfShown(layer); });
+  tpl.addEventListener('input', _syncLibTpl);
+  preview.refresh();
   document.getElementById('lib-ttbg-' + px + layer.id).addEventListener('input', function() { layer.ttBg = this.value; _refreshLibraryTooltipIfShown(layer); });
   document.getElementById('lib-ttcolor-' + px + layer.id).addEventListener('input', function() { layer.ttColor = this.value; _refreshLibraryTooltipIfShown(layer); });
 }

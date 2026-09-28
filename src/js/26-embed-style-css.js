@@ -29,6 +29,22 @@ var EMBED_STYLE_CSS = [
 '.tt-img{width:96px;height:60px;object-fit:contain;border-radius:4px;display:block;margin:0 auto 8px}',
 '.tt-chip-row{text-align:center;margin-bottom:5px}',
 '.tt-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#1a1a1a}',
+// Classes du modèle personnalisé (onglet Style > Infobulle) — le modèle
+// est publié tel quel (js/13-export-embed-payload.js) : sans ces règles,
+// une infobulle personnalisée dans l'outil perdait son style une fois
+// publiée (pastille, libellés, éléments prédéfinis — hr/liste/mise en
+// valeur — jamais définis ici alors qu'ils le sont dans styles.css).
+'.tt-bloc-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#fff;margin-top:0}',
+'.tt-row-label{color:#767676;font-size:10px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}',
+'.tt-row-val{color:#444;font-weight:500}',
+'.tt-data-val{font-size:14px;font-weight:700;color:#0D0E12;margin-top:4px}',
+'#tt hr{border:none;border-top:1px solid #e2e2e2;margin:7px 0}',
+'#tt hr.tt-hr-thin{border-top-width:1px}',
+'#tt hr.tt-hr-medium{border-top-width:2px}',
+'#tt hr.tt-hr-thick{border-top-width:4px}',
+'#tt ul.tt-list{margin:5px 0;padding-left:16px}',
+'#tt ul.tt-list li{font-size:11px;line-height:1.4;margin-bottom:2px}',
+'#tt big{font-size:1.3em;font-weight:700;line-height:1.3}',
 // Sous ~480px (mobile) : fiche ancrée en bas, pleine largeur — un tap
 // épingle l'infobulle (js/26-embed-tooltip-mobile.js), plus lisible/
 // atteignable qu'une bulle flottante près du doigt.

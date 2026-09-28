@@ -11,7 +11,7 @@ var EMBED_TT_MOBILE_JS = [
 '  function ready(){',
 '    var T = window.__tt;',
 '    if (!T) { setTimeout(ready, 50); return; }', // PLAYER_SCRIPT expose __tt en fin d\'IIFE ; ce script peut s\'exécuter avant
-'    function isMobile(){ return (window.innerWidth||document.documentElement.clientWidth||1024) <= 480; }',
+'    function isMobile(){ return window.matchMedia("(pointer: coarse)").matches; }',
 '    function layout(){',
 '      if (isMobile()) { T.tt.classList.add("tt-sheet"); T.tt.style.left=""; T.tt.style.top=""; }',
 '      else T.tt.classList.remove("tt-sheet");',

@@ -219,9 +219,11 @@
               <div class="field" id="tt-html-wrap" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
                   <label style="margin:0">Modèle HTML</label>
-                  <button class="btn btn-secondary btn-sm" id="btn-tt-tpl-auto" type="button" title="Générer un modèle à partir des champs cochés">↺ Modèle auto</button>
+                  <button class="btn btn-secondary btn-sm" id="btn-tt-tpl-auto" type="button" title="Repartir de l'affichage actuel (champs cochés dans cette section)">↺ Partir de l'affichage actuel</button>
                 </div>
+                <div id="tt-toolbar-slot"></div>
                 <textarea id="tt-html-tpl" rows="6" placeholder='<img src="{{flag_pays}}" width="36">&#10;<div style="font-weight:700">{{name}}</div>&#10;<div>{{pays}} — {{valeur}}</div>'></textarea>
+                <div id="tt-preview-slot"></div>
                 <div style="font-size:10.5px;color:#555;margin-top:6px;margin-bottom:3px;font-weight:600">Variables disponibles — cliquer pour insérer :</div>
                 <div id="tt-vars-static">
                   <span class="tt-var-chip" data-var="chipLabel">chipLabel</span><span class="tt-var-chip" data-var="chipColor">chipColor</span><span class="tt-var-chip" data-var="name">name</span><span class="tt-var-chip" data-var="pays">pays</span><span class="tt-var-chip" data-var="region">region</span><span class="tt-var-chip" data-var="dept">dept</span><span class="tt-var-chip" data-var="canton">canton</span><span class="tt-var-chip" data-var="arrondissement">arrondissement</span><span class="tt-var-chip" data-var="kreis">kreis</span><span class="tt-var-chip" data-var="province">province</span><span class="tt-var-chip" data-var="vg">vg</span><span class="tt-var-chip" data-var="code">code</span><span class="tt-var-chip" data-var="valeur">valeur</span><span class="tt-var-chip" data-var="colonne">colonne</span><span class="tt-var-chip" data-var="flag_pays">flag_pays</span><span class="tt-var-chip" data-var="flag_region">flag_region</span>

@@ -55,6 +55,7 @@ JS_MODULES = [
     "js/26-embed-style-css.js",
     "js/27-embed-tooltip-mobile.js",
     "js/28-library-tooltip-custom.js",
+    "js/29-tt-editor-widgets.js",
 ]
 
 

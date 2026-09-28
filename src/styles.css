@@ -136,6 +136,29 @@ select.full{font-family:var(--font)}
 .tt-bloc-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#fff;margin-top:0}
 .tt-data-val{font-size:15px;font-weight:700;color:#0D0E12;margin-top:5px}
 
+/* Éléments prédéfinis insérables dans une infobulle personnalisée (onglet
+   Style > Infobulle, et par couche Bibliothèque) — mêmes règles partout où
+   une infobulle peut s'afficher : #map-tt (carte), .tt-preview-inner
+   (aperçu dans le panneau) ; l'embed publié a son propre jeu (js/26) qui
+   doit rester visuellement identique. */
+#map-tt hr, .tt-preview-inner hr{border:none;border-top:1px solid #e2e2e2;margin:8px 0}
+#map-tt hr.tt-hr-thin, .tt-preview-inner hr.tt-hr-thin{border-top-width:1px}
+#map-tt hr.tt-hr-medium, .tt-preview-inner hr.tt-hr-medium{border-top-width:2px}
+#map-tt hr.tt-hr-thick, .tt-preview-inner hr.tt-hr-thick{border-top-width:4px}
+#map-tt ul.tt-list, .tt-preview-inner ul.tt-list{margin:6px 0;padding-left:18px}
+#map-tt ul.tt-list li, .tt-preview-inner ul.tt-list li{font-size:11.5px;line-height:1.5;margin-bottom:2px}
+#map-tt big, .tt-preview-inner big{font-size:1.3em;font-weight:700;line-height:1.3}
+
+/* Barre d'outils + aperçu au-dessus du champ "Modèle HTML" (onglet Style et
+   par couche Bibliothèque) — rend le modèle éditable sans lire le HTML :
+   on clique un bouton, on voit le résultat tout de suite ci-dessous. */
+.tt-editor-toolbar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.tt-editor-toolbar button{font-size:10.5px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#fff;color:#444;cursor:pointer;white-space:nowrap}
+.tt-editor-toolbar button:hover{background:#f5f5f5;border-color:#ccc}
+.tt-preview-box{border:1px dashed var(--border);border-radius:8px;padding:8px;margin-top:6px;background:#fafaf8}
+.tt-preview-box .tt-preview-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;display:block}
+.tt-preview-inner{background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:11px 14px;font-size:12.5px;line-height:1.5;display:inline-block;max-width:240px}
+
 /* Legend */
 #map-legend{position:absolute;left:10px;bottom:10px;z-index:40;background:rgba(255,255,255,.93);border-radius:8px;padding:8px 11px;display:flex;flex-direction:column;gap:4px;max-width:min(46%,250px);box-shadow:0 1px 6px rgba(0,0,0,.12)}
 #map-legend:empty{display:none}

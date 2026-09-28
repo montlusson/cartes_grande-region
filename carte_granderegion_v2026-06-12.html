@@ -149,6 +149,29 @@ select.full{font-family:var(--font)}
 .tt-bloc-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#fff;margin-top:0}
 .tt-data-val{font-size:15px;font-weight:700;color:#0D0E12;margin-top:5px}
 
+/* Éléments prédéfinis insérables dans une infobulle personnalisée (onglet
+   Style > Infobulle, et par couche Bibliothèque) — mêmes règles partout où
+   une infobulle peut s'afficher : #map-tt (carte), .tt-preview-inner
+   (aperçu dans le panneau) ; l'embed publié a son propre jeu (js/26) qui
+   doit rester visuellement identique. */
+#map-tt hr, .tt-preview-inner hr{border:none;border-top:1px solid #e2e2e2;margin:8px 0}
+#map-tt hr.tt-hr-thin, .tt-preview-inner hr.tt-hr-thin{border-top-width:1px}
+#map-tt hr.tt-hr-medium, .tt-preview-inner hr.tt-hr-medium{border-top-width:2px}
+#map-tt hr.tt-hr-thick, .tt-preview-inner hr.tt-hr-thick{border-top-width:4px}
+#map-tt ul.tt-list, .tt-preview-inner ul.tt-list{margin:6px 0;padding-left:18px}
+#map-tt ul.tt-list li, .tt-preview-inner ul.tt-list li{font-size:11.5px;line-height:1.5;margin-bottom:2px}
+#map-tt big, .tt-preview-inner big{font-size:1.3em;font-weight:700;line-height:1.3}
+
+/* Barre d'outils + aperçu au-dessus du champ "Modèle HTML" (onglet Style et
+   par couche Bibliothèque) — rend le modèle éditable sans lire le HTML :
+   on clique un bouton, on voit le résultat tout de suite ci-dessous. */
+.tt-editor-toolbar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px}
+.tt-editor-toolbar button{font-size:10.5px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#fff;color:#444;cursor:pointer;white-space:nowrap}
+.tt-editor-toolbar button:hover{background:#f5f5f5;border-color:#ccc}
+.tt-preview-box{border:1px dashed var(--border);border-radius:8px;padding:8px;margin-top:6px;background:#fafaf8}
+.tt-preview-box .tt-preview-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;display:block}
+.tt-preview-inner{background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);padding:11px 14px;font-size:12.5px;line-height:1.5;display:inline-block;max-width:240px}
+
 /* Legend */
 #map-legend{position:absolute;left:10px;bottom:10px;z-index:40;background:rgba(255,255,255,.93);border-radius:8px;padding:8px 11px;display:flex;flex-direction:column;gap:4px;max-width:min(46%,250px);box-shadow:0 1px 6px rgba(0,0,0,.12)}
 #map-legend:empty{display:none}
@@ -987,9 +1010,11 @@ body.preview-mode:not(.pv-tablet) #map-search{top:22px}
               <div class="field" id="tt-html-wrap" style="display:none">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
                   <label style="margin:0">Modèle HTML</label>
-                  <button class="btn btn-secondary btn-sm" id="btn-tt-tpl-auto" type="button" title="Générer un modèle à partir des champs cochés">↺ Modèle auto</button>
+                  <button class="btn btn-secondary btn-sm" id="btn-tt-tpl-auto" type="button" title="Repartir de l'affichage actuel (champs cochés dans cette section)">↺ Partir de l'affichage actuel</button>
                 </div>
+                <div id="tt-toolbar-slot"></div>
                 <textarea id="tt-html-tpl" rows="6" placeholder='<img src="{{flag_pays}}" width="36">&#10;<div style="font-weight:700">{{name}}</div>&#10;<div>{{pays}} — {{valeur}}</div>'></textarea>
+                <div id="tt-preview-slot"></div>
                 <div style="font-size:10.5px;color:#555;margin-top:6px;margin-bottom:3px;font-weight:600">Variables disponibles — cliquer pour insérer :</div>
                 <div id="tt-vars-static">
                   <span class="tt-var-chip" data-var="chipLabel">chipLabel</span><span class="tt-var-chip" data-var="chipColor">chipColor</span><span class="tt-var-chip" data-var="name">name</span><span class="tt-var-chip" data-var="pays">pays</span><span class="tt-var-chip" data-var="region">region</span><span class="tt-var-chip" data-var="dept">dept</span><span class="tt-var-chip" data-var="canton">canton</span><span class="tt-var-chip" data-var="arrondissement">arrondissement</span><span class="tt-var-chip" data-var="kreis">kreis</span><span class="tt-var-chip" data-var="province">province</span><span class="tt-var-chip" data-var="vg">vg</span><span class="tt-var-chip" data-var="code">code</span><span class="tt-var-chip" data-var="valeur">valeur</span><span class="tt-var-chip" data-var="colonne">colonne</span><span class="tt-var-chip" data-var="flag_pays">flag_pays</span><span class="tt-var-chip" data-var="flag_region">flag_region</span>
@@ -3074,12 +3099,24 @@ function _showTooltip(e, feat) {
   _positionTooltip(tt, fr, e.point.x, e.point.y);
 }
 
-// Sous ~480px de large (mobile), une bulle flottante près du doigt est
-// difficile à lire/atteindre — bascule en fiche ancrée en bas de la carte,
-// pleine largeur (mêmes proportions que le pied de page de l'embed publié).
-// Au-dessus, comportement flottant habituel, positionné près du point touché.
+// Sur pointeur tactile (doigt imprécis), une bulle flottante est difficile
+// à lire/atteindre — bascule en fiche ancrée en bas de la carte, pleine
+// largeur (mêmes proportions que le pied de page de l'embed publié). Sur
+// pointeur fin (souris/trackpad), comportement flottant habituel, positionné
+// près du curseur — quelle que soit la largeur de fenêtre : une largeur de
+// #map-frame réduite (fenêtre desktop pas maximisée, sidebar ouverte...)
+// déclenchait auparavant la fiche mobile même en usage souris, la faisant
+// atterrir en bas de carte, juste au-dessus de la légende.
+function _isMobileTooltipMode() {
+  // L'aperçu "Vue Mobile" de l'outil simule un téléphone dans une fenêtre où
+  // l'auteur, lui, garde toujours une souris — sans ce cas, l'aperçu ne
+  // montrerait jamais le rendu réel que verront les lecteurs sur téléphone.
+  var mobilePreview = document.body.classList.contains('preview-mode')
+    && !document.body.classList.contains('pv-tablet');
+  return mobilePreview || window.matchMedia('(pointer: coarse)').matches;
+}
 function _positionTooltip(tt, fr, px, py) {
-  if (fr.width <= 480) {
+  if (_isMobileTooltipMode()) {
     tt.classList.add('tt-sheet');
     tt.style.left = ''; tt.style.top = '';
     return;
@@ -4282,42 +4319,53 @@ function wireEvents() {
   });
   var ttImgUrl = document.getElementById('tt-img-url');
   if (ttImgUrl) ttImgUrl.addEventListener('input', function() { _ttImageUrl = this.value; _refreshTooltip(); });
+
+  // Barre d'outils + aperçu en direct (js/29) — insérés une fois au chargement
+  // de part et d'autre du <textarea> ; _syncTtGlobalTpl() est le seul point
+  // qui relit sa valeur, met à jour l'état et rafraîchit à la fois la vraie
+  // infobulle (si affichée sur la carte) et l'aperçu du panneau.
+  var ttHtmlTplEl = document.getElementById('tt-html-tpl');
+  var ttToolbarSlot = document.getElementById('tt-toolbar-slot');
+  var ttPreviewSlot = document.getElementById('tt-preview-slot');
+  var ttPreview = null;
+  function _syncTtGlobalTpl() {
+    _ttHtmlTemplate = ttHtmlTplEl.value;
+    _refreshTooltip();
+    if (ttPreview) ttPreview.refresh();
+  }
+  if (ttHtmlTplEl && ttToolbarSlot && ttPreviewSlot) {
+    ttToolbarSlot.appendChild(_buildTtToolbar(ttHtmlTplEl, _syncTtGlobalTpl));
+    ttPreview = _buildTtPreview(function() { return ttHtmlTplEl.value; }, _ttGlobalPreviewContext);
+    ttPreviewSlot.appendChild(ttPreview);
+    ttPreview.refresh();
+  }
+
   var ttHtmlChk = document.getElementById('tt-html-mode');
   if (ttHtmlChk) ttHtmlChk.addEventListener('change', function() {
     _ttHtmlMode = this.checked;
     var w = document.getElementById('tt-html-wrap');
     if (w) w.style.display = this.checked ? 'block' : 'none';
-    if (this.checked) {
-      var tpl = document.getElementById('tt-html-tpl');
-      if (tpl && !tpl.value.trim()) {
-        tpl.value = _generateDefaultTpl();
-        _ttHtmlTemplate = tpl.value;
-      }
-    }
+    // Le modèle reste vide tant que l'auteur n'a pas cliqué "Partir de
+    // l'affichage actuel" ou utilisé la barre d'outils — plus de mur de
+    // HTML imposé au premier clic sur le toggle.
     _refreshTooltip();
   });
-  var ttHtmlTpl = document.getElementById('tt-html-tpl');
-  if (ttHtmlTpl) ttHtmlTpl.addEventListener('input', function() { _ttHtmlTemplate = this.value; _refreshTooltip(); });
+  if (ttHtmlTplEl) ttHtmlTplEl.addEventListener('input', _syncTtGlobalTpl);
   var btnTplAuto = document.getElementById('btn-tt-tpl-auto');
   if (btnTplAuto) btnTplAuto.addEventListener('click', function() {
-    var tpl = document.getElementById('tt-html-tpl');
-    if (!tpl) return;
-    tpl.value = _generateDefaultTpl();
-    _ttHtmlTemplate = tpl.value;
-    _refreshTooltip();
+    if (!ttHtmlTplEl) return;
+    ttHtmlTplEl.value = _generateDefaultTpl();
+    _syncTtGlobalTpl();
   });
   document.addEventListener('click', function(e) {
     var chip = e.target && e.target.closest ? e.target.closest('.tt-var-chip') : null;
-    if (!chip || !chip.dataset || !chip.dataset.var) return;
-    var tpl = document.getElementById('tt-html-tpl');
-    if (!tpl) return;
+    if (!chip || !chip.dataset || !chip.dataset.var || !ttHtmlTplEl) return;
     var insert = '{{' + chip.dataset.var + '}}';
-    var s = tpl.selectionStart, end = tpl.selectionEnd;
-    tpl.value = tpl.value.substring(0, s) + insert + tpl.value.substring(end);
-    tpl.selectionStart = tpl.selectionEnd = s + insert.length;
-    tpl.focus();
-    _ttHtmlTemplate = tpl.value;
-    _refreshTooltip();
+    var s = ttHtmlTplEl.selectionStart, end = ttHtmlTplEl.selectionEnd;
+    ttHtmlTplEl.value = ttHtmlTplEl.value.substring(0, s) + insert + ttHtmlTplEl.value.substring(end);
+    ttHtmlTplEl.selectionStart = ttHtmlTplEl.selectionEnd = s + insert.length;
+    ttHtmlTplEl.focus();
+    _syncTtGlobalTpl();
   });
 
   // Échap ferme les modals
@@ -7699,6 +7747,22 @@ var EMBED_STYLE_CSS = [
 '.tt-img{width:96px;height:60px;object-fit:contain;border-radius:4px;display:block;margin:0 auto 8px}',
 '.tt-chip-row{text-align:center;margin-bottom:5px}',
 '.tt-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#1a1a1a}',
+// Classes du modèle personnalisé (onglet Style > Infobulle) — le modèle
+// est publié tel quel (js/13-export-embed-payload.js) : sans ces règles,
+// une infobulle personnalisée dans l'outil perdait son style une fois
+// publiée (pastille, libellés, éléments prédéfinis — hr/liste/mise en
+// valeur — jamais définis ici alors qu'ils le sont dans styles.css).
+'.tt-bloc-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:#fff;margin-top:0}',
+'.tt-row-label{color:#767676;font-size:10px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}',
+'.tt-row-val{color:#444;font-weight:500}',
+'.tt-data-val{font-size:14px;font-weight:700;color:#0D0E12;margin-top:4px}',
+'#tt hr{border:none;border-top:1px solid #e2e2e2;margin:7px 0}',
+'#tt hr.tt-hr-thin{border-top-width:1px}',
+'#tt hr.tt-hr-medium{border-top-width:2px}',
+'#tt hr.tt-hr-thick{border-top-width:4px}',
+'#tt ul.tt-list{margin:5px 0;padding-left:16px}',
+'#tt ul.tt-list li{font-size:11px;line-height:1.4;margin-bottom:2px}',
+'#tt big{font-size:1.3em;font-weight:700;line-height:1.3}',
 // Sous ~480px (mobile) : fiche ancrée en bas, pleine largeur — un tap
 // épingle l'infobulle (js/26-embed-tooltip-mobile.js), plus lisible/
 // atteignable qu'une bulle flottante près du doigt.
@@ -7783,7 +7847,7 @@ var EMBED_TT_MOBILE_JS = [
 '  function ready(){',
 '    var T = window.__tt;',
 '    if (!T) { setTimeout(ready, 50); return; }', // PLAYER_SCRIPT expose __tt en fin d\'IIFE ; ce script peut s\'exécuter avant
-'    function isMobile(){ return (window.innerWidth||document.documentElement.clientWidth||1024) <= 480; }',
+'    function isMobile(){ return window.matchMedia("(pointer: coarse)").matches; }',
 '    function layout(){',
 '      if (isMobile()) { T.tt.classList.add("tt-sheet"); T.tt.style.left=""; T.tt.style.top=""; }',
 '      else T.tt.classList.remove("tt-sheet");',
@@ -7848,6 +7912,18 @@ function _libraryDefaultTtTemplate(layer) {
   return lines.join('\n');
 }
 
+// Contexte d'aperçu (js/29) : la première entité réelle de la couche — un
+// exemple générique n'aurait aucun sens ici, le schéma de champs étant
+// propre à chaque jeu de données importé.
+function _libraryPreviewContext(layer) {
+  var props = ((layer.geojson.features || [])[0] || {}).properties || {};
+  var ctx = { layerName: layer.name, layerColor: layer.color };
+  Object.keys(props).forEach(function(k) {
+    ctx[k] = (props[k] !== null && props[k] !== undefined) ? String(props[k]) : '';
+  });
+  return ctx;
+}
+
 function _appendLibTooltipEditor(layer, list, px) {
   var wrap = document.createElement('div');
   wrap.className = 'lib-opa-row';
@@ -7868,16 +7944,28 @@ function _appendLibTooltipEditor(layer, list, px) {
   tplRow.innerHTML = '<span style="font-size:10px;color:var(--muted)">Modèle HTML</span>';
   var autoBtn = document.createElement('button');
   autoBtn.className = 'btn btn-secondary btn-sm'; autoBtn.type = 'button';
-  autoBtn.textContent = '↺ Modèle auto';
+  autoBtn.title = 'Repartir de l\'affichage actuel (nom de couche + premiers champs)';
+  autoBtn.textContent = '↺ Partir de l\'affichage actuel';
   tplRow.appendChild(autoBtn);
   detail.appendChild(tplRow);
 
+  // Barre d'outils + aperçu en direct (js/29) — l'aperçu utilise la première
+  // entité réelle de la couche importée, plus parlant qu'un exemple générique
+  // vu que le schéma de champs est propre à chaque jeu de données.
   var tpl = document.createElement('textarea');
   tpl.id = 'lib-tttpl-' + px + layer.id;
   tpl.rows = 5;
   tpl.style.cssText = 'width:100%;font-family:monospace;font-size:10.5px';
   tpl.value = layer.ttTemplate || '';
+  detail.appendChild(_buildTtToolbar(tpl, function() { _syncLibTpl(); }));
   detail.appendChild(tpl);
+  var preview = _buildTtPreview(function() { return tpl.value; }, function() { return _libraryPreviewContext(layer); });
+  detail.appendChild(preview);
+  function _syncLibTpl() {
+    layer.ttTemplate = tpl.value;
+    preview.refresh();
+    _refreshLibraryTooltipIfShown(layer);
+  }
 
   var colorsRow = document.createElement('div');
   colorsRow.style.cssText = 'display:flex;gap:10px;margin:6px 0';
@@ -7900,13 +7988,8 @@ function _appendLibTooltipEditor(layer, list, px) {
     chip.className = 'tt-var-chip csv-col';
     chip.textContent = f;
     chip.addEventListener('click', function() {
-      var insert = '{{' + f + '}}';
-      var s = tpl.selectionStart || 0, end = tpl.selectionEnd || 0;
-      tpl.value = tpl.value.substring(0, s) + insert + tpl.value.substring(end);
-      tpl.selectionStart = tpl.selectionEnd = s + insert.length;
-      tpl.focus();
-      layer.ttTemplate = tpl.value;
-      _refreshLibraryTooltipIfShown(layer);
+      _ttInsertAtCursor(tpl, '{{' + f + '}}', '', '');
+      _syncLibTpl();
     });
     chipsWrap.appendChild(chip);
   });
@@ -7918,20 +8001,105 @@ function _appendLibTooltipEditor(layer, list, px) {
   toggleLbl.querySelector('input').addEventListener('change', function() {
     layer.ttCustom = this.checked;
     detail.style.display = this.checked ? 'block' : 'none';
-    if (this.checked && !tpl.value.trim()) {
-      tpl.value = _libraryDefaultTtTemplate(layer);
-      layer.ttTemplate = tpl.value;
-    }
+    // Le modèle reste vide tant que l'auteur n'a pas cliqué "Partir de
+    // l'affichage actuel" ou utilisé la barre d'outils/les variables —
+    // plus de mur de HTML imposé au premier clic sur la case à cocher.
+    preview.refresh();
     _refreshLibraryTooltipIfShown(layer);
   });
   autoBtn.addEventListener('click', function() {
     tpl.value = _libraryDefaultTtTemplate(layer);
-    layer.ttTemplate = tpl.value;
-    _refreshLibraryTooltipIfShown(layer);
+    _syncLibTpl();
   });
-  tpl.addEventListener('input', function() { layer.ttTemplate = tpl.value; _refreshLibraryTooltipIfShown(layer); });
+  tpl.addEventListener('input', _syncLibTpl);
+  preview.refresh();
   document.getElementById('lib-ttbg-' + px + layer.id).addEventListener('input', function() { layer.ttBg = this.value; _refreshLibraryTooltipIfShown(layer); });
   document.getElementById('lib-ttcolor-' + px + layer.id).addEventListener('input', function() { layer.ttColor = this.value; _refreshLibraryTooltipIfShown(layer); });
+}
+//  INFOBULLE — BARRE D'OUTILS + APERÇU EN DIRECT
+//  Partagé entre le modèle global (onglet Style > Infobulle, js/07 + js/11)
+//  et le modèle par couche Bibliothèque (js/28) — le point commun des deux
+//  est un <textarea> de modèle HTML avec placeholders {{var}} ; ce module
+//  ajoute au-dessus une barre de boutons qui insère des éléments prédéfinis
+//  sans avoir à écrire de HTML, et en dessous un aperçu rendu en direct
+//  (mêmes classes CSS que la vraie infobulle, cf. styles.css) — pour rendre
+//  le modèle éditable sans avoir à le lire.
+// ══════════════════════════════════════════════════════════════════
+
+// Insère avant/après la sélection courante (ou un texte de repli si rien
+// n'est sélectionné), puis resélectionne le texte inséré — permet de
+// ré-appliquer un bouton (ex. mettre en valeur une autre portion) sans
+// perdre le curseur.
+function _ttInsertAtCursor(ta, before, after, fallback) {
+  var s = ta.selectionStart || 0, end = ta.selectionEnd || 0;
+  var mid = ta.value.substring(s, end) || fallback || '';
+  ta.value = ta.value.substring(0, s) + before + mid + after + ta.value.substring(end);
+  ta.selectionStart = s + before.length;
+  ta.selectionEnd = ta.selectionStart + mid.length;
+  ta.focus();
+}
+
+// onChange : appelé après chaque insertion (mise à jour de la variable liée
+// au textarea + rafraîchissement de l'aperçu/de la carte, propre à chaque
+// appelant — cf. js/11-events.js et js/28-library-tooltip-custom.js).
+function _buildTtToolbar(ta, onChange) {
+  var bar = document.createElement('div');
+  bar.className = 'tt-editor-toolbar';
+  [
+    { label: '― Ligne fine', title: 'Insérer une ligne de séparation fine',
+      run: function() { _ttInsertAtCursor(ta, '\n<hr class="tt-hr-thin">\n', '', ''); } },
+    { label: '─ Ligne moyenne', title: 'Insérer une ligne de séparation moyenne',
+      run: function() { _ttInsertAtCursor(ta, '\n<hr class="tt-hr-medium">\n', '', ''); } },
+    { label: '▬ Ligne épaisse', title: 'Insérer une ligne de séparation épaisse',
+      run: function() { _ttInsertAtCursor(ta, '\n<hr class="tt-hr-thick">\n', '', ''); } },
+    { label: '☰ Liste', title: 'Insérer une liste à puces',
+      run: function() { _ttInsertAtCursor(ta, '\n<ul class="tt-list">\n  <li>', '</li>\n  <li>Élément 2</li>\n</ul>\n', 'Élément 1'); } },
+    { label: 'A＋ Mettre en valeur', title: 'Agrandir le texte sélectionné (ou un texte de départ)',
+      run: function() { _ttInsertAtCursor(ta, '<big>', '</big>', 'Texte en valeur'); } }
+  ].forEach(function(b) {
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.textContent = b.label; btn.title = b.title;
+    btn.addEventListener('click', function() { b.run(); onChange(); });
+    bar.appendChild(btn);
+  });
+  return bar;
+}
+
+// getTpl/getCtx : fonctions (pas des valeurs figées) — appelées à chaque
+// refresh() pour toujours lire l'état courant du modèle et son contexte
+// d'exemple (fixe pour le modèle global, données réelles de la couche pour
+// le modèle Bibliothèque, cf. les deux appelants).
+function _buildTtPreview(getTpl, getCtx) {
+  var box = document.createElement('div');
+  box.className = 'tt-preview-box';
+  var label = document.createElement('span');
+  label.className = 'tt-preview-label';
+  label.textContent = 'Aperçu';
+  var inner = document.createElement('div');
+  inner.className = 'tt-preview-inner';
+  box.appendChild(label);
+  box.appendChild(inner);
+  box.refresh = function() {
+    var tpl = getTpl();
+    inner.innerHTML = tpl.trim()
+      ? _renderTpl(tpl, getCtx(), true)
+      : '<span style="color:var(--muted);font-size:11px">Le modèle est vide — utilisez les boutons ci-dessus ou les variables ci-dessous.</span>';
+  };
+  return box;
+}
+
+// Contexte d'exemple pour l'aperçu du modèle GLOBAL (onglet Style) — fixe,
+// pour que l'aperçu fonctionne même avant tout survol de la carte (cf.
+// js/09-ui-helpers.js _ttContext pour le contexte réel utilisé à l'affichage).
+function _ttGlobalPreviewContext() {
+  var region = 'Grand Est';
+  return {
+    name: 'Metz', region: BLOC_LABELS[region] || region, pays: 'France',
+    dept: 'Moselle', arrondissement: 'Metz', canton: '', kreis: '', province: '', vg: '',
+    code: '57463', valeur: '42', colonne: _valueLabel() || 'Valeur',
+    flag_pays: FLAG_PAYS['France'] || '', flag_region: FLAG_REGION[region] || '',
+    chipLabel: 'Lorraine', chipColor: BLOC_COLORS[region] || '#a6d49f'
+  };
 }
 </script>
 </body>

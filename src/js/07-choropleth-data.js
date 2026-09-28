@@ -327,12 +327,24 @@ function _showTooltip(e, feat) {
   _positionTooltip(tt, fr, e.point.x, e.point.y);
 }
 
-// Sous ~480px de large (mobile), une bulle flottante près du doigt est
-// difficile à lire/atteindre — bascule en fiche ancrée en bas de la carte,
-// pleine largeur (mêmes proportions que le pied de page de l'embed publié).
-// Au-dessus, comportement flottant habituel, positionné près du point touché.
+// Sur pointeur tactile (doigt imprécis), une bulle flottante est difficile
+// à lire/atteindre — bascule en fiche ancrée en bas de la carte, pleine
+// largeur (mêmes proportions que le pied de page de l'embed publié). Sur
+// pointeur fin (souris/trackpad), comportement flottant habituel, positionné
+// près du curseur — quelle que soit la largeur de fenêtre : une largeur de
+// #map-frame réduite (fenêtre desktop pas maximisée, sidebar ouverte...)
+// déclenchait auparavant la fiche mobile même en usage souris, la faisant
+// atterrir en bas de carte, juste au-dessus de la légende.
+function _isMobileTooltipMode() {
+  // L'aperçu "Vue Mobile" de l'outil simule un téléphone dans une fenêtre où
+  // l'auteur, lui, garde toujours une souris — sans ce cas, l'aperçu ne
+  // montrerait jamais le rendu réel que verront les lecteurs sur téléphone.
+  var mobilePreview = document.body.classList.contains('preview-mode')
+    && !document.body.classList.contains('pv-tablet');
+  return mobilePreview || window.matchMedia('(pointer: coarse)').matches;
+}
 function _positionTooltip(tt, fr, px, py) {
-  if (fr.width <= 480) {
+  if (_isMobileTooltipMode()) {
     tt.classList.add('tt-sheet');
     tt.style.left = ''; tt.style.top = '';
     return;
