@@ -45,7 +45,14 @@ function applyData() {
   _dataMap = {}; _rowMap = {};
   _csvData.rows.forEach(function(row) {
     var keyRaw = row[_joinCol] || '';
-    var key = (jt === 'name' || jt === 'region') ? _normStr(keyRaw) : keyRaw;
+    // Jointure "Région/Bloc" : passer par _canonicalRegion (js/02) avant de
+    // normaliser, pour reconnaître les noms "exotiques" (Sarre, Rhénanie,
+    // Grand-Duché…) au même titre que le nom interne (Saarland…) utilisé
+    // par la couche de blocs — sinon "Sarre" dans le CSV ne rejoint jamais
+    // rien, faute de correspondre littéralement.
+    var key = jt === 'region' ? _normStr(_canonicalRegion(keyRaw))
+            : jt === 'name'   ? _normStr(keyRaw)
+            : keyRaw;
     var val = row[_valueCol];
     if (key) { _dataMap[key] = val; _rowMap[key] = row; }
     // Jointure tolérante : « Nom - Précision » (exports à suffixes maison) et
@@ -263,7 +270,7 @@ function _generateDefaultTpl() {
   }
   var fmap = [
     {k:'canton',l:'Canton'},{k:'dept',l:'D\u00e9partement'},{k:'arrondissement',l:'Arrondissement'},
-    {k:'kreis',l:'Kreis / Landkreis'},{k:'province',l:'Province'},{k:'vg',l:'Verbandsgemeinde'},
+    {k:'kreis',l:'Arrondissement (Kreis)'},{k:'province',l:'Province'},{k:'vg',l:'Communauté de communes (Verbandsgemeinde)'},
     {k:'region',l:'R\u00e9gion'},{k:'pays',l:'Pays'},{k:'code',l:'Code'}
   ];
   fmap.forEach(function(f) {
@@ -319,9 +326,13 @@ function _showTooltip(e, feat) {
   if (tf.canton  && h.canton && h.region !== 'Grand Est') rows.push({l:'Canton', v:h.canton});
   if (tf.dept    && h.dept)        rows.push({l: h.region==='Grand Est' ? 'Département' : 'Dept.', v:h.dept});
   if (tf.arrondissement && h.arrondissement && h.arrondissement !== h.dept) rows.push({l:'Arrondissement', v:h.arrondissement});
-  if (tf.kreis   && h.kreis)       rows.push({l:'Kreis / Landkreis', v:h.kreis});
+  // Libellés en français partout, comme les autres niveaux (Canton,
+  // Département, Arrondissement, Province) — le terme allemand reste
+  // entre parenthèses pour qui le cherche, mais n'est jamais ce qui ouvre
+  // le libellé (cf. GIS-GR lui-même : "Kreis (arrondissement)").
+  if (tf.kreis   && h.kreis)       rows.push({l:'Arrondissement (Kreis)', v:h.kreis});
   if (tf.province && h.province)   rows.push({l:'Province', v:h.province});
-  if (tf.vg      && h.vg)          rows.push({l:'Verbandsgemeinde', v:h.vg});
+  if (tf.vg      && h.vg)          rows.push({l:'Communauté de communes (Verbandsgemeinde)', v:h.vg});
   if (tf.region)                   rows.push({l:'Région', v:BLOC_LABELS[h.region] || h.region});
   if (tf.pays    && h.pays)        rows.push({l:'Pays', v:h.pays});
 

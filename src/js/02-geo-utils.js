@@ -1,6 +1,12 @@
 //  NORMALISATION RÉGION & HIÉRARCHIE
 // ══════════════════════════════════════════════════════════════════
 
+// Reconnaît aussi bien les codes internes (LOR, WAL…) que les noms "exotiques"
+// rencontrés dans des fichiers externes (CSV collés, couches Bibliothèque,
+// résultats de recherche…) : nom français courant (Sarre, Rhénanie),
+// dénomination officielle (Grand-Duché), variantes tronquées, etc. — jamais
+// un code pays seul (DE/FR/BE/LU), qui désignerait plusieurs blocs à la fois
+// dans la Grande Région (RLP et Sarre sont tous deux "DE").
 function _canonicalRegion(raw) {
   var r = raw || '';
   if (r === 'LOR' || r === 'GE')  return 'Grand Est';
@@ -9,11 +15,11 @@ function _canonicalRegion(raw) {
   if (r === 'RLP')                return 'Rheinland-Pfalz';
   if (r === 'SL'  || r === 'SAR') return 'Saarland';
   if (BLOC_COLORS[r]) return r;
-  if (r.match(/Grand.Est|Lorraine/i))    return 'Grand Est';
-  if (r.match(/Rheinland|Palatinat/i))   return 'Rheinland-Pfalz';
-  if (r.match(/Saar/i))                  return 'Saarland';
-  if (r.match(/Wallon/i))                return 'Wallonie';
-  if (r.match(/Luxemb/i))                return 'Luxembourg';
+  if (r.match(/Grand.Est|Lorraine/i))         return 'Grand Est';
+  if (r.match(/Rheinland|Palatinat|Rh.nanie/i)) return 'Rheinland-Pfalz';
+  if (r.match(/Saar|^Sarre$|\bSarre\b/i))      return 'Saarland';
+  if (r.match(/Wallon/i))                      return 'Wallonie';
+  if (r.match(/Luxemb|Grand.Duch/i))           return 'Luxembourg';
   return r;
 }
 

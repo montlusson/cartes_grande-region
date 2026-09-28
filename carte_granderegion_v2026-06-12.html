@@ -1683,6 +1683,12 @@ var CAT_FALLBACK = ['#4e79a7','#f28e2b','#e15759','#76b7b4','#59a14f','#edc948',
 //  NORMALISATION RÉGION & HIÉRARCHIE
 // ══════════════════════════════════════════════════════════════════
 
+// Reconnaît aussi bien les codes internes (LOR, WAL…) que les noms "exotiques"
+// rencontrés dans des fichiers externes (CSV collés, couches Bibliothèque,
+// résultats de recherche…) : nom français courant (Sarre, Rhénanie),
+// dénomination officielle (Grand-Duché), variantes tronquées, etc. — jamais
+// un code pays seul (DE/FR/BE/LU), qui désignerait plusieurs blocs à la fois
+// dans la Grande Région (RLP et Sarre sont tous deux "DE").
 function _canonicalRegion(raw) {
   var r = raw || '';
   if (r === 'LOR' || r === 'GE')  return 'Grand Est';
@@ -1691,11 +1697,11 @@ function _canonicalRegion(raw) {
   if (r === 'RLP')                return 'Rheinland-Pfalz';
   if (r === 'SL'  || r === 'SAR') return 'Saarland';
   if (BLOC_COLORS[r]) return r;
-  if (r.match(/Grand.Est|Lorraine/i))    return 'Grand Est';
-  if (r.match(/Rheinland|Palatinat/i))   return 'Rheinland-Pfalz';
-  if (r.match(/Saar/i))                  return 'Saarland';
-  if (r.match(/Wallon/i))                return 'Wallonie';
-  if (r.match(/Luxemb/i))                return 'Luxembourg';
+  if (r.match(/Grand.Est|Lorraine/i))         return 'Grand Est';
+  if (r.match(/Rheinland|Palatinat|Rh.nanie/i)) return 'Rheinland-Pfalz';
+  if (r.match(/Saar|^Sarre$|\bSarre\b/i))      return 'Saarland';
+  if (r.match(/Wallon/i))                      return 'Wallonie';
+  if (r.match(/Luxemb|Grand.Duch/i))           return 'Luxembourg';
   return r;
 }
 
@@ -2953,7 +2959,14 @@ function applyData() {
   _dataMap = {}; _rowMap = {};
   _csvData.rows.forEach(function(row) {
     var keyRaw = row[_joinCol] || '';
-    var key = (jt === 'name' || jt === 'region') ? _normStr(keyRaw) : keyRaw;
+    // Jointure "Région/Bloc" : passer par _canonicalRegion (js/02) avant de
+    // normaliser, pour reconnaître les noms "exotiques" (Sarre, Rhénanie,
+    // Grand-Duché…) au même titre que le nom interne (Saarland…) utilisé
+    // par la couche de blocs — sinon "Sarre" dans le CSV ne rejoint jamais
+    // rien, faute de correspondre littéralement.
+    var key = jt === 'region' ? _normStr(_canonicalRegion(keyRaw))
+            : jt === 'name'   ? _normStr(keyRaw)
+            : keyRaw;
     var val = row[_valueCol];
     if (key) { _dataMap[key] = val; _rowMap[key] = row; }
     // Jointure tolérante : « Nom - Précision » (exports à suffixes maison) et
@@ -3171,7 +3184,7 @@ function _generateDefaultTpl() {
   }
   var fmap = [
     {k:'canton',l:'Canton'},{k:'dept',l:'D\u00e9partement'},{k:'arrondissement',l:'Arrondissement'},
-    {k:'kreis',l:'Kreis / Landkreis'},{k:'province',l:'Province'},{k:'vg',l:'Verbandsgemeinde'},
+    {k:'kreis',l:'Arrondissement (Kreis)'},{k:'province',l:'Province'},{k:'vg',l:'Communauté de communes (Verbandsgemeinde)'},
     {k:'region',l:'R\u00e9gion'},{k:'pays',l:'Pays'},{k:'code',l:'Code'}
   ];
   fmap.forEach(function(f) {
@@ -3227,9 +3240,13 @@ function _showTooltip(e, feat) {
   if (tf.canton  && h.canton && h.region !== 'Grand Est') rows.push({l:'Canton', v:h.canton});
   if (tf.dept    && h.dept)        rows.push({l: h.region==='Grand Est' ? 'Département' : 'Dept.', v:h.dept});
   if (tf.arrondissement && h.arrondissement && h.arrondissement !== h.dept) rows.push({l:'Arrondissement', v:h.arrondissement});
-  if (tf.kreis   && h.kreis)       rows.push({l:'Kreis / Landkreis', v:h.kreis});
+  // Libellés en français partout, comme les autres niveaux (Canton,
+  // Département, Arrondissement, Province) — le terme allemand reste
+  // entre parenthèses pour qui le cherche, mais n'est jamais ce qui ouvre
+  // le libellé (cf. GIS-GR lui-même : "Kreis (arrondissement)").
+  if (tf.kreis   && h.kreis)       rows.push({l:'Arrondissement (Kreis)', v:h.kreis});
   if (tf.province && h.province)   rows.push({l:'Province', v:h.province});
-  if (tf.vg      && h.vg)          rows.push({l:'Verbandsgemeinde', v:h.vg});
+  if (tf.vg      && h.vg)          rows.push({l:'Communauté de communes (Verbandsgemeinde)', v:h.vg});
   if (tf.region)                   rows.push({l:'Région', v:BLOC_LABELS[h.region] || h.region});
   if (tf.pays    && h.pays)        rows.push({l:'Pays', v:h.pays});
 
