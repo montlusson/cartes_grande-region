@@ -1,130 +1,162 @@
 [
  {
-  "file": "communes_rhenanie-palatinat.topojson",
+  "file": "communes_rhenanie-palatinat.geojson",
+  "csv": "communes_rhenanie-palatinat.csv",
   "group": "Communes",
   "label": "Rhénanie-Palatinat (Allemagne)",
   "regions": 2300,
-  "bytes": 999973,
-  "simplification_kept_pct": 49.2
+  "bytes": 996810,
+  "csv_bytes": 172280,
+  "simplification_kept_pct": 11.2
  },
  {
-  "file": "communes_sarre.topojson",
+  "file": "communes_sarre.geojson",
+  "csv": "communes_sarre.csv",
   "group": "Communes",
   "label": "Sarre (Allemagne)",
   "regions": 52,
-  "bytes": 75718,
+  "bytes": 185505,
+  "csv_bytes": 2931,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "communes_wallonie.topojson",
+  "file": "communes_wallonie.geojson",
+  "csv": "communes_wallonie.csv",
   "group": "Communes",
   "label": "Wallonie (Belgique)",
   "regions": 261,
-  "bytes": 298356,
-  "simplification_kept_pct": 99.8
+  "bytes": 498618,
+  "csv_bytes": 13248,
+  "simplification_kept_pct": 54.0
  },
  {
-  "file": "communes_lorraine.topojson",
+  "file": "communes_lorraine.geojson",
+  "csv": "communes_lorraine.csv",
   "group": "Communes",
   "label": "Lorraine (France)",
   "regions": 2321,
-  "bytes": 999349,
-  "simplification_kept_pct": 67.5
+  "bytes": 995607,
+  "csv_bytes": 123263,
+  "simplification_kept_pct": 15.3
  },
  {
-  "file": "communes_luxembourg.topojson",
+  "file": "communes_luxembourg.geojson",
+  "csv": "communes_luxembourg.csv",
   "group": "Communes",
   "label": "Luxembourg (Luxembourg)",
   "regions": 100,
-  "bytes": 169346,
+  "bytes": 457438,
+  "csv_bytes": 5605,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "communes_grande-region.topojson",
+  "file": "communes_grande-region.geojson",
+  "csv": "communes_grande-region.csv",
   "group": "Communes",
   "label": "Toute la Grande Région (cartes transfrontalières)",
   "regions": 5034,
-  "bytes": 1898755,
-  "simplification_kept_pct": 21.1
+  "bytes": 1891141,
+  "csv_bytes": 332588,
+  "simplification_kept_pct": 3.0
  },
  {
-  "file": "depts-lor.topojson",
+  "file": "depts-lor.geojson",
+  "csv": "depts-lor.csv",
   "group": "Niveaux intermédiaires",
   "label": "Départements — Lorraine",
   "regions": 4,
-  "bytes": 84322,
+  "bytes": 197572,
+  "csv_bytes": 179,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "arr-lor.topojson",
+  "file": "arr-lor.geojson",
+  "csv": "arr-lor.csv",
   "group": "Niveaux intermédiaires",
   "label": "Arrondissements — Lorraine",
   "regions": 15,
-  "bytes": 119151,
+  "bytes": 317068,
+  "csv_bytes": 584,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "cantons-lor.topojson",
+  "file": "cantons-lor.geojson",
+  "csv": "cantons-lor.csv",
   "group": "Niveaux intermédiaires",
   "label": "Cantons — Lorraine",
   "regions": 84,
-  "bytes": 209183,
-  "simplification_kept_pct": 99.8
+  "bytes": 499087,
+  "csv_bytes": 3248,
+  "simplification_kept_pct": 76.4
  },
  {
-  "file": "kreise-rlp.topojson",
+  "file": "kreise-rlp.geojson",
+  "csv": "kreise-rlp.csv",
   "group": "Niveaux intermédiaires",
   "label": "Kreise — Rhénanie-Palatinat",
   "regions": 36,
-  "bytes": 200019,
-  "simplification_kept_pct": 99.8
+  "bytes": 499476,
+  "csv_bytes": 2078,
+  "simplification_kept_pct": 79.9
  },
  {
-  "file": "vg-rlp.topojson",
+  "file": "vg-rlp.geojson",
+  "csv": "vg-rlp.csv",
   "group": "Niveaux intermédiaires",
   "label": "Verbandsgemeinden — Rhénanie-Palatinat",
   "regions": 170,
-  "bytes": 361677,
-  "simplification_kept_pct": 99.8
+  "bytes": 498993,
+  "csv_bytes": 9911,
+  "simplification_kept_pct": 39.8
  },
  {
-  "file": "landkreise-sar.topojson",
+  "file": "landkreise-sar.geojson",
+  "csv": "landkreise-sar.csv",
   "group": "Niveaux intermédiaires",
   "label": "Landkreise — Sarre",
   "regions": 6,
-  "bytes": 39555,
+  "bytes": 89003,
+  "csv_bytes": 318,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "provinces-wal.topojson",
+  "file": "provinces-wal.geojson",
+  "csv": "provinces-wal.csv",
   "group": "Niveaux intermédiaires",
   "label": "Provinces — Wallonie",
   "regions": 5,
-  "bytes": 83786,
+  "bytes": 185550,
+  "csv_bytes": 218,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "arr-wal.topojson",
+  "file": "arr-wal.geojson",
+  "csv": "arr-wal.csv",
   "group": "Niveaux intermédiaires",
   "label": "Arrondissements — Wallonie",
   "regions": 20,
-  "bytes": 118699,
+  "bytes": 303439,
+  "csv_bytes": 800,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "cantons-lux.topojson",
+  "file": "cantons-lux.geojson",
+  "csv": "cantons-lux.csv",
   "group": "Niveaux intermédiaires",
   "label": "Cantons — Luxembourg",
   "regions": 12,
-  "bytes": 76353,
+  "bytes": 185051,
+  "csv_bytes": 506,
   "simplification_kept_pct": 99.8
  },
  {
-  "file": "blocs.topojson",
+  "file": "blocs.geojson",
+  "csv": "blocs.csv",
   "group": "Territoires",
   "label": "Les 5 territoires",
   "regions": 5,
-  "bytes": 164479,
+  "bytes": 439714,
+  "csv_bytes": 226,
   "simplification_kept_pct": 99.8
  }
 ]

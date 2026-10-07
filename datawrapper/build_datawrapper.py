@@ -15,6 +15,7 @@ La simplification passe par mapshaper (Visvalingam pondéré, frontières
 partagées entre voisins : pas de trous ni de chevauchements créés par le
 dessin) et garde chaque polygone (`keep-shapes`).
 """
+import csv
 import json
 import os
 import pathlib
@@ -35,7 +36,7 @@ SOFT_MAX = 1_000_000   # repli quand 500 Ko est impossible (milliers de communes
 # (limite dure Datawrapper : 2 Mo — jamais approchée volontairement)
 # Exception assumée : 5 034 communes dans un seul fichier ne tiennent pas en 1 Mo.
 EXTRA_LIMIT = {"communes_grande-region": 1_900_000}
-QUANT = 100_000        # grille de quantification TopoJSON
+PRECISION = 0.0001      # décimales des coordonnées GeoJSON (≈ 11 m) : évite les « décimales microscopiques »
 
 BLOC_LABELS = {
     "Rheinland-Pfalz": "Rhénanie-Palatinat", "Saarland": "Sarre", "Wallonie": "Wallonie",
@@ -49,6 +50,9 @@ SLUG = {"Rheinland-Pfalz": "rhenanie-palatinat", "Saarland": "sarre", "Wallonie"
         "Grand Est": "lorraine", "Luxembourg": "luxembourg"}
 REGION_CODE = {"LOR": "Grand Est", "RLP": "Rheinland-Pfalz", "SL": "Saarland",
                "WAL": "Wallonie", "LUX": "Luxembourg"}
+# Initiales (colonne `sigle`) : celles déjà utilisées par l'outil (cf. _canonicalRegion).
+SIGLE = {"Rheinland-Pfalz": "RLP", "Saarland": "SL", "Wallonie": "WAL", "Grand Est": "LOR", "Luxembourg": "LUX"}
+PAYS_SIGLE = {"Allemagne": "DE", "Belgique": "BE", "France": "FR", "Luxembourg": "LU"}
 FR_DEPTS = {"54": "Meurthe-et-Moselle", "55": "Meuse", "57": "Moselle", "88": "Vosges"}
 WAL_PROV = {"2": "Brabant wallon", "5": "Hainaut", "6": "Liège", "8": "Luxembourg", "9": "Namur"}
 
@@ -120,7 +124,8 @@ def communes_features(cache):
         name = CORRECTIONS["noms"].get(region + "|" + code, name)
         feats.append({"type": "Feature", "geometry": f["geometry"], "properties": {
             "id": code, "name": name,
-            "territoire": BLOC_LABELS[region], "pays": BLOC_PAYS[region],
+            "territoire": BLOC_LABELS[region], "sigle": SIGLE[region],
+            "pays": BLOC_PAYS[region], "pays_sigle": PAYS_SIGLE[BLOC_PAYS[region]],
             "subdivision": commune_parent(region, code, canton_lux),
             "_region": region,
         }})
@@ -134,7 +139,8 @@ def level_features(layer_id, cache):
         p = f["properties"]
         feats.append({"type": "Feature", "geometry": f["geometry"], "properties": {
             "id": clean_name(p["code"]), "name": clean_name(p["name"]),
-            "territoire": BLOC_LABELS[region], "pays": BLOC_PAYS[region], "_region": region,
+            "territoire": BLOC_LABELS[region], "sigle": SIGLE[region],
+            "pays": BLOC_PAYS[region], "pays_sigle": PAYS_SIGLE[BLOC_PAYS[region]], "_region": region,
             "_type": clean_name(p.get("de_entity")),
         }})
     return feats
@@ -174,22 +180,35 @@ def run_mapshaper(args):
     return r.stderr
 
 
-def export(feats, name, tmp, keys):
-    """Écrit fonds/<name>.topojson au plus fort détail qui tient sous TARGET (sinon HARD_MAX)."""
+def write_csv(feats, name, csv_keys):
+    """Données de base à coller dans Datawrapper (onglet Données) : une ligne par région, clé = `id`."""
+    rows = sorted((f["properties"] for f in feats), key=lambda p: p["name"].casefold())
+    with open(OUT / (name + ".csv"), "w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(csv_keys)
+        for p in rows:
+            w.writerow([p.get(k, "") for k in csv_keys])
+    return (OUT / (name + ".csv")).stat().st_size
+
+
+def export(feats, name, tmp, keys, csv_keys):
+    """Écrit fonds/<name>.geojson (+ .csv) au plus fort détail qui tient sous la limite de poids."""
+    OUT.mkdir(exist_ok=True)
+    csv_bytes = write_csv(feats, name, csv_keys)
     for f in feats:
         f["properties"] = {k: f["properties"][k] for k in keys if k in f["properties"]}
     limits = (TARGET, SOFT_MAX) + ((EXTRA_LIMIT[name],) if name in EXTRA_LIMIT else ())
     src = tmp / (name + ".geojson")
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}), encoding="utf-8")
     OUT.mkdir(exist_ok=True)
-    out = OUT / (name + ".topojson")
+    out = OUT / (name + ".geojson")
 
     def build(pct):
         args = ["-i", str(src), "-clean"]
         if pct < 100:
             args += ["-simplify", "%s%%" % pct, "visvalingam", "weighted", "keep-shapes"]
         args += ["-each", "cx=Math.round(this.innerX*1e3)/1e3, cy=Math.round(this.innerY*1e3)/1e3",
-                 "-o", str(out), "format=topojson", "quantization=%d" % QUANT, "force"]
+                 "-o", str(out), "format=geojson", "rfc7946", "precision=%s" % PRECISION, "force"]   # rfc7946 : extérieur antihoraire (d3 et la norme)
         run_mapshaper(args)
         return out.stat().st_size
 
@@ -209,21 +228,22 @@ def export(feats, name, tmp, keys):
     else:
         sys.exit("✗ %s dépasse %d Ko même à 0,3 %% : à découper" % (name, limits[-1] // 1000))
     size = build(best)
-    return size, best, limit
+    return size, best, limit, csv_bytes
 
 
 def specs(cache):
-    """(nom de fichier, features, clés de propriétés conservées)"""
-    commune_keys = ["id", "name", "subdivision"]               # un seul territoire par fichier : pas de colonne constante
+    """(nom de fichier, features, clés dans le GeoJSON, colonnes du CSV de données de base)"""
+    commune_keys = ["id", "name", "subdivision"]               # GeoJSON léger : un seul territoire par fichier, pas de colonne constante
     commune_keys_all = ["id", "name", "territoire", "pays", "subdivision"]
-    level_keys = ["id", "name"]
+    commune_csv = ["id", "name", "subdivision", "territoire", "sigle", "pays", "pays_sigle"]
+    level_keys = ["id", "name", "territoire", "sigle", "pays"]
     communes = communes_features(cache)
     allc = json.loads(json.dumps(communes))   # copie AVANT les noms désambiguïsés par territoire
 
     for region, slug in SLUG.items():
         feats = [f for f in communes if f["properties"]["_region"] == region]
         disambiguate(feats)
-        yield "communes_" + slug, feats, commune_keys
+        yield "communes_" + slug, feats, commune_keys, commune_csv
 
     # Fichier combiné : les codes NIS (BE) et INSEE (FR) se chevauchent (5 chiffres chacun) →
     # préfixe pays pour garder un `id` unique, comme Datawrapper l'exige.
@@ -231,12 +251,12 @@ def specs(cache):
     for f in allc:
         f["properties"]["id"] = "%s-%s" % (iso[f["properties"]["pays"]], f["properties"]["id"])
     disambiguate(allc)
-    yield "communes_grande-region", allc, commune_keys_all
+    yield "communes_grande-region", allc, commune_keys_all, commune_csv
 
     for layer_id, (region, _) in LEVELS.items():
         feats = level_features(layer_id, cache)
         disambiguate(feats)
-        yield layer_id.replace("_", "-"), feats, level_keys
+        yield layer_id.replace("_", "-"), feats, level_keys, level_keys
 
 
 def blocs_spec(tmp, cache):
@@ -245,14 +265,15 @@ def blocs_spec(tmp, cache):
     feats = communes_features(cache)
     src.write_text(json.dumps({"type": "FeatureCollection", "features": feats}), encoding="utf-8")
     merged = tmp / "blocs_raw.geojson"
-    run_mapshaper(["-i", str(src), "-dissolve", "_region", "copy-fields=territoire,pays",
+    run_mapshaper(["-i", str(src), "-dissolve", "_region", "copy-fields=territoire,pays,pays_sigle,sigle",
                    "-o", str(merged), "format=geojson", "force"])
     out = json.loads(merged.read_text(encoding="utf-8"))["features"]
     for f in out:
         p = f["properties"]
         p["id"] = SLUG[p["_region"]]
         p["name"] = p["territoire"]
-    return "blocs", out, ["id", "name", "pays"]
+    keys = ["id", "name", "sigle", "pays", "pays_sigle"]
+    return "blocs", out, keys, keys
 
 
 def describe(name):
@@ -281,18 +302,18 @@ def main():
         todo = list(specs(cache)) + [blocs_spec(tmp, cache)]
         print("Fonds de carte Datawrapper → %s" % OUT)
         report = []
-        for name, feats, keys in todo:
+        for name, feats, keys, csv_keys in todo:
             if wanted and name not in wanted:
                 continue
             check_ids(feats, name)
-            size, pct, limit = export(feats, name, tmp, keys)
+            size, pct, limit, csv_bytes = export(feats, name, tmp, keys, csv_keys)
             flag = "✓" if size <= TARGET else "≈ >500 Ko"
             print("  %s %-28s %4d régions  %6.0f Ko  (détail conservé : %.1f %%)" % (
                 flag, name, len(feats), size / 1000, pct))
             group, label = describe(name)
-            report.append({"file": name + ".topojson", "group": group, "label": label,
-                           "regions": len(feats),
-                           "bytes": size, "simplification_kept_pct": round(pct, 1)})
+            report.append({"file": name + ".geojson", "csv": name + ".csv", "group": group,
+                           "label": label, "regions": len(feats),
+                           "bytes": size, "csv_bytes": csv_bytes, "simplification_kept_pct": round(pct, 1)})
         if not wanted:
             (OUT / "manifest.json").write_text(
                 json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")

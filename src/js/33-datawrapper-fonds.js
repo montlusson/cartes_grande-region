@@ -38,15 +38,19 @@ function _renderDatawrapperFonds() {
           var span = document.createElement('span');
           span.style.cssText = 'flex:1;padding-right:8px;line-height:1.35';
           span.textContent = f.label + ' — ' + f.regions + ' régions, ' + Math.round(f.bytes / 1000) + ' Ko';
-          var a = document.createElement('a');
-          a.className = 'btn btn-secondary btn-sm';
-          a.style.textDecoration = 'none';
-          a.href = DW_FONDS_DIR + f.file;
-          a.download = f.file;
-          a.textContent = '↓ Télécharger';
-          a.title = f.file + ' — clé : id, nom : name';
+          function link(file, text, title) {
+            var a = document.createElement('a');
+            a.className = 'btn btn-secondary btn-sm';
+            a.style.cssText = 'text-decoration:none;margin-left:4px';
+            a.href = DW_FONDS_DIR + file;
+            a.download = file;
+            a.textContent = text;
+            a.title = title;
+            return a;
+          }
           row.appendChild(span);
-          row.appendChild(a);
+          row.appendChild(link(f.file, '↓ Carte', f.file + ' — fond de carte GeoJSON à importer dans Datawrapper'));
+          row.appendChild(link(f.csv, '↓ CSV', f.csv + ' — données de base (id, nom, initiales…) à coller dans l\'onglet Données'));
           body.appendChild(row);
         });
         wrap.appendChild(hdr);
