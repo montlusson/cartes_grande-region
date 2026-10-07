@@ -59,6 +59,7 @@ JS_MODULES = [
     "js/30-library-paste-geojson.js",
     "js/31-data-tab-search.js",
     "js/32-number-format.js",
+    "js/33-datawrapper-fonds.js",
 ]
 
 

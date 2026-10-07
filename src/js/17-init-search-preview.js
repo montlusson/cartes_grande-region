@@ -346,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
   _updateLegend();
   _renderBlocColorPickers();
   _renderLibraryCatalog();
+  _renderDatawrapperFonds();
   _wireCatalogSearch();
   _activeLayers['blocs'] = true;
 

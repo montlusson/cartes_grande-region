@@ -1,0 +1,130 @@
+[
+ {
+  "file": "communes_rhenanie-palatinat.topojson",
+  "group": "Communes",
+  "label": "Rhénanie-Palatinat (Allemagne)",
+  "regions": 2300,
+  "bytes": 999973,
+  "simplification_kept_pct": 49.2
+ },
+ {
+  "file": "communes_sarre.topojson",
+  "group": "Communes",
+  "label": "Sarre (Allemagne)",
+  "regions": 52,
+  "bytes": 75718,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "communes_wallonie.topojson",
+  "group": "Communes",
+  "label": "Wallonie (Belgique)",
+  "regions": 261,
+  "bytes": 298356,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "communes_lorraine.topojson",
+  "group": "Communes",
+  "label": "Lorraine (France)",
+  "regions": 2321,
+  "bytes": 999349,
+  "simplification_kept_pct": 67.5
+ },
+ {
+  "file": "communes_luxembourg.topojson",
+  "group": "Communes",
+  "label": "Luxembourg (Luxembourg)",
+  "regions": 100,
+  "bytes": 169346,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "communes_grande-region.topojson",
+  "group": "Communes",
+  "label": "Toute la Grande Région (cartes transfrontalières)",
+  "regions": 5034,
+  "bytes": 1898755,
+  "simplification_kept_pct": 21.1
+ },
+ {
+  "file": "depts-lor.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Départements — Lorraine",
+  "regions": 4,
+  "bytes": 84322,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "arr-lor.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Arrondissements — Lorraine",
+  "regions": 15,
+  "bytes": 119151,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "cantons-lor.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Cantons — Lorraine",
+  "regions": 84,
+  "bytes": 209183,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "kreise-rlp.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Kreise — Rhénanie-Palatinat",
+  "regions": 36,
+  "bytes": 200019,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "vg-rlp.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Verbandsgemeinden — Rhénanie-Palatinat",
+  "regions": 170,
+  "bytes": 361677,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "landkreise-sar.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Landkreise — Sarre",
+  "regions": 6,
+  "bytes": 39555,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "provinces-wal.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Provinces — Wallonie",
+  "regions": 5,
+  "bytes": 83786,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "arr-wal.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Arrondissements — Wallonie",
+  "regions": 20,
+  "bytes": 118699,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "cantons-lux.topojson",
+  "group": "Niveaux intermédiaires",
+  "label": "Cantons — Luxembourg",
+  "regions": 12,
+  "bytes": 76353,
+  "simplification_kept_pct": 99.8
+ },
+ {
+  "file": "blocs.topojson",
+  "group": "Territoires",
+  "label": "Les 5 territoires",
+  "regions": 5,
+  "bytes": 164479,
+  "simplification_kept_pct": 99.8
+ }
+]

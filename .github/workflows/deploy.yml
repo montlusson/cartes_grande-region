@@ -45,6 +45,10 @@ jobs:
           for dir in embeds assets data; do
             [ -d "$dir" ] && cp -r "$dir" _site/ || true
           done
+          # Fonds de carte Datawrapper (datawrapper/build_datawrapper.py) — seulement les fichiers, pas les scripts
+          if [ -d datawrapper/fonds ]; then
+            mkdir -p _site/datawrapper && cp -r datawrapper/fonds _site/datawrapper/
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
