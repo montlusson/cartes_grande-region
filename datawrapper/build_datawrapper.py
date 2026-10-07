@@ -180,21 +180,28 @@ def run_mapshaper(args):
     return r.stderr
 
 
-def write_csv(feats, name, csv_keys):
-    """Données de base à coller dans Datawrapper (onglet Données) : une ligne par région, clé = `id`."""
-    rows = sorted((f["properties"] for f in feats), key=lambda p: p["name"].casefold())
+def write_csv(rows, name, csv_keys, geojson_path):
+    """Données de base à coller dans Datawrapper (onglet Données) : une ligne par région, clé = `id`.
+
+    `latitude`/`longitude` = point intérieur (cx/cy) lu dans le GeoJSON FINAL (donc dans le polygone
+    simplifié) : indispensable aux cartes à symboles, qui placent un symbole par coordonnées."""
+    points = {}
+    for f in json.loads(geojson_path.read_text(encoding="utf-8"))["features"]:
+        pr = f["properties"]
+        points[pr["id"]] = (pr["cy"], pr["cx"])
+    rows = sorted(rows, key=lambda p: p["name"].casefold())
     with open(OUT / (name + ".csv"), "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
-        w.writerow(csv_keys)
+        w.writerow(list(csv_keys) + ["latitude", "longitude"])
         for p in rows:
-            w.writerow([p.get(k, "") for k in csv_keys])
+            w.writerow([p.get(k, "") for k in csv_keys] + list(points[p["id"]]))
     return (OUT / (name + ".csv")).stat().st_size
 
 
 def export(feats, name, tmp, keys, csv_keys):
     """Écrit fonds/<name>.geojson (+ .csv) au plus fort détail qui tient sous la limite de poids."""
     OUT.mkdir(exist_ok=True)
-    csv_bytes = write_csv(feats, name, csv_keys)
+    rows = [dict(f["properties"]) for f in feats]   # propriétés complètes, avant filtrage pour le GeoJSON
     for f in feats:
         f["properties"] = {k: f["properties"][k] for k in keys if k in f["properties"]}
     limits = (TARGET, SOFT_MAX) + ((EXTRA_LIMIT[name],) if name in EXTRA_LIMIT else ())
@@ -228,7 +235,7 @@ def export(feats, name, tmp, keys, csv_keys):
     else:
         sys.exit("✗ %s dépasse %d Ko même à 0,3 %% : à découper" % (name, limits[-1] // 1000))
     size = build(best)
-    return size, best, limit, csv_bytes
+    return size, best, limit, write_csv(rows, name, csv_keys, out)
 
 
 def specs(cache):

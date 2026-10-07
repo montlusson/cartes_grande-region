@@ -1,7 +1,7 @@
-id,name,territoire,sigle,pays
-DEC02,Landkreis Merzig-Wadern,Sarre,SL,Allemagne
-DEC03,Landkreis Neunkirchen,Sarre,SL,Allemagne
-DEC04,Landkreis Saarlouis,Sarre,SL,Allemagne
-DEC06,Landkreis St. Wendel,Sarre,SL,Allemagne
-DEC01,Regionalverband Saarbücken,Sarre,SL,Allemagne
-DEC05,Saarpfalz-Kreis,Sarre,SL,Allemagne
+id,name,territoire,sigle,pays,latitude,longitude
+DEC02,Landkreis Merzig-Wadern,Sarre,SL,Allemagne,49.468,6.682
+DEC03,Landkreis Neunkirchen,Sarre,SL,Allemagne,49.366,7.155
+DEC04,Landkreis Saarlouis,Sarre,SL,Allemagne,49.329,6.779
+DEC06,Landkreis St. Wendel,Sarre,SL,Allemagne,49.517,7.101
+DEC01,Regionalverband Saarbücken,Sarre,SL,Allemagne,49.279,6.973
+DEC05,Saarpfalz-Kreis,Sarre,SL,Allemagne,49.224,7.219

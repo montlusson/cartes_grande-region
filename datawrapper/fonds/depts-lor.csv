@@ -1,5 +1,5 @@
-id,name,territoire,sigle,pays
-FRF31,Meurthe-et-Moselle,Lorraine,LOR,France
-FRF32,Meuse,Lorraine,LOR,France
-FRF33,Moselle,Lorraine,LOR,France
-FRF34,Vosges,Lorraine,LOR,France
+id,name,territoire,sigle,pays,latitude,longitude
+FRF31,Meurthe-et-Moselle,Lorraine,LOR,France,48.704,6.1
+FRF32,Meuse,Lorraine,LOR,France,48.991,5.381
+FRF33,Moselle,Lorraine,LOR,France,48.998,6.556
+FRF34,Vosges,Lorraine,LOR,France,48.18,6.322

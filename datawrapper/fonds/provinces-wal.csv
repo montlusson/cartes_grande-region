@@ -1,6 +1,6 @@
-id,name,territoire,sigle,pays
-BE31,Brabant Wallon,Wallonie,WAL,Belgique
-BE32,Hainaut,Wallonie,WAL,Belgique
-BE33,Liège,Wallonie,WAL,Belgique
-BE34,Luxembourg,Wallonie,WAL,Belgique
-BE35,Namur,Wallonie,WAL,Belgique
+id,name,territoire,sigle,pays,latitude,longitude
+BE31,Brabant Wallon,Wallonie,WAL,Belgique,50.66,4.581
+BE32,Hainaut,Wallonie,WAL,Belgique,50.512,3.972
+BE33,Liège,Wallonie,WAL,Belgique,50.536,5.74
+BE34,Luxembourg,Wallonie,WAL,Belgique,49.969,5.496
+BE35,Namur,Wallonie,WAL,Belgique,50.357,4.887

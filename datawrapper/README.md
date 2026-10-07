@@ -13,6 +13,8 @@ python3 datawrapper/validate_datawrapper.py    # contrôle indépendant, code re
 2. Dans l'onglet Données, coller le contenu de `xxx.csv` (même nom) : une ligne par région, avec nom, initiales, pays…
 3. Choisir `id` comme colonne de clé, `name` comme libellé, puis ajouter vos propres colonnes de valeurs à côté.
 
+**Cartes à symboles** : collez le CSV, puis indiquez les colonnes `latitude` et `longitude` pour placer un symbole au centre de chaque région (le point est toujours à l'intérieur du polygone, même simplifié). Pour des symboles ailleurs qu'au centre (une adresse, un site), remplacez ces deux colonnes par vos propres coordonnées.
+
 Les ids peuvent commencer par un zéro (`07133090`, `0106`) : gardez la colonne en **texte** si un tableur ouvre le CSV, sinon les zéros sautent.
 
 ## Quel fichier choisir
@@ -36,6 +38,7 @@ Préférez le fichier d'un territoire dès qu'une carte n'en couvre qu'un : plus
 | `territoire`, `pays`, `pays_sigle` (FR, DE, BE, LU) | blocs, niveaux ; `territoire`/`pays` dans le combiné | ✓ |
 | `subdivision` — département / Kreis / province / canton | communes | communes |
 | `cx`, `cy` — point intérieur pour les étiquettes | ✓ | — |
+| `latitude`, `longitude` — point intérieur de la région (même point que `cx`/`cy`) | — | ✓ |
 
 Codes officiels : INSEE (Lorraine), NIS (Wallonie), AGS (Allemagne), code commune (Luxembourg). Dans `communes_grande-region` seulement, les ids sont préfixés (`FR-54395`, `BE-25044`, `DE-07133090`, `LU-1001`) car NIS et INSEE ont tous deux 5 chiffres et se chevauchent. Les homonymes sont levés par la subdivision : « Berg (Ahrweiler) », « Remoncourt (Vosges) ».
 

@@ -6,7 +6,7 @@
   "label": "Rhénanie-Palatinat (Allemagne)",
   "regions": 2300,
   "bytes": 996810,
-  "csv_bytes": 172280,
+  "csv_bytes": 201720,
   "simplification_kept_pct": 11.2
  },
  {
@@ -16,7 +16,7 @@
   "label": "Sarre (Allemagne)",
   "regions": 52,
   "bytes": 185505,
-  "csv_bytes": 2931,
+  "csv_bytes": 3620,
   "simplification_kept_pct": 99.8
  },
  {
@@ -26,7 +26,7 @@
   "label": "Wallonie (Belgique)",
   "regions": 261,
   "bytes": 498618,
-  "csv_bytes": 13248,
+  "csv_bytes": 16619,
   "simplification_kept_pct": 54.0
  },
  {
@@ -36,7 +36,7 @@
   "label": "Lorraine (France)",
   "regions": 2321,
   "bytes": 995607,
-  "csv_bytes": 123263,
+  "csv_bytes": 152982,
   "simplification_kept_pct": 15.3
  },
  {
@@ -46,7 +46,7 @@
   "label": "Luxembourg (Luxembourg)",
   "regions": 100,
   "bytes": 457438,
-  "csv_bytes": 5605,
+  "csv_bytes": 6897,
   "simplification_kept_pct": 99.8
  },
  {
@@ -56,7 +56,7 @@
   "label": "Toute la Grande Région (cartes transfrontalières)",
   "regions": 5034,
   "bytes": 1891141,
-  "csv_bytes": 332588,
+  "csv_bytes": 396923,
   "simplification_kept_pct": 3.0
  },
  {
@@ -66,7 +66,7 @@
   "label": "Départements — Lorraine",
   "regions": 4,
   "bytes": 197572,
-  "csv_bytes": 179,
+  "csv_bytes": 247,
   "simplification_kept_pct": 99.8
  },
  {
@@ -76,7 +76,7 @@
   "label": "Arrondissements — Lorraine",
   "regions": 15,
   "bytes": 317068,
-  "csv_bytes": 584,
+  "csv_bytes": 798,
   "simplification_kept_pct": 99.8
  },
  {
@@ -86,7 +86,7 @@
   "label": "Cantons — Lorraine",
   "regions": 84,
   "bytes": 499087,
-  "csv_bytes": 3248,
+  "csv_bytes": 4341,
   "simplification_kept_pct": 76.4
  },
  {
@@ -96,7 +96,7 @@
   "label": "Kreise — Rhénanie-Palatinat",
   "regions": 36,
   "bytes": 499476,
-  "csv_bytes": 2078,
+  "csv_bytes": 2554,
   "simplification_kept_pct": 79.9
  },
  {
@@ -106,7 +106,7 @@
   "label": "Verbandsgemeinden — Rhénanie-Palatinat",
   "regions": 170,
   "bytes": 498993,
-  "csv_bytes": 9911,
+  "csv_bytes": 12107,
   "simplification_kept_pct": 39.8
  },
  {
@@ -116,7 +116,7 @@
   "label": "Landkreise — Sarre",
   "regions": 6,
   "bytes": 89003,
-  "csv_bytes": 318,
+  "csv_bytes": 415,
   "simplification_kept_pct": 99.8
  },
  {
@@ -126,7 +126,7 @@
   "label": "Provinces — Wallonie",
   "regions": 5,
   "bytes": 185550,
-  "csv_bytes": 218,
+  "csv_bytes": 300,
   "simplification_kept_pct": 99.8
  },
  {
@@ -136,7 +136,7 @@
   "label": "Arrondissements — Wallonie",
   "regions": 20,
   "bytes": 303439,
-  "csv_bytes": 800,
+  "csv_bytes": 1075,
   "simplification_kept_pct": 99.8
  },
  {
@@ -146,7 +146,7 @@
   "label": "Cantons — Luxembourg",
   "regions": 12,
   "bytes": 185051,
-  "csv_bytes": 506,
+  "csv_bytes": 676,
   "simplification_kept_pct": 99.8
  },
  {
@@ -156,7 +156,7 @@
   "label": "Les 5 territoires",
   "regions": 5,
   "bytes": 439714,
-  "csv_bytes": 226,
+  "csv_bytes": 310,
   "simplification_kept_pct": 99.8
  }
 ]

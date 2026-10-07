@@ -1,21 +1,21 @@
-id,name,territoire,sigle,pays
-BE341,Arlon,Wallonie,WAL,Belgique
-BE321,Ath,Wallonie,WAL,Belgique
-BE342,Bastogne,Wallonie,WAL,Belgique
-BE322,Charleroi,Wallonie,WAL,Belgique
-BE351,Dinant,Wallonie,WAL,Belgique
-BE331,Huy,Wallonie,WAL,Belgique
-BE329,La Louvière,Wallonie,WAL,Belgique
-BE332,Liège,Wallonie,WAL,Belgique
-BE343,Marche-en-Famenne,Wallonie,WAL,Belgique
-BE323,Mons,Wallonie,WAL,Belgique
-BE352,Namur,Wallonie,WAL,Belgique
-BE344,Neufchâteau,Wallonie,WAL,Belgique
-BE310,Nivelles,Wallonie,WAL,Belgique
-BE353,Philippeville,Wallonie,WAL,Belgique
-BE325,Soignies,Wallonie,WAL,Belgique
-BE326,Thuin,Wallonie,WAL,Belgique
-BE328,Tournai-Mouscron,Wallonie,WAL,Belgique
-BE335 / BE336,Verviers,Wallonie,WAL,Belgique
-BE345,Virton,Wallonie,WAL,Belgique
-BE334,Waremme,Wallonie,WAL,Belgique
+id,name,territoire,sigle,pays,latitude,longitude
+BE341,Arlon,Wallonie,WAL,Belgique,49.68,5.781
+BE321,Ath,Wallonie,WAL,Belgique,50.644,3.776
+BE342,Bastogne,Wallonie,WAL,Belgique,50.102,5.771
+BE322,Charleroi,Wallonie,WAL,Belgique,50.45,4.426
+BE351,Dinant,Wallonie,WAL,Belgique,50.203,4.992
+BE331,Huy,Wallonie,WAL,Belgique,50.481,5.337
+BE329,La Louvière,Wallonie,WAL,Belgique,50.425,4.151
+BE332,Liège,Wallonie,WAL,Belgique,50.616,5.585
+BE343,Marche-en-Famenne,Wallonie,WAL,Belgique,50.225,5.509
+BE323,Mons,Wallonie,WAL,Belgique,50.447,3.872
+BE352,Namur,Wallonie,WAL,Belgique,50.476,4.852
+BE344,Neufchâteau,Wallonie,WAL,Belgique,49.921,5.294
+BE310,Nivelles,Wallonie,WAL,Belgique,50.66,4.581
+BE353,Philippeville,Wallonie,WAL,Belgique,50.149,4.551
+BE325,Soignies,Wallonie,WAL,Belgique,50.565,4.103
+BE326,Thuin,Wallonie,WAL,Belgique,50.17,4.277
+BE328,Tournai-Mouscron,Wallonie,WAL,Belgique,50.622,3.433
+BE335 / BE336,Verviers,Wallonie,WAL,Belgique,50.507,6.003
+BE345,Virton,Wallonie,WAL,Belgique,49.639,5.525
+BE334,Waremme,Wallonie,WAL,Belgique,50.654,5.122

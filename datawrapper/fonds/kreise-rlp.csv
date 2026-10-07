@@ -1,37 +1,37 @@
-id,name,territoire,sigle,pays
-DEB12,Ahrweiler,Rhénanie-Palatinat,RLP,Allemagne
-DEB13,Altenkirchen (Ww),Rhénanie-Palatinat,RLP,Allemagne
-DEB3B,Alzey-Worms,Rhénanie-Palatinat,RLP,Allemagne
-DEB3C,Bad Dürkheim,Rhénanie-Palatinat,RLP,Allemagne
-DEB14,Bad Kreuznach,Rhénanie-Palatinat,RLP,Allemagne
-DEB22,Bernkastel-Wittlich,Rhénanie-Palatinat,RLP,Allemagne
-DEB15,Birkenfeld,Rhénanie-Palatinat,RLP,Allemagne
-DEB1C,Cochem-Zell,Rhénanie-Palatinat,RLP,Allemagne
-DEB3D,Donnersbergkreis,Rhénanie-Palatinat,RLP,Allemagne
-DEB23,Eifelkreis Bitburg-Prüm,Rhénanie-Palatinat,RLP,Allemagne
-DEB3E,Germersheim,Rhénanie-Palatinat,RLP,Allemagne
-DEB3F,Kaiserslautern,Rhénanie-Palatinat,RLP,Allemagne
-DEB3G,Kusel,Rhénanie-Palatinat,RLP,Allemagne
-DEB33,Landau in der Pfalz,Rhénanie-Palatinat,RLP,Allemagne
-DEB3J,Mainz-Bingen,Rhénanie-Palatinat,RLP,Allemagne
-DEB17,Mayen-Koblenz,Rhénanie-Palatinat,RLP,Allemagne
-DEB18,Neuwied,Rhénanie-Palatinat,RLP,Allemagne
-DEB1D,Rhein-Hunsrück-Kreis,Rhénanie-Palatinat,RLP,Allemagne
-DEB1A,Rhein-Lahn-Kreis,Rhénanie-Palatinat,RLP,Allemagne
-DEB3I,Rhein-Pfalz-Kreis,Rhénanie-Palatinat,RLP,Allemagne
-DEB31,Stadt Frankenthal (Pfalz),Rhénanie-Palatinat,RLP,Allemagne
-DEB32,Stadt Kaiserslautern,Rhénanie-Palatinat,RLP,Allemagne
-DEB11,Stadt Koblenz,Rhénanie-Palatinat,RLP,Allemagne
-DEB34,Stadt Ludwigshafen a. Rh.,Rhénanie-Palatinat,RLP,Allemagne
-DEB35,Stadt Mainz,Rhénanie-Palatinat,RLP,Allemagne
-DEB36,Stadt Neustadt a.d. W.,Rhénanie-Palatinat,RLP,Allemagne
-DEB37,Stadt Pirmasens,Rhénanie-Palatinat,RLP,Allemagne
-DEB38,Stadt Speyer,Rhénanie-Palatinat,RLP,Allemagne
-DEB21,Stadt Trier,Rhénanie-Palatinat,RLP,Allemagne
-DEB39,Stadt Worms,Rhénanie-Palatinat,RLP,Allemagne
-DEB3A,Stadt Zweibrücken,Rhénanie-Palatinat,RLP,Allemagne
-DEB3H,Südliche Weinstraße,Rhénanie-Palatinat,RLP,Allemagne
-DEB3K,Südwestpfalz,Rhénanie-Palatinat,RLP,Allemagne
-DEB25,Trier-Saarburg,Rhénanie-Palatinat,RLP,Allemagne
-DEB24,Vulkaneifel,Rhénanie-Palatinat,RLP,Allemagne
-DEB1B,Westerwaldkreis,Rhénanie-Palatinat,RLP,Allemagne
+id,name,territoire,sigle,pays,latitude,longitude
+DEB12,Ahrweiler,Rhénanie-Palatinat,RLP,Allemagne,50.482,7.039
+DEB13,Altenkirchen (Ww),Rhénanie-Palatinat,RLP,Allemagne,50.8,7.816
+DEB3B,Alzey-Worms,Rhénanie-Palatinat,RLP,Allemagne,49.778,8.126
+DEB3C,Bad Dürkheim,Rhénanie-Palatinat,RLP,Allemagne,49.477,8.121
+DEB14,Bad Kreuznach,Rhénanie-Palatinat,RLP,Allemagne,49.828,7.682
+DEB22,Bernkastel-Wittlich,Rhénanie-Palatinat,RLP,Allemagne,49.939,6.978
+DEB15,Birkenfeld,Rhénanie-Palatinat,RLP,Allemagne,49.713,7.278
+DEB1C,Cochem-Zell,Rhénanie-Palatinat,RLP,Allemagne,50.133,7.175
+DEB3D,Donnersbergkreis,Rhénanie-Palatinat,RLP,Allemagne,49.634,7.883
+DEB23,Eifelkreis Bitburg-Prüm,Rhénanie-Palatinat,RLP,Allemagne,50.056,6.398
+DEB3E,Germersheim,Rhénanie-Palatinat,RLP,Allemagne,49.053,8.241
+DEB3F,Kaiserslautern,Rhénanie-Palatinat,RLP,Allemagne,49.443,7.551
+DEB3G,Kusel,Rhénanie-Palatinat,RLP,Allemagne,49.6,7.521
+DEB33,Landau in der Pfalz,Rhénanie-Palatinat,RLP,Allemagne,49.201,8.11
+DEB3J,Mainz-Bingen,Rhénanie-Palatinat,RLP,Allemagne,49.945,8.076
+DEB17,Mayen-Koblenz,Rhénanie-Palatinat,RLP,Allemagne,50.326,7.352
+DEB18,Neuwied,Rhénanie-Palatinat,RLP,Allemagne,50.524,7.421
+DEB1D,Rhein-Hunsrück-Kreis,Rhénanie-Palatinat,RLP,Allemagne,50.044,7.5
+DEB1A,Rhein-Lahn-Kreis,Rhénanie-Palatinat,RLP,Allemagne,50.252,7.809
+DEB3I,Rhein-Pfalz-Kreis,Rhénanie-Palatinat,RLP,Allemagne,49.402,8.347
+DEB31,Stadt Frankenthal (Pfalz),Rhénanie-Palatinat,RLP,Allemagne,49.53,8.352
+DEB32,Stadt Kaiserslautern,Rhénanie-Palatinat,RLP,Allemagne,49.433,7.761
+DEB11,Stadt Koblenz,Rhénanie-Palatinat,RLP,Allemagne,50.359,7.574
+DEB34,Stadt Ludwigshafen a. Rh.,Rhénanie-Palatinat,RLP,Allemagne,49.48,8.401
+DEB35,Stadt Mainz,Rhénanie-Palatinat,RLP,Allemagne,49.983,8.243
+DEB36,Stadt Neustadt a.d. W.,Rhénanie-Palatinat,RLP,Allemagne,49.349,8.152
+DEB37,Stadt Pirmasens,Rhénanie-Palatinat,RLP,Allemagne,49.201,7.587
+DEB38,Stadt Speyer,Rhénanie-Palatinat,RLP,Allemagne,49.33,8.431
+DEB21,Stadt Trier,Rhénanie-Palatinat,RLP,Allemagne,49.759,6.653
+DEB39,Stadt Worms,Rhénanie-Palatinat,RLP,Allemagne,49.645,8.325
+DEB3A,Stadt Zweibrücken,Rhénanie-Palatinat,RLP,Allemagne,49.248,7.365
+DEB3H,Südliche Weinstraße,Rhénanie-Palatinat,RLP,Allemagne,49.111,8.008
+DEB3K,Südwestpfalz,Rhénanie-Palatinat,RLP,Allemagne,49.155,7.75
+DEB25,Trier-Saarburg,Rhénanie-Palatinat,RLP,Allemagne,49.678,6.805
+DEB24,Vulkaneifel,Rhénanie-Palatinat,RLP,Allemagne,50.234,6.747
+DEB1B,Westerwaldkreis,Rhénanie-Palatinat,RLP,Allemagne,50.552,7.862

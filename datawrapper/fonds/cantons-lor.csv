@@ -1,85 +1,85 @@
-id,name,territoire,sigle,pays
-5701,Algrange,Lorraine,LOR,France
-5501,Ancerville,Lorraine,LOR,France
-5401,Baccarat,Lorraine,LOR,France
-5502,Bar-le-Duc-1,Lorraine,LOR,France
-5503,Bar-le-Duc-2,Lorraine,LOR,France
-5504,Belleville-sur-Meuse,Lorraine,LOR,France
-5702,Bitche,Lorraine,LOR,France
-5703,Boulay-Moselle,Lorraine,LOR,France
-5505,Bouligny,Lorraine,LOR,France
-5704,Bouzonville,Lorraine,LOR,France
-8802,Bruyères,Lorraine,LOR,France
-8803,Charmes,Lorraine,LOR,France
-5506,Clermont-en-Argonne,Lorraine,LOR,France
-5507,Commercy,Lorraine,LOR,France
-8804,Darney,Lorraine,LOR,France
-5508,Dieue-sur-Meuse,Lorraine,LOR,France
-5402,Entre Seille et Meurthe,Lorraine,LOR,France
-5706,Fameck,Lorraine,LOR,France
-5707,Faulquemont,Lorraine,LOR,France
-5708,Forbach,Lorraine,LOR,France
-5709,Freyming-Merlebach,Lorraine,LOR,France
-8808,Golbey,Lorraine,LOR,France
-5403,Grand Couronné,Lorraine,LOR,France
-8807,Gérardmer,Lorraine,LOR,France
-5710,Hayange,Lorraine,LOR,France
-5404,Jarny,Lorraine,LOR,France
-5405,Jarville-la-Malgrange,Lorraine,LOR,France
-8801,La Bresse,Lorraine,LOR,France
-5406,Laxou,Lorraine,LOR,France
-5416,Le Nord-Toulois,Lorraine,LOR,France
-5716,Le Pays Messin,Lorraine,LOR,France
-5723,Le Saulnois,Lorraine,LOR,France
-5724,Le Sillon Mosellan,Lorraine,LOR,France
-8815,Le Thillot,Lorraine,LOR,France
-8816,Le Val-d'Ajol,Lorraine,LOR,France
-5705,Les Coteaux de Moselle,Lorraine,LOR,France
-5510,Ligny-en-Barrois,Lorraine,LOR,France
-5407,Longwy,Lorraine,LOR,France
-5408,Lunéville-1,Lorraine,LOR,France
-5409,Lunéville-2,Lorraine,LOR,France
-5410,Meine au Saintois,Lorraine,LOR,France
-5711,Metz-1,Lorraine,LOR,France
-5712,Metz-2,Lorraine,LOR,France
-5713,Metz-3,Lorraine,LOR,France
-5714,Metzervisse,Lorraine,LOR,France
-8809,Mirecourt,Lorraine,LOR,France
-5411,Mont-Saint-Martin,Lorraine,LOR,France
-5715,Montigny-lès-Metz,Lorraine,LOR,France
-5511,Montmédy,Lorraine,LOR,France
-5412,Nancy-1,Lorraine,LOR,France
-5413,Nancy-2,Lorraine,LOR,France
-5414,Nancy-3,Lorraine,LOR,France
-8810,Neufchâteau,Lorraine,LOR,France
-5415,Neuves-Maisons,Lorraine,LOR,France
-5417,Pays de Briey,Lorraine,LOR,France
-5717,Phalsbourg,Lorraine,LOR,France
-5418,Pont-à-Mousson,Lorraine,LOR,France
-8811,Raon-l'Étape,Lorraine,LOR,France
-8812,Remiremont,Lorraine,LOR,France
-5512,Revigny-sur-Ornain,Lorraine,LOR,France
-5718,Rombas,Lorraine,LOR,France
-5719,Saint-Avold,Lorraine,LOR,France
-8813,Saint-Dié-des-Vosges-1,Lorraine,LOR,France
-8814,Saint-Dié-des-Vosges-2,Lorraine,LOR,France
-5419,Saint-Max,Lorraine,LOR,France
-5513,Saint-Mihiel,Lorraine,LOR,France
-5720,Sarralbe,Lorraine,LOR,France
-5721,Sarrebourg,Lorraine,LOR,France
-5722,Sarreguemines,Lorraine,LOR,France
-5514,Stenay,Lorraine,LOR,France
-5725,Stiring-Wendel,Lorraine,LOR,France
-5726,Thionville,Lorraine,LOR,France
-5420,Toul,Lorraine,LOR,France
-5421,Val de Lorraine Sud,Lorraine,LOR,France
-5422,Vandoeuvre-lès-Nancy,Lorraine,LOR,France
-5515,Vaucouleurs,Lorraine,LOR,France
-5516,Verdun-1,Lorraine,LOR,France
-5517,Verdun-2,Lorraine,LOR,France
-5423,Villerupt,Lorraine,LOR,France
-8817,Vittel,Lorraine,LOR,France
-5727,Yutz,Lorraine,LOR,France
-8805,Épinal-1,Lorraine,LOR,France
-8806,Épinal-2,Lorraine,LOR,France
-5509,Étain,Lorraine,LOR,France
+id,name,territoire,sigle,pays,latitude,longitude
+5701,Algrange,Lorraine,LOR,France,49.393,5.99
+5501,Ancerville,Lorraine,LOR,France,48.666,5.138
+5401,Baccarat,Lorraine,LOR,France,48.539,6.769
+5502,Bar-le-Duc-1,Lorraine,LOR,France,48.821,5.274
+5503,Bar-le-Duc-2,Lorraine,LOR,France,48.805,5.162
+5504,Belleville-sur-Meuse,Lorraine,LOR,France,49.213,5.471
+5702,Bitche,Lorraine,LOR,France,49.05,7.398
+5703,Boulay-Moselle,Lorraine,LOR,France,49.191,6.528
+5505,Bouligny,Lorraine,LOR,France,49.327,5.631
+5704,Bouzonville,Lorraine,LOR,France,49.339,6.508
+8802,Bruyères,Lorraine,LOR,France,48.226,6.659
+8803,Charmes,Lorraine,LOR,France,48.352,6.302
+5506,Clermont-en-Argonne,Lorraine,LOR,France,49.205,5.133
+5507,Commercy,Lorraine,LOR,France,48.775,5.593
+8804,Darney,Lorraine,LOR,France,48.061,5.984
+5508,Dieue-sur-Meuse,Lorraine,LOR,France,48.993,5.347
+5402,Entre Seille et Meurthe,Lorraine,LOR,France,48.841,6.205
+5706,Fameck,Lorraine,LOR,France,49.306,6.134
+5707,Faulquemont,Lorraine,LOR,France,49.041,6.543
+5708,Forbach,Lorraine,LOR,France,49.187,6.882
+5709,Freyming-Merlebach,Lorraine,LOR,France,49.11,6.825
+8808,Golbey,Lorraine,LOR,France,48.24,6.388
+5403,Grand Couronné,Lorraine,LOR,France,48.716,6.316
+8807,Gérardmer,Lorraine,LOR,France,48.128,6.914
+5710,Hayange,Lorraine,LOR,France,49.276,6.054
+5404,Jarny,Lorraine,LOR,France,49.132,5.882
+5405,Jarville-la-Malgrange,Lorraine,LOR,France,48.606,6.241
+8801,La Bresse,Lorraine,LOR,France,47.991,6.793
+5406,Laxou,Lorraine,LOR,France,48.674,6.12
+5416,Le Nord-Toulois,Lorraine,LOR,France,48.813,5.894
+5716,Le Pays Messin,Lorraine,LOR,France,49.144,6.318
+5723,Le Saulnois,Lorraine,LOR,France,48.814,6.629
+5724,Le Sillon Mosellan,Lorraine,LOR,France,49.207,6.166
+8815,Le Thillot,Lorraine,LOR,France,47.88,6.82
+8816,Le Val-d'Ajol,Lorraine,LOR,France,48.035,6.353
+5705,Les Coteaux de Moselle,Lorraine,LOR,France,49.066,6.064
+5510,Ligny-en-Barrois,Lorraine,LOR,France,48.53,5.459
+5407,Longwy,Lorraine,LOR,France,49.497,5.768
+5408,Lunéville-1,Lorraine,LOR,France,48.643,6.464
+5409,Lunéville-2,Lorraine,LOR,France,48.494,6.437
+5410,Meine au Saintois,Lorraine,LOR,France,48.475,6.022
+5711,Metz-1,Lorraine,LOR,France,49.131,6.171
+5712,Metz-2,Lorraine,LOR,France,49.106,6.227
+5713,Metz-3,Lorraine,LOR,France,49.09,6.19
+5714,Metzervisse,Lorraine,LOR,France,49.326,6.302
+8809,Mirecourt,Lorraine,LOR,France,48.337,5.905
+5411,Mont-Saint-Martin,Lorraine,LOR,France,49.481,5.65
+5715,Montigny-lès-Metz,Lorraine,LOR,France,49.104,6.146
+5511,Montmédy,Lorraine,LOR,France,49.431,5.388
+5412,Nancy-1,Lorraine,LOR,France,48.691,6.164
+5413,Nancy-2,Lorraine,LOR,France,48.701,6.176
+5414,Nancy-3,Lorraine,LOR,France,48.682,6.193
+8810,Neufchâteau,Lorraine,LOR,France,48.374,5.673
+5415,Neuves-Maisons,Lorraine,LOR,France,48.612,6.095
+5417,Pays de Briey,Lorraine,LOR,France,49.293,5.853
+5717,Phalsbourg,Lorraine,LOR,France,48.639,7.145
+5418,Pont-à-Mousson,Lorraine,LOR,France,48.923,6.04
+8811,Raon-l'Étape,Lorraine,LOR,France,48.392,6.978
+8812,Remiremont,Lorraine,LOR,France,48.052,6.594
+5512,Revigny-sur-Ornain,Lorraine,LOR,France,48.868,5.026
+5718,Rombas,Lorraine,LOR,France,49.201,6.078
+5719,Saint-Avold,Lorraine,LOR,France,49.097,6.725
+8813,Saint-Dié-des-Vosges-1,Lorraine,LOR,France,48.305,6.73
+8814,Saint-Dié-des-Vosges-2,Lorraine,LOR,France,48.256,7.052
+5419,Saint-Max,Lorraine,LOR,France,48.706,6.218
+5513,Saint-Mihiel,Lorraine,LOR,France,48.924,5.655
+5720,Sarralbe,Lorraine,LOR,France,49.018,6.927
+5721,Sarrebourg,Lorraine,LOR,France,48.786,6.961
+5722,Sarreguemines,Lorraine,LOR,France,49.107,7.111
+5514,Stenay,Lorraine,LOR,France,49.45,5.186
+5725,Stiring-Wendel,Lorraine,LOR,France,49.137,6.939
+5726,Thionville,Lorraine,LOR,France,49.374,6.115
+5420,Toul,Lorraine,LOR,France,48.67,5.882
+5421,Val de Lorraine Sud,Lorraine,LOR,France,48.734,6.125
+5422,Vandoeuvre-lès-Nancy,Lorraine,LOR,France,48.66,6.174
+5515,Vaucouleurs,Lorraine,LOR,France,48.652,5.644
+5516,Verdun-1,Lorraine,LOR,France,49.141,5.26
+5517,Verdun-2,Lorraine,LOR,France,49.13,5.405
+5423,Villerupt,Lorraine,LOR,France,49.451,5.872
+8817,Vittel,Lorraine,LOR,France,48.205,5.906
+5727,Yutz,Lorraine,LOR,France,49.437,6.186
+8805,Épinal-1,Lorraine,LOR,France,48.152,6.421
+8806,Épinal-2,Lorraine,LOR,France,48.186,6.514
+5509,Étain,Lorraine,LOR,France,49.112,5.652

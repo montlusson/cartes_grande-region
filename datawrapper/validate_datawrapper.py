@@ -51,6 +51,15 @@ def check_csv(path, ids):
     errs = []
     if "id" not in (rows[0] if rows else {}):
         return ["CSV sans colonne id"]
+    for r in rows:
+        try:
+            lat, lon = float(r["latitude"]), float(r["longitude"])
+        except (KeyError, ValueError):
+            errs.append("CSV : latitude/longitude absentes ou illisibles (%s)" % r.get("id"))
+            break
+        if not (BBOX[1] <= lat <= BBOX[3] and BBOX[0] <= lon <= BBOX[2]):
+            errs.append("CSV : coordonnées hors zone (%s)" % r["id"])
+            break
     csv_ids = [r["id"] for r in rows]
     if len(set(csv_ids)) != len(csv_ids):
         errs.append("CSV : ids en double")

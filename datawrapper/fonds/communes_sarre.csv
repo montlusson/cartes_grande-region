@@ -1,53 +1,53 @@
-id,name,subdivision,territoire,sigle,pays,pays_sigle
-10042111,Beckingen,Merzig-Wadern,Sarre,SL,Allemagne,DE
-10045111,Bexbach,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE
-10045112,Blieskastel,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE
-10044122,Bous,Saarlouis,Sarre,SL,Allemagne,DE
-10044111,Dillingen/Saar,Saarlouis,Sarre,SL,Allemagne,DE
-10044123,Ensdorf,Saarlouis,Sarre,SL,Allemagne,DE
-10043111,Eppelborn,Neunkirchen,Sarre,SL,Allemagne,DE
-10046111,Freisen,St. Wendel,Sarre,SL,Allemagne,DE
-10041511,Friedrichsthal,Saarbrücken,Sarre,SL,Allemagne,DE
-10045113,Gersheim,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE
-10041512,Großrosseln,Saarbrücken,Sarre,SL,Allemagne,DE
-10041513,Heusweiler,Saarbrücken,Sarre,SL,Allemagne,DE
-10045114,Homburg,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE
-10043112,Illingen,Neunkirchen,Sarre,SL,Allemagne,DE
-10045115,Kirkel,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE
-10041514,Kleinblittersdorf,Saarbrücken,Sarre,SL,Allemagne,DE
-10044112,Lebach,Saarlouis,Sarre,SL,Allemagne,DE
-10042112,Losheim am See,Merzig-Wadern,Sarre,SL,Allemagne,DE
-10045116,Mandelbachtal,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE
-10046112,Marpingen,St. Wendel,Sarre,SL,Allemagne,DE
-10043113,Merchweiler,Neunkirchen,Sarre,SL,Allemagne,DE
-10042113,Merzig,Merzig-Wadern,Sarre,SL,Allemagne,DE
-10042114,Mettlach,Merzig-Wadern,Sarre,SL,Allemagne,DE
-10044113,Nalbach,Saarlouis,Sarre,SL,Allemagne,DE
-10046113,Namborn,St. Wendel,Sarre,SL,Allemagne,DE
-10043114,Neunkirchen/Saar,Neunkirchen,Sarre,SL,Allemagne,DE
-10046114,Nohfelden,St. Wendel,Sarre,SL,Allemagne,DE
-10046115,Nonnweiler,St. Wendel,Sarre,SL,Allemagne,DE
-10046116,Oberthal,St. Wendel,Sarre,SL,Allemagne,DE
-10043115,Ottweiler,Neunkirchen,Sarre,SL,Allemagne,DE
-10042115,Perl,Merzig-Wadern,Sarre,SL,Allemagne,DE
-10041515,Püttlingen,Saarbrücken,Sarre,SL,Allemagne,DE
-10041516,Quierschied,Saarbrücken,Sarre,SL,Allemagne,DE
-10044114,Rehlingen-Siersburg,Saarlouis,Sarre,SL,Allemagne,DE
-10041517,Riegelsberg,Saarbrücken,Sarre,SL,Allemagne,DE
-10041100,Saarbrücken,Saarbrücken,Sarre,SL,Allemagne,DE
-10044115,Saarlouis,Saarlouis,Sarre,SL,Allemagne,DE
-10044116,Saarwellingen,Saarlouis,Sarre,SL,Allemagne,DE
-10043116,Schiffweiler,Neunkirchen,Sarre,SL,Allemagne,DE
-10044117,Schmelz,Saarlouis,Sarre,SL,Allemagne,DE
-10044118,Schwalbach,Saarlouis,Sarre,SL,Allemagne,DE
-10043117,Spiesen-Elversberg,Neunkirchen,Sarre,SL,Allemagne,DE
-10045117,St. Ingbert,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE
-10046117,St. Wendel,St. Wendel,Sarre,SL,Allemagne,DE
-10041518,Sulzbach/Saar,Saarbrücken,Sarre,SL,Allemagne,DE
-10046118,Tholey,St. Wendel,Sarre,SL,Allemagne,DE
-10041519,Völklingen,Saarbrücken,Sarre,SL,Allemagne,DE
-10042116,Wadern,Merzig-Wadern,Sarre,SL,Allemagne,DE
-10044120,Wadgassen,Saarlouis,Sarre,SL,Allemagne,DE
-10044121,Wallerfangen,Saarlouis,Sarre,SL,Allemagne,DE
-10042117,Weiskirchen,Merzig-Wadern,Sarre,SL,Allemagne,DE
-10044119,Überherrn,Saarlouis,Sarre,SL,Allemagne,DE
+id,name,subdivision,territoire,sigle,pays,pays_sigle,latitude,longitude
+10042111,Beckingen,Merzig-Wadern,Sarre,SL,Allemagne,DE,49.422,6.741
+10045111,Bexbach,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE,49.359,7.262
+10045112,Blieskastel,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE,49.224,7.252
+10044122,Bous,Saarlouis,Sarre,SL,Allemagne,DE,49.278,6.817
+10044111,Dillingen/Saar,Saarlouis,Sarre,SL,Allemagne,DE,49.366,6.733
+10044123,Ensdorf,Saarlouis,Sarre,SL,Allemagne,DE,49.303,6.782
+10043111,Eppelborn,Neunkirchen,Sarre,SL,Allemagne,DE,49.404,6.978
+10046111,Freisen,St. Wendel,Sarre,SL,Allemagne,DE,49.537,7.24
+10041511,Friedrichsthal,Saarbrücken,Sarre,SL,Allemagne,DE,49.332,7.086
+10045113,Gersheim,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE,49.152,7.224
+10041512,Großrosseln,Saarbrücken,Sarre,SL,Allemagne,DE,49.182,6.822
+10041513,Heusweiler,Saarbrücken,Sarre,SL,Allemagne,DE,49.347,6.947
+10045114,Homburg,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE,49.328,7.346
+10043112,Illingen,Neunkirchen,Sarre,SL,Allemagne,DE,49.389,7.047
+10045115,Kirkel,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE,49.294,7.254
+10041514,Kleinblittersdorf,Saarbrücken,Sarre,SL,Allemagne,DE,49.155,7.063
+10044112,Lebach,Saarlouis,Sarre,SL,Allemagne,DE,49.411,6.894
+10042112,Losheim am See,Merzig-Wadern,Sarre,SL,Allemagne,DE,49.508,6.732
+10045116,Mandelbachtal,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE,49.188,7.151
+10046112,Marpingen,St. Wendel,Sarre,SL,Allemagne,DE,49.447,7.062
+10043113,Merchweiler,Neunkirchen,Sarre,SL,Allemagne,DE,49.354,7.069
+10042113,Merzig,Merzig-Wadern,Sarre,SL,Allemagne,DE,49.447,6.627
+10042114,Mettlach,Merzig-Wadern,Sarre,SL,Allemagne,DE,49.508,6.551
+10044113,Nalbach,Saarlouis,Sarre,SL,Allemagne,DE,49.392,6.802
+10046113,Namborn,St. Wendel,Sarre,SL,Allemagne,DE,49.518,7.165
+10043114,Neunkirchen/Saar,Neunkirchen,Sarre,SL,Allemagne,DE,49.347,7.193
+10046114,Nohfelden,St. Wendel,Sarre,SL,Allemagne,DE,49.575,7.073
+10046115,Nonnweiler,St. Wendel,Sarre,SL,Allemagne,DE,49.59,6.982
+10046116,Oberthal,St. Wendel,Sarre,SL,Allemagne,DE,49.522,7.097
+10043115,Ottweiler,Neunkirchen,Sarre,SL,Allemagne,DE,49.413,7.205
+10042115,Perl,Merzig-Wadern,Sarre,SL,Allemagne,DE,49.509,6.418
+10041515,Püttlingen,Saarbrücken,Sarre,SL,Allemagne,DE,49.292,6.898
+10041516,Quierschied,Saarbrücken,Sarre,SL,Allemagne,DE,49.324,7.029
+10044114,Rehlingen-Siersburg,Saarlouis,Sarre,SL,Allemagne,DE,49.375,6.631
+10041517,Riegelsberg,Saarbrücken,Sarre,SL,Allemagne,DE,49.309,6.943
+10041100,Saarbrücken,Saarbrücken,Sarre,SL,Allemagne,DE,49.24,7.007
+10044115,Saarlouis,Saarlouis,Sarre,SL,Allemagne,DE,49.312,6.747
+10044116,Saarwellingen,Saarlouis,Sarre,SL,Allemagne,DE,49.353,6.841
+10043116,Schiffweiler,Neunkirchen,Sarre,SL,Allemagne,DE,49.367,7.121
+10044117,Schmelz,Saarlouis,Sarre,SL,Allemagne,DE,49.442,6.84
+10044118,Schwalbach,Saarlouis,Sarre,SL,Allemagne,DE,49.306,6.833
+10043117,Spiesen-Elversberg,Neunkirchen,Sarre,SL,Allemagne,DE,49.311,7.155
+10045117,St. Ingbert,Saarpfalz-Kreis,Sarre,SL,Allemagne,DE,49.274,7.133
+10046117,St. Wendel,St. Wendel,Sarre,SL,Allemagne,DE,49.465,7.186
+10041518,Sulzbach/Saar,Saarbrücken,Sarre,SL,Allemagne,DE,49.298,7.069
+10046118,Tholey,St. Wendel,Sarre,SL,Allemagne,DE,49.487,7.003
+10041519,Völklingen,Saarbrücken,Sarre,SL,Allemagne,DE,49.201,6.76
+10042116,Wadern,Merzig-Wadern,Sarre,SL,Allemagne,DE,49.54,6.891
+10044120,Wadgassen,Saarlouis,Sarre,SL,Allemagne,DE,49.248,6.777
+10044121,Wallerfangen,Saarlouis,Sarre,SL,Allemagne,DE,49.318,6.654
+10042117,Weiskirchen,Merzig-Wadern,Sarre,SL,Allemagne,DE,49.551,6.809
+10044119,Überherrn,Saarlouis,Sarre,SL,Allemagne,DE,49.261,6.706

@@ -1,6 +1,6 @@
-id,name,sigle,pays,pays_sigle
-lorraine,Lorraine,LOR,France,FR
-luxembourg,Luxembourg,LUX,Luxembourg,LU
-rhenanie-palatinat,Rhénanie-Palatinat,RLP,Allemagne,DE
-sarre,Sarre,SL,Allemagne,DE
-wallonie,Wallonie,WAL,Belgique,BE
+id,name,sigle,pays,pays_sigle,latitude,longitude
+lorraine,Lorraine,LOR,France,FR,48.762,6.142
+luxembourg,Luxembourg,LUX,Luxembourg,LU,49.773,6.087
+rhenanie-palatinat,Rhénanie-Palatinat,RLP,Allemagne,DE,50.042,7.314
+sarre,Sarre,SL,Allemagne,DE,49.405,6.953
+wallonie,Wallonie,WAL,Belgique,BE,50.279,5.311
